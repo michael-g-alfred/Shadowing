@@ -1,0 +1,24 @@
+{
+  "originHash" : "b7dceba1b1c353940daf7b906a89a201231b847d397ddfc1b9deb7c665b58643",
+  "pins" : [
+    {
+      "identity" : "mgnetworkingkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/michael-g-alfred/MGNetworkingKit.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "819779ad37ad905817ba2ec7048eb3787828943a"
+      }
+    },
+    {
+      "identity" : "mgonboardingkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/michael-g-alfred/MGOnboardingKit.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "ecca19ad8b105ca604e95d119781fa02d81c9990"
+      }
+    }
+  ],
+  "version" : 3
+}

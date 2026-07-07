@@ -1,0 +1,33 @@
+import Foundation
+
+struct ProfileResponseDTO: Codable {
+    let user: UserDTO
+}
+
+struct UserDTO: Codable {
+    let id: String
+    let email: String
+    let displayName: String
+    let nationalId: String?
+    let role: String?
+    let rating: Double?
+    let totalRatings: Int?
+    let completedTasks: Int?
+    let createdAt: Date?
+}
+
+extension UserDTO {
+    func toDomain() -> UserModel {
+        UserModel(
+            id: id,
+            email: email,
+            displayName: displayName,
+            nationalId: nationalId,
+            role: role ?? "user",
+            rating: rating ?? 0,
+            totalRatings: totalRatings ?? 0,
+            completedTasks: completedTasks ?? 0,
+            createdAt: createdAt
+        )
+    }
+}
