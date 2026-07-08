@@ -28,8 +28,6 @@ struct ExecutorView: View {
             
             Group {
                 switch vm.selectedTab {
-                    case .allTasks:
-                        container.makeExecutorAllTasksView()
                     case .availableTasks:
                         container.makeExecutorAvailableTasksView()
                     case .assignedTasks:
@@ -46,8 +44,8 @@ struct ExecutorView: View {
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $vm.showRateRequesterSheet) {
-            if let taskId = vm.selectedTaskIdForRating {
-                container.makeRatingSheet(taskId: taskId, target: .requester)
+            if let taskId = vm.selectedTaskIdForRating, let name = vm.requesterName {
+                container.makeRatingSheet(taskId: taskId, target: .requester(displayName: name))
                     .presentationDetents([.fraction(0.75)])
                     .presentationDragIndicator(.visible)
             }

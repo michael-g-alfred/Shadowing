@@ -13,7 +13,14 @@ struct MapTaskItem: Identifiable, Codable, Hashable {
     }
 }
 
+struct MapBounds: Equatable, Codable {
+    let minLat: Double
+    let maxLat: Double
+    let minLng: Double
+    let maxLng: Double
+}
+
 struct MapTasksPage: Codable {
     let tasks: [MapTaskItem]
-    let nextCursor: String?
+    let truncated: Bool
 }

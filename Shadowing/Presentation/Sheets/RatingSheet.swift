@@ -6,6 +6,10 @@ struct RatingSheet: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var commentFocused: Bool
     
+    init(vm: RatingViewModel) {
+        _vm = State(initialValue: vm)
+    }
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -47,31 +51,58 @@ struct RatingSheet: View {
     }
     
     private var starPicker: some View {
-        HStack(spacing: 12) {
-            ForEach(1...5, id: \.self) { star in
-                Image(systemName: star <= vm.rating ? "star.fill" : "star")
-                    .font(.system(size: 34))
-                    .foregroundStyle(star <= vm.rating ? .yellow : .gray.opacity(0.4))
-                    .onTapGesture {
-                        withAnimation(.easeInOut) {
-                            vm.selectRating(star)
-                            commentFocused = false
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                ForEach(1...5, id: \.self) { star in
+                    Image(systemName: star <= Int(vm.rating) ? "star.fill" : "star")
+                        .imageScale(.large)
+                        .foregroundStyle(star <= Int(vm.rating) ? .yellow : .gray.opacity(0.5))
+                        .animation(.easeInOut, value: vm.rating)
+                        .onTapGesture {
+                            withAnimation(.easeInOut) {
+                                vm.selectRating(star)
+                                commentFocused = false
+                            }
                         }
-                    }
-                    .accessibilityLabel("\(star) star\(star == 1 ? "" : "s")")
+                        .accessibilityLabel("\(star) star\(star == 1 ? "" : "s")")
+                }
+            }
+            
+            Slider(value: Binding(get: {
+                Double(vm.rating)
+            }, set: { v in
+                vm.selectRating(Int(v))
+            }), in: 1...5, step: 1)
+            .tint(.yellow)
+            .frame(width: 250)
+            .onChange(of: vm.rating) { _,_ in
+                withAnimation(.easeInOut) {
+                    commentFocused = false
+                }
             }
         }
     }
     
     private var commentField: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Comment")
                 .font(.subheadline.weight(.semibold))
             
             TextEditor(text: $vm.comment)
-                .frame(height: 100)
-                .padding(8)
-                .background(.gray.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                .scrollContentBackground(.hidden)
+                .padding(12)
+                .frame(minHeight: 100)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(.gray.opacity(0.5), lineWidth: 1)
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(.blue, lineWidth: 3)
+                        .scaleEffect(commentFocused ? 1 : 0.8)
+                        .opacity(commentFocused ? 1 : 0)
+                }
+                .animation(commentFocused ? .spring(duration: 0.3, bounce: 0.45) : .none, value: commentFocused)
                 .focused($commentFocused)
         }
     }

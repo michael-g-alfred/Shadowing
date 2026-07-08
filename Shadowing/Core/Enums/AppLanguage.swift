@@ -22,3 +22,5 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         Locale.current.language.languageCode?.identifier ?? "en"
     }
 }
+
+

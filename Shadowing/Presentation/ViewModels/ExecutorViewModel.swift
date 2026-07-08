@@ -41,6 +41,7 @@ final class ExecutorViewModel {
         // Rating sheet state
     var showRateRequesterSheet: Bool = false
     var selectedTaskIdForRating: String?
+    var requesterName: String?
     
     init(repository: TaskRepositoryProtocol) {
         self.repository = repository
@@ -86,6 +87,7 @@ final class ExecutorViewModel {
             await loadAssignedTasks()
             
             selectedTaskIdForRating = task.id
+            requesterName = task.requester.displayName
             showRateRequesterSheet = true
         } catch {
             errorMessage = error.localizedDescription

@@ -2,13 +2,15 @@ import Foundation
 import Observation
 
 enum RatingTarget {
-    case executor
-    case requester
+    case executor (displayName: String)
+    case requester (displayName: String)
     
     var title: LocalizedStringResource {
         switch self {
-            case .executor:  return "Rate the Executor"
-            case .requester: return "Rate the Requester"
+            case .executor(let displayName):
+                return "Rate \(displayName)"
+            case .requester(let displayName):
+                return "Rate \(displayName)"
         }
     }
 }

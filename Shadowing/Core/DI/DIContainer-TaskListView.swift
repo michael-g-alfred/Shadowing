@@ -82,22 +82,6 @@ extension DIContainer {
         )
     }
     
-    func makeExecutorAllTasksView () -> TaskListView {
-        TaskListView(
-            tasks: executorViewModel.executorAllTasks,
-            isLoading: executorViewModel.isLoading,
-            errorMessage: executorViewModel.errorMessage,
-            isLoadingMore: executorViewModel.isLoadingMoreAllTasks,
-            loadingTitle: "Loading",
-            loadingSubtitle: "Fetching all tasks.",
-            emptyState: .noTasks) {
-                await self.executorViewModel.loadAllTasks()
-            } onLoadMoreIfNeeded: {
-                await self.executorViewModel.loadMoreAllTasksIfNeeded()
-            }
-
-    }
-    
     func makeExecutorAvailableTasksView() -> TaskListView {
         TaskListView(
             tasks: executorViewModel.executorAvailableTasks,

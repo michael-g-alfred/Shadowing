@@ -23,6 +23,8 @@ struct RootView: View {
                     container.makeAdminDashboardView()
             }
         }
+        .environment(\.layoutDirection, container.languageManager.currentLanguage == .arabic ? .rightToLeft : .leftToRight)
+        .environment(\.locale, Locale(identifier: container.languageManager.currentLanguage.rawValue))
         .id(container.rootID)
         .animation(.easeInOut, value: container.appState)
     }

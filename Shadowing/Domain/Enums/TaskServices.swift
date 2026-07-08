@@ -43,7 +43,73 @@ enum TaskService: String, Codable, CaseIterable {
     case tutoring
     
     var localizedLabel: String {
-        return NSLocalizedString(self.rawValue, comment: "")
+        if AppLanguage.current == "ar" {
+            switch self {
+                case .accounting: return "محاسبة"
+                case .airportTransfer: return "توصيل من/إلى المطار"
+                case .carRental: return "تأجير سيارات"
+                case .catering: return "تموين طعام"
+                case .chauffeur: return "سائق خاص"
+                case .childcare: return "رعاية أطفال"
+                case .cleaning: return "تنظيف"
+                case .dataEntry: return "إدخال بيانات"
+                case .delivery: return "توصيل"
+                case .documentation: return "توثيق مستندات"
+                case .elderCare: return "رعاية كبار السن"
+                case .electrical: return "أعمال كهرباء"
+                case .errands: return "مشاوير"
+                case .eventPlanning: return "تنظيم مناسبات"
+                case .foodDelivery: return "توصيل طعام"
+                case .gardening: return "بستنة"
+                case .giftSourcing: return "تأمين هدايا"
+                case .governmentServices: return "خدمات حكومية"
+                case .groceryDelivery: return "توصيل بقالة"
+                case .homeRepair: return "صيانة منزلية"
+                case .itSupport: return "دعم تقني"
+                case .legalAssistance: return "مساعدة قانونية"
+                case .marketing: return "تسويق"
+                case .medicalAppointment: return "موعد طبي"
+                case .mentalHealth: return "صحة نفسية"
+                case .moving: return "نقل عفش"
+                case .packagePickup: return "استلام طرد"
+                case .personalHelp: return "مساعدة شخصية"
+                case .pestControl: return "مكافحة حشرات"
+                case .petCare: return "رعاية حيوانات أليفة"
+                case .pharmacy: return "صيدلية"
+                case .photography: return "تصوير"
+                case .plumbing: return "سباكة"
+                case .printing: return "طباعة"
+                case .queue: return "وقوف في طابور"
+                case .returnItems: return "إرجاع مشتريات"
+                case .shopping: return "تسوق"
+                case .translation: return "ترجمة"
+                case .travel: return "سفر"
+                case .tutoring: return "دروس خصوصية"
+            }
+        } else {
+            switch self {
+                case .airportTransfer: return "Airport Transfer"
+                case .carRental: return "Car Rental"
+                case .dataEntry: return "Data Entry"
+                case .elderCare: return "Elder Care"
+                case .eventPlanning: return "Event Planning"
+                case .foodDelivery: return "Food Delivery"
+                case .giftSourcing: return "Gift Sourcing"
+                case .governmentServices: return "Government Services"
+                case .groceryDelivery: return "Grocery Delivery"
+                case .homeRepair: return "Home Repair"
+                case .itSupport: return "IT Support"
+                case .legalAssistance: return "Legal Assistance"
+                case .medicalAppointment: return "Medical Appointment"
+                case .mentalHealth: return "Mental Health"
+                case .packagePickup: return "Package Pickup"
+                case .personalHelp: return "Personal Help"
+                case .pestControl: return "Pest Control"
+                case .petCare: return "Pet Care"
+                case .returnItems: return "Return Items"
+                default: return self.rawValue.capitalized
+            }
+        }
     }
     
     var icon: String {

@@ -23,6 +23,7 @@ final class RequesterViewModel {
     
     var showAddTaskSheet: Bool = false
     var showRateExecutorSheet: Bool = false
+    var executorName: String?
     var selectedTaskIdForRating: String?
     
         // Applicants sheet state
@@ -86,6 +87,7 @@ final class RequesterViewModel {
             DebugLogger.log("✅ Task \(task.id) confirmed as completed")
             
             selectedTaskIdForRating = task.id
+            executorName = task.executor?.displayName
             showRateExecutorSheet = true
         } catch {
             errorMessage = error.localizedDescription

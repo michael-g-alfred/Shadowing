@@ -168,7 +168,9 @@ struct ApplicantsBadge: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: "person.2.fill").font(.caption2)
-            Text("\(applicants)").font(.caption2).fontWeight(.bold)
+            Text("\(applicants)")
+                .font(.caption2)
+                .fontWeight(.bold)
                 .contentTransition(.numericText())
         }
         .foregroundStyle(color)

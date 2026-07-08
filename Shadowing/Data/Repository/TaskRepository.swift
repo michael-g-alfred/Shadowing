@@ -50,12 +50,14 @@ final class TaskRepository: TaskRepositoryProtocol {
     }
     
         // MARK: - Map
-    func getMapTasks(cursor: String? = nil) async throws -> MapTasksPage {
+    
+    func getMapTasks(bounds: MapBounds) async throws -> MapTasksPage {
         let token = try await getValidToken()
-        let config = APIConfig.mapTasks(cursor: cursor, accessToken: token)
+        let config = APIConfig.mapTasks(bounds: bounds, accessToken: token)
         let response: APIResponseDTO<MapTasksPage> = try await network.request(config)
-        return MapTasksPage(tasks: response.data.tasks, nextCursor: response.data.nextCursor)
+        return MapTasksPage(tasks: response.data.tasks, truncated: response.data.truncated)
     }
+    
         // MARK: - Requester
     
     func postTask( title: String, description: String, budget: Double, priority: TaskPriority, serviceType: String, address: String, latitude: Double?, longitude: Double?, scheduledAt: Date?, preferredTimeOfDay: PreferredTimeOfDay? ) async throws -> TaskModel {

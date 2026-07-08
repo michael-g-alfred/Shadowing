@@ -6,8 +6,7 @@ extension APIConfig {
         // MARK: - Map
     
     static func mapTasks(
-        cursor: String? = nil,
-        limit: Int? = nil,
+        bounds: MapBounds,
         accessToken: String
     ) -> MGRequestConfig {
         MGRequestConfig(
@@ -15,8 +14,10 @@ extension APIConfig {
             path: APIEndpoints.mapTasksPath,
             method: .get,
             queryItems: Self.queryItems([
-                ("cursor", cursor),
-                ("limit", limit.map(String.init))
+                ("minLat", String(bounds.minLat)),
+                ("maxLat", String(bounds.maxLat)),
+                ("minLng", String(bounds.minLng)),
+                ("maxLng", String(bounds.maxLng))
             ]),
             headers: ["Authorization": "Bearer \(accessToken)"]
         )

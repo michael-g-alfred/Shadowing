@@ -40,6 +40,7 @@ struct HomeView: View {
                             ? UserMode.executor.image
                             : UserMode.requester.image
                         )
+                        .labelStyle(.titleAndIcon)
                     }
                     .buttonStyle(.glassProminent)
                 }

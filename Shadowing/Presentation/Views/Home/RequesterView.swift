@@ -53,8 +53,8 @@ struct RequesterView: View {
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $vm.showRateExecutorSheet) {
-            if let taskId = vm.selectedTaskIdForRating {
-                container.makeRatingSheet(taskId: taskId, target: .executor)
+            if let taskId = vm.selectedTaskIdForRating, let name = vm.executorName {
+                container.makeRatingSheet(taskId: taskId, target: .executor(displayName: name))
                     .presentationDetents([.fraction(0.75)])
                     .presentationDragIndicator(.visible)
             }

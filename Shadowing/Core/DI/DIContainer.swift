@@ -7,9 +7,10 @@ import MGNetworkingKit
 final class DIContainer {
     
         // MARK: - App State
-    
     @ObservationIgnored
     @AppStorage("appState") var appState: AppState = .onboarding
+    
+    var rootID = UUID()
     
     func setAppState(_ newState: AppState) {
         withAnimation(.easeInOut) {
@@ -17,13 +18,11 @@ final class DIContainer {
         }
     }
     
-    var rootID = UUID()
-    
     func relaunchRoot() {
         rootID = UUID()
     }
     
-        // MARK: - Dependencies
+        // MARK: - Core Services
     
     @ObservationIgnored
     private lazy var networkService: MGNetworkServiceProtocol = MGNetworkService()
@@ -35,12 +34,26 @@ final class DIContainer {
     lazy var locationService: LocationService = CLLocationServiceImpl()
     
     @ObservationIgnored
+    lazy var languageManager: LanguageManager = .shared
+    
+        // MARK: - Language
+    
+    func setLanguage(_ language: AppLanguage) {
+        languageManager.setLanguage(language)
+        relaunchRoot()
+    }
+    
+        // MARK: - Repositories
+    
+    @ObservationIgnored
     private(set) lazy var authRepository: AuthRepositoryProtocol = AuthRepository(
         network: networkService, keychainService: keychainService
     )
     
     @ObservationIgnored
-    private(set) lazy var userRepository: UserRepositoryProtocol = UserRepository(network: networkService, authRepository: authRepository)
+    private(set) lazy var userRepository: UserRepositoryProtocol = UserRepository(
+        network: networkService, authRepository: authRepository
+    )
     
     @ObservationIgnored
     private(set) lazy var taskRepository: TaskRepositoryProtocol = TaskRepository(
@@ -55,13 +68,10 @@ final class DIContainer {
         // MARK: - Shared ViewModels
     
     @ObservationIgnored
-    lazy var requesterViewModel = RequesterViewModel(
-        repository: taskRepository
-    )
+    lazy var requesterViewModel = RequesterViewModel(repository: taskRepository)
+    
     @ObservationIgnored
-    lazy var executorViewModel = ExecutorViewModel(
-        repository: taskRepository
-    )
+    lazy var executorViewModel = ExecutorViewModel(repository: taskRepository)
     
         // MARK: - Root
     
@@ -69,7 +79,7 @@ final class DIContainer {
         RootView()
     }
     
-        // MARK: - Intro
+        // MARK: - Onboarding
     
     func makeOnboardingView() -> OnboardingView {
         OnboardingView(vm: makeOnboardingViewModel())
@@ -144,7 +154,15 @@ final class DIContainer {
     }
     
     func makeProfileViewModel() -> ProfileViewModel {
-        ProfileViewModel(authRepo: authRepository, userRepo: userRepository, locationService: locationService)
+        ProfileViewModel(
+            authRepo: authRepository,
+            userRepo: userRepository,
+            locationService: locationService,
+            languageManager: languageManager,
+            onLanguageChanged: { [weak self] in
+                self?.relaunchRoot()
+            }
+        )
     }
     
         // MARK: - Map
@@ -180,7 +198,7 @@ final class DIContainer {
         )
     }
     
-        // MARK: - Applicant Sheet
+        // MARK: - Applicants Sheet
     
     func makeApplicantsSheet() -> ApplicantsSheet {
         ApplicantsSheet(vm: makeRequesterViewModel())
@@ -193,11 +211,7 @@ final class DIContainer {
     }
     
     func makeRatingViewModel(taskId: String, target: RatingTarget) -> RatingViewModel {
-        RatingViewModel(
-            taskId: taskId,
-            target: target,
-            taskRepo: taskRepository
-        )
+        RatingViewModel(taskId: taskId, target: target, taskRepo: taskRepository)
     }
     
         // MARK: - Ratings

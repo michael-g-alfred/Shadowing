@@ -5,6 +5,7 @@ struct ProfileView: View {
     @Environment(DIContainer.self) private var container
     @Environment(\.openURL) private var openURL
     @State private var vm: ProfileViewModel
+    
     @State private var isIdExpanded = false
     @State private var isNationalIDAppearance = false
     
@@ -77,19 +78,23 @@ struct ProfileView: View {
                 InfoRow(
                     title: "Completed Tasks",
                     systemImage: "checklist",
-                    value: "\(user.completedTasks)"
+                    localizedValue: "\(user.completedTasks)"
                 )
                 
                 InfoRow(
                     title: "Total Ratings",
                     systemImage: "person.2",
-                    value: user.totalRatings > 0 ? String(user.totalRatings) : "No ratings yet"
+                    localizedValue: user.totalRatings > 0
+                    ? "\(user.totalRatings)"
+                    : "No ratings yet"
                 )
                 
                 InfoRow(
                     title: "Rating",
                     systemImage: "star",
-                    value: user.totalRatings > 0 ? String(format: "%.1f", user.rating) : "No ratings yet"
+                    localizedValue: user.totalRatings > 0
+                    ? "\(user.rating, specifier: "%.1f")"
+                    : "No ratings yet"
                 )
                 
                 if let createdAt = user.createdAt {
@@ -104,6 +109,8 @@ struct ProfileView: View {
             }
             
             locationSection
+            
+            languageSection
             
             if let errorMessage = vm.errorMessage {
                 Section {
@@ -132,6 +139,20 @@ struct ProfileView: View {
                     vm.requestLocationAccess()
                 }
             }
+        }
+    }
+    
+    private var languageSection: some View {
+        Section("Language") {
+            Picker("App Language", selection: Binding(
+                get: { vm.currentLanguage },
+                set: { vm.setLanguage($0) }
+            )) {
+                ForEach(AppLanguage.allCases, id: \.self) { language in
+                    Text(language.title).tag(language)
+                }
+            }
+            .pickerStyle(.segmented)
         }
     }
     
@@ -178,7 +199,7 @@ struct ProfileView: View {
     }
     
     private func submit() async {
-        guard await vm.submit() else { return }
+        guard await vm.signout() else { return }
         container.setAppState(.auth)
         container.relaunchRoot()
     }

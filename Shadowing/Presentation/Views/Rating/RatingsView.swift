@@ -3,14 +3,18 @@ import SwiftUI
 struct RatingsView: View {
 
     @State var vm: RatingsViewModel
-
+    
+    init(vm: RatingsViewModel) {
+        _vm = State(initialValue: vm)
+    }
+    
     var body: some View {
         content
             .navigationTitle("\(vm.userName)'s Ratings")
             .navigationBarTitleDisplayMode(.inline)
             .task { await vm.loadRatings() }
     }
-
+    
     @ViewBuilder
     private var content: some View {
         if vm.isLoading {
@@ -36,7 +40,7 @@ struct RatingsView: View {
                             await vm.loadMoreIfNeeded(current: rating)
                         }
                 }
-
+                
                 if vm.isLoadingMore {
                     HStack {
                         Spacer()
@@ -48,16 +52,16 @@ struct RatingsView: View {
             .listStyle(.insetGrouped)
         }
     }
-
+    
     @ViewBuilder
     private func ratingRow(_ rating: RatingModel) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(rating.raterName)
                     .font(.headline)
-
+                
                 Spacer()
-
+                
                 HStack(spacing: 2) {
                     ForEach(1...5, id: \.self) { star in
                         Image(systemName: star <= rating.rating ? "star.fill" : "star")
@@ -66,11 +70,11 @@ struct RatingsView: View {
                     }
                 }
             }
-
+            
             Text(rating.comment)
                 .font(.subheadline)
                 .foregroundStyle(.primary)
-
+            
             Text(rating.createdAt.toRelativeString())
                 .font(.caption2)
                 .foregroundStyle(.secondary)

@@ -44,8 +44,8 @@ struct MapView: View {
             .navigationDestination(for: String.self) { taskId in
                 makeTaskDetails(taskId)
             }
-            .task {
-                await vm.loadMapTasks()
+            .onMapCameraChange(frequency: .onEnd) { context in
+                vm.regionDidChange(context.region)
             }
             .overlay {
                 if vm.isLoading && vm.tasks.isEmpty {
@@ -97,17 +97,12 @@ private struct TaskMapCard: View {
             }
             
             HStack(spacing: 12) {
-                Button(action: onDirections) {
-                    Label("Directions", systemImage: "car.fill")
-                        .frame(maxWidth: .infinity)
+                ActionButton(title: "Directions", systemImage: "car.fill", labelStyle: .titleAndIcon, tint: .accentColor, buttonSizing: .fitted) {
+                    onDirections()
                 }
-                .buttonStyle(.bordered)
-                
-                Button(action: onDetails) {
-                    Label("Details", systemImage: "doc.text.magnifyingglass")
-                        .frame(maxWidth: .infinity)
+                ActionButton(title: "Details", systemImage: "doc.text.magnifyingglass", labelStyle: .titleAndIcon, tint: .accentColor, buttonSizing: .fitted) {
+                    onDetails()
                 }
-                .buttonStyle(.borderedProminent)
             }
         }
         .padding()

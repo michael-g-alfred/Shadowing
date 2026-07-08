@@ -10,14 +10,25 @@ final class ProfileViewModel {
     
     var user: UserModel?
     
+    var currentLanguage: AppLanguage {
+        languageManager.currentLanguage
+    }
+    
+    private let onLanguageChanged: () -> Void
+    
     private let authRepo: AuthRepositoryProtocol
     private let userRepo: UserRepositoryProtocol
     private let locationService: LocationService
+    private let languageManager: LanguageManager
     
-    init(authRepo: AuthRepositoryProtocol, userRepo: UserRepositoryProtocol, locationService: LocationService) {
+    init(authRepo: AuthRepositoryProtocol, userRepo: UserRepositoryProtocol,
+         locationService: LocationService, languageManager: LanguageManager,
+         onLanguageChanged: @escaping () -> Void) {
         self.authRepo = authRepo
         self.userRepo = userRepo
         self.locationService = locationService
+        self.languageManager = languageManager
+        self.onLanguageChanged = onLanguageChanged
     }
     
         // MARK: - Location
@@ -86,7 +97,7 @@ final class ProfileViewModel {
         }
     }
     
-    func submit() async -> Bool {
+    func signout() async -> Bool {
         isLoading = true
         defer { isLoading = false }
         do {
@@ -96,5 +107,10 @@ final class ProfileViewModel {
             errorMessage = error.localizedDescription
             return false
         }
+    }
+    
+    func setLanguage(_ language: AppLanguage) {
+        languageManager.setLanguage(language)
+        onLanguageChanged()
     }
 }

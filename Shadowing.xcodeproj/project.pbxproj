@@ -9,10 +9,12 @@
 /* Begin PBXBuildFile section */
 		BE5E82FC2FFCF4AC00DE012B /* MGOnboardingKit in Frameworks */ = {isa = PBXBuildFile; productRef = BE5E82FB2FFCF4AC00DE012B /* MGOnboardingKit */; };
 		BE5E82FF2FFCF4CD00DE012B /* MGNetworkingKit in Frameworks */ = {isa = PBXBuildFile; productRef = BE5E82FE2FFCF4CD00DE012B /* MGNetworkingKit */; };
+		BEDF5B962FFED85C00015FE5 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BEDF5B952FFED85C00015FE5 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		BE5E81FD2FFCF43100DE012B /* Shadowing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shadowing.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BEDF5B952FFED85C00015FE5 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -39,6 +41,7 @@
 		BE5E81F42FFCF43000DE012B = {
 			isa = PBXGroup;
 			children = (
+				BEDF5B952FFED85C00015FE5 /* Localizable.xcstrings */,
 				BE5E81FF2FFCF43100DE012B /* Shadowing */,
 				BE5E81FE2FFCF43100DE012B /* Products */,
 			);
@@ -100,6 +103,7 @@
 			knownRegions = (
 				en,
 				Base,
+				ar,
 			);
 			mainGroup = BE5E81F42FFCF43000DE012B;
 			minimizedProjectReferenceProxies = 1;
@@ -122,6 +126,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BEDF5B962FFED85C00015FE5 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -198,6 +203,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -255,6 +261,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

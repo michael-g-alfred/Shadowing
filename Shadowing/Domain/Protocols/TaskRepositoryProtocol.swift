@@ -9,7 +9,7 @@ protocol TaskRepositoryProtocol {
     
         // MARK: - Map
     
-    func getMapTasks(cursor: String?) async throws -> MapTasksPage
+    func getMapTasks(bounds: MapBounds) async throws -> MapTasksPage
     
         // MARK: - Requester
     

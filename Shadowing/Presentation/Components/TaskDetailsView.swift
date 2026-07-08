@@ -135,7 +135,7 @@ struct TaskDetailsView: View {
             InfoRow(
                 title: "Applicants",
                 systemImage: "person.3",
-                value: "\(task.applicantsCount)"
+                localizedValue: "\(task.applicantsCount)"
             )
         }
     }
@@ -173,19 +173,23 @@ struct TaskDetailsView: View {
         InfoRow(
             title: "Completed Tasks",
             systemImage: "checklist",
-            value: "\(user.completedTasks)"
+            localizedValue: "\(user.completedTasks)"
         )
         
         InfoRow(
             title: "Total Ratings",
             systemImage: "person.2",
-            value: user.totalRatings > 0 ? String(user.totalRatings) : "No ratings yet"
+            localizedValue: user.totalRatings > 0
+            ? "\(user.totalRatings)"
+            : "No ratings yet"
         )
         
         InfoRow(
             title: "Rating",
             systemImage: "star",
-            value: user.totalRatings > 0 ? String(format: "%.1f", user.rating) : "No ratings yet"
+            localizedValue: user.totalRatings > 0
+            ? "\(user.rating, specifier: "%.1f")"
+            : "No ratings yet"
         )
     }
 }

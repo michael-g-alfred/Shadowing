@@ -23,18 +23,39 @@ struct InfoRow<Value: View>: View {
 
 extension InfoRow where Value == Text {
     
+        // MARK: - String
+    
     init(
         title: LocalizedStringResource,
         systemImage: String,
         value: String,
         iconColor: Color = .accentColor,
-        valueColor: Color = .secondary,
+        valueColor: Color = .secondary
     ) {
         self.title = title
         self.systemImage = systemImage
         self.iconColor = iconColor
         self.value = {
             Text(value)
+                .foregroundStyle(valueColor)
+                .bold()
+        }
+    }
+    
+        // MARK: - LocalizedStringResource
+    
+    init(
+        title: LocalizedStringResource,
+        systemImage: String,
+        localizedValue: LocalizedStringResource,
+        iconColor: Color = .accentColor,
+        valueColor: Color = .secondary
+    ) {
+        self.title = title
+        self.systemImage = systemImage
+        self.iconColor = iconColor
+        self.value = {
+            Text(localizedValue)
                 .foregroundStyle(valueColor)
                 .bold()
         }
