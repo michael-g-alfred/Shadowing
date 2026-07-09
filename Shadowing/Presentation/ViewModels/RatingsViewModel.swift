@@ -41,12 +41,15 @@ final class RatingsViewModel {
     }
 
     func loadMoreIfNeeded(current rating: RatingModel) async {
-        guard hasMore, !isLoadingMore else { return }
-        guard ratings.last?.id == rating.id else { return }
-
+        
+        guard shouldLoadMore(
+            hasMore: hasMore,
+            isLoadingMore: isLoadingMore
+        ) else { return }
+        
         isLoadingMore = true
         defer { isLoadingMore = false }
-
+        
         do {
             let result = try await userRepo.fetchUserRatings(userId: userId, cursor: cursor, limit: nil)
             ratings.append(contentsOf: result.ratings)
@@ -55,5 +58,12 @@ final class RatingsViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+    
+        // MARK: - Helpers
+    
+        /// Triggers when the visible row is within the last 5 items of the current list.
+    private func shouldLoadMore(hasMore: Bool, isLoadingMore: Bool) -> Bool {
+        return hasMore && !isLoadingMore
     }
 }

@@ -26,13 +26,14 @@ struct TaskDetailsView: View {
                 titleSection(task)
                 descriptionSection(task)
                 overviewSection(task)
-                timelineSection(task)
+                schedulingSection(task)
                 taskInfoSection(task)
                 locationSection(task)
                 requesterSection(task.requester)
                 if let executor = task.executor {
                     executorSection(executor)
                 }
+                historySection(task)
             }
             .listStyle(.insetGrouped)
         }
@@ -67,14 +68,15 @@ struct TaskDetailsView: View {
             
             InfoRow(
                 title: "Budget",
-                systemImage: "wallet.bifold",
+                systemImage: "wallet.bifold.fill",
                 value: task.budget.formatted(.currency(code: task.currency)),
             )
             
             InfoRow(
                 title: "Status",
-                systemImage: "flag",
+                systemImage: "flag.fill",
                 value: task.status.localizedLabel,
+                iconColor: task.status.color,
                 valueColor: task.status.color
             )
             
@@ -88,36 +90,27 @@ struct TaskDetailsView: View {
         }
     }
     
-        // MARK: - Timeline
+        // MARK: - Scheduling
     
-    private func timelineSection(_ task: TaskModel) -> some View {
-        Section("Timeline") {
-            InfoRow(
-                title: "Created",
-                systemImage: "calendar",
-                value: task.createdAt.formatted(date: .abbreviated, time: .shortened)
-            )
-            
-            InfoRow(
-                title: "Updated",
-                systemImage: "clock.arrow.circlepath",
-                value: task.updatedAt.formatted(date: .abbreviated, time: .shortened)
-            )
-            
-            if let scheduledAt = task.scheduledAt {
-                InfoRow(
-                    title: "Scheduled",
-                    systemImage: "clock.badge",
-                    value: scheduledAt.formatted(date: .abbreviated, time: .shortened)
-                )
-            }
-            
-            if let preferredTime = task.preferredTimeOfDay {
-                InfoRow(
-                    title: "Preferred Time",
-                    systemImage: "sun.max",
-                    value: preferredTime.localizedLabel
-                )
+    @ViewBuilder
+    private func schedulingSection(_ task: TaskModel) -> some View {
+        if task.scheduledAt != nil || task.preferredTimeOfDay != nil {
+            Section("Scheduling") {
+                if let scheduledAt = task.scheduledAt {
+                    InfoRow(
+                        title: "Scheduled",
+                        systemImage: "clock.badge",
+                        value: scheduledAt.formatted(date: .abbreviated, time: .shortened)
+                    )
+                }
+                
+                if let preferredTime = task.preferredTimeOfDay {
+                    InfoRow(
+                        title: "Preferred Time",
+                        systemImage: "sun.max",
+                        value: preferredTime.localizedLabel
+                    )
+                }
             }
         }
     }
@@ -168,7 +161,8 @@ struct TaskDetailsView: View {
     
     @ViewBuilder
     private func userRows(for user: TaskUserModel) -> some View {
-        InfoRow(title: "Name", systemImage: "person", value: user.displayName)
+        
+        AvatarView(profile: user, size: 26, nameLayout: .horizontal, borderColor: .primary)
         
         InfoRow(
             title: "Completed Tasks",
@@ -192,4 +186,23 @@ struct TaskDetailsView: View {
             : "No ratings yet"
         )
     }
+    
+        // MARK: - History
+    
+    private func historySection(_ task: TaskModel) -> some View {
+        Section("History") {
+            InfoRow(
+                title: "Created",
+                systemImage: "calendar",
+                value: task.createdAt.formatted(date: .abbreviated, time: .shortened)
+            )
+            
+            InfoRow(
+                title: "Updated",
+                systemImage: "clock.arrow.circlepath",
+                value: task.updatedAt.formatted(date: .abbreviated, time: .shortened)
+            )
+        }
+    }
+    
 }

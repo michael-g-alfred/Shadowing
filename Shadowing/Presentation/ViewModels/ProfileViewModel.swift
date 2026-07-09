@@ -6,6 +6,7 @@ import CoreLocation
 final class ProfileViewModel {
     
     var isLoading = false
+    var isUploadingAvatar = false
     var errorMessage: String?
     
     var user: UserModel?
@@ -112,5 +113,28 @@ final class ProfileViewModel {
     func setLanguage(_ language: AppLanguage) {
         languageManager.setLanguage(language)
         onLanguageChanged()
+    }
+    
+        // MARK: - Avatar
+    
+    func uploadAvatar(imageData: Data) async {
+        guard let userId = user?.id else { return }
+        errorMessage = nil
+        isUploadingAvatar = true
+        defer { isUploadingAvatar = false }
+        
+        do {
+            let avatarUrl = try await userRepo.uploadAvatar(
+                userId: userId,
+                imageData: imageData,
+                fileName: "avatar.jpg",
+                mimeType: "image/jpeg"
+            )
+            if let currentUser = user {
+                user = currentUser.withAvatarUrl(avatarUrl)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }

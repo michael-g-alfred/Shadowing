@@ -2,13 +2,18 @@ import SwiftUI
 
 struct MainView: View {
     
+    // MARK: - Environment
     @Environment(DIContainer.self) private var container
+    
+    // MARK: - State
     @State private var vm: MainViewModel
     
+    // MARK: - Init
     init(vm: MainViewModel) {
         _vm = State(initialValue: vm)
     }
     
+    // MARK: - Body
     var body: some View {
         TabView(selection: $vm.selectedTab) {
             ForEach(AppTab.allCases) { tab in
@@ -19,6 +24,7 @@ struct MainView: View {
         }
     }
     
+    // MARK: - Private Views
     @ViewBuilder
     private func view(for tab: AppTab) -> some View {
         switch tab {

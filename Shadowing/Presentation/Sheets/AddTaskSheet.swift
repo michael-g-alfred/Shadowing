@@ -2,13 +2,18 @@ import SwiftUI
 
 struct AddTaskSheet: View {
     
+        // MARK: - Environment
     @Environment(\.dismiss) private var dismiss
+    
+        // MARK: - State
     @State private var vm: AddTaskVM
     
+        // MARK: - Init
     init(vm: AddTaskVM) {
         _vm = State(initialValue: vm)
     }
     
+        // MARK: - Body
     var body: some View {
         NavigationStack {
             Form {

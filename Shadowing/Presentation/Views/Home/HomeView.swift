@@ -2,13 +2,18 @@ import SwiftUI
 
 struct HomeView: View {
     
+    // MARK: - Environment
     @Environment(DIContainer.self) private var container
+    
+    // MARK: - State
     @State private var vm: HomeViewModel
     
+    // MARK: - Init
     init(vm: HomeViewModel) {
         _vm = State(initialValue: vm)
     }
     
+    // MARK: - Body
     var body: some View {
         NavigationStack {
             ZStack {

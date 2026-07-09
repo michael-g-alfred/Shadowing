@@ -23,6 +23,27 @@ extension APIConfig {
         )
     }
     
+    static func uploadAvatar(userId: String, imageData: Data, fileName: String, mimeType: String, accessToken: String) -> MGRequestConfig {
+        let boundary = UUID().uuidString
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"avatar\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        
+        return MGRequestConfig(
+            baseURL: APIEndpoints.baseURL,
+            path: APIEndpoints.userAvatarPath(id: userId),
+            method: .post,
+            headers: [
+                "Authorization": "Bearer \(accessToken)",
+                "Content-Type": "multipart/form-data; boundary=\(boundary)"
+            ],
+            body: body
+        )
+    }
+    
         // endpoint جديد لجلب تقييمات مستخدم معين
     static func userRatings(userId: String, cursor: String?, limit: Int?, accessToken: String) -> MGRequestConfig {
         var queryItems: [URLQueryItem] = []

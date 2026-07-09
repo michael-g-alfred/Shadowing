@@ -5,11 +5,11 @@ import MapKit
 @MainActor
 @Observable
 final class MapViewModel {
-    private(set) var tasks: [MapTaskItem] = []
+    private(set) var tasks: [TaskModel] = []
     private(set) var isLoading = false
     private(set) var isTruncated = false
     var errorMessage: String?
-    var selectedTask: MapTaskItem?
+    var selectedTask: TaskModel?
     
     private let taskRepo: TaskRepositoryProtocol
     private var debounceTask: Task<Void, Never>?
@@ -42,7 +42,7 @@ final class MapViewModel {
         errorMessage = nil
         do {
             let page = try await taskRepo.getMapTasks(bounds: bounds)
-            tasks = page.tasks
+            tasks = page.tasks.map({$0.toDomain()})
             isTruncated = page.truncated
         } catch {
             errorMessage = error.localizedDescription
@@ -50,6 +50,6 @@ final class MapViewModel {
         isLoading = false
     }
     
-    func selectTask(_ task: MapTaskItem) { selectedTask = task }
+    func selectTask(_ task: TaskModel) { selectedTask = task }
     func clearSelection() { selectedTask = nil }
 }

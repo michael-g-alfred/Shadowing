@@ -12,14 +12,7 @@ struct TaskCard: View {
                 // MARK: Header
             HStack(alignment: .center, spacing: 12) {
                 
-                AvatarView(profile: task.requester)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(task.requester.displayName)
-                        .font(.subheadline).fontWeight(.semibold).lineLimit(1)
-                    Text(task.createdAt.toRelativeString())
-                        .font(.caption).foregroundStyle(.secondary)
-                }
+                AvatarView(profile: task.requester, nameLayout: .horizontal, subtitle: task.createdAt.toRelativeString())
                 
                 Spacer()
                 

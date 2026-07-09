@@ -2,12 +2,15 @@ import SwiftUI
 
 struct RatingsView: View {
 
-    @State var vm: RatingsViewModel
+    // MARK: - State
+    @State private var vm: RatingsViewModel
     
+    // MARK: - Init
     init(vm: RatingsViewModel) {
         _vm = State(initialValue: vm)
     }
     
+    // MARK: - Body
     var body: some View {
         content
             .navigationTitle("\(vm.userName)'s Ratings")
@@ -15,6 +18,7 @@ struct RatingsView: View {
             .task { await vm.loadRatings() }
     }
     
+    // MARK: - Private Views
     @ViewBuilder
     private var content: some View {
         if vm.isLoading {
@@ -37,18 +41,18 @@ struct RatingsView: View {
                 ForEach(vm.ratings) { rating in
                     ratingRow(rating)
                         .task {
-                            await vm.loadMoreIfNeeded(current: rating)
+                            if vm.ratings.suffix(5).contains(where: { $0.id == rating.id }) {
+                                await vm.loadMoreIfNeeded(current: rating)
+                            }
                         }
                 }
                 
                 if vm.isLoadingMore {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
-                }
-            }
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .listRowBackground(Color.clear)
+                }            }
             .listStyle(.insetGrouped)
         }
     }

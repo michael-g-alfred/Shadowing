@@ -2,13 +2,18 @@ import SwiftUI
 
 struct ExecutorView: View {
     
+    // MARK: - Environment
     @Environment(DIContainer.self) private var container
+    
+    // MARK: - State
     @State private var vm: ExecutorViewModel
     
+    // MARK: - Init
     init(vm: ExecutorViewModel) {
         _vm = State(initialValue: vm)
     }
     
+    // MARK: - Body
     var body: some View {
         VStack(spacing: 16) {
             Picker(

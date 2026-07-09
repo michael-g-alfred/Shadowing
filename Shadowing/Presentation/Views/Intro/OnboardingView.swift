@@ -3,13 +3,18 @@ import MGOnboardingKit
 
 struct OnboardingView: View {
     
-    var vm: OnboardingViewModel
+    // MARK: - Environment
     @Environment(DIContainer.self) private var container
     
+    // MARK: - Properties
+    var vm: OnboardingViewModel
+    
+    // MARK: - Init
     init(vm: OnboardingViewModel) {
         self.vm = vm
     }
     
+    // MARK: - Body
     var body: some View {
         MGOnboardingKitMainView(
             items: vm.items,

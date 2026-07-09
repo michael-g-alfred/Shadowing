@@ -28,6 +28,9 @@ enum APIEndpoints {
     static func userRatingsPath(id: String) -> String {
         return userRoute + "/\(id)/ratings"
     }
+    static func userAvatarPath(id: String) -> String {
+        return userRoute + "/\(id)/avatar"
+    }
     
         // MARK: - Shared Tasks
     static func taskDetailsPath(id: String) -> String {
@@ -91,4 +94,4 @@ enum APIEndpoints {
     static let lookupPath = lookupRoute + "/lookups"
     static func lookupTypePath(type: String) -> String {
         return lookupRoute + "/lookups/\(type)"
-    }}
+        }}

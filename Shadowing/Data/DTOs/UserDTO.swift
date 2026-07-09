@@ -9,6 +9,7 @@ struct UserDTO: Codable {
     let email: String
     let displayName: String
     let nationalId: String?
+    let avatarUrl: String?
     let role: String?
     let rating: Double?
     let totalRatings: Int?
@@ -23,6 +24,7 @@ extension UserDTO {
             email: email,
             displayName: displayName,
             nationalId: nationalId,
+            avatarUrl: avatarUrl,
             role: role ?? "user",
             rating: rating ?? 0,
             totalRatings: totalRatings ?? 0,
@@ -30,4 +32,8 @@ extension UserDTO {
             createdAt: createdAt
         )
     }
+}
+
+struct AvatarUploadResponseDTO: Codable {
+    let avatarUrl: String
 }

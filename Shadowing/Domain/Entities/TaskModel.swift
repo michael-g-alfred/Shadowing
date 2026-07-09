@@ -1,4 +1,5 @@
 import Foundation
+import CoreLocation
 
 struct PaginatedTasksResult {
     let tasks: [TaskModel]
@@ -29,4 +30,8 @@ struct TaskModel: Identifiable {
     let executor: TaskUserModel?
     let applicantsCount: Int
     let isApplicant: Bool
+    
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude ?? 31.2565, longitude: longitude ?? 32.2841)
+    }
 }

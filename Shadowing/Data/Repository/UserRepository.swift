@@ -41,4 +41,17 @@ final class UserRepository: UserRepositoryProtocol {
             cursor: response.data.cursor
         )
     }
+    
+    func uploadAvatar(userId: String, imageData: Data, fileName: String, mimeType: String) async throws -> String {
+        let accessToken = try await getValidToken()
+        let config = APIConfig.uploadAvatar(
+            userId: userId,
+            imageData: imageData,
+            fileName: fileName,
+            mimeType: mimeType,
+            accessToken: accessToken
+        )
+        let response: APIResponseDTO<AvatarUploadResponseDTO> = try await network.request(config)
+        return response.data.avatarUrl
+    }
 }

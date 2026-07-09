@@ -2,18 +2,26 @@ import SwiftUI
 
 struct SignInView: View {
     
-    @Binding var screen:   AuthScreen
-    @State private var vm: SignInViewModel
+    // MARK: - Environment
     @Environment(DIContainer.self) private var container
-
+    
+    // MARK: - Bindings
+    @Binding var screen: AuthScreen
+    
+    // MARK: - State
+    @State private var vm: SignInViewModel
+    
+    // MARK: - Focus
     @FocusState private var focusedField: Field?
     enum Field: Hashable { case email, password }
-
+    
+    // MARK: - Init
     init(screen: Binding<AuthScreen>, vm: SignInViewModel) {
         _screen = screen
         _vm = State(initialValue: vm)
     }
 
+    // MARK: - Body
     var body: some View {
         ZStack {
             AppBackground()
@@ -63,6 +71,7 @@ struct SignInView: View {
         }
     }
 
+    // MARK: - Private Methods
     private func submit() async {
         guard await vm.submit() else { return }
         container.setAppState(vm.isAdmin ? .admin : .main)

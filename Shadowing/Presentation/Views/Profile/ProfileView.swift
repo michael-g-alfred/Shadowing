@@ -1,18 +1,24 @@
 import SwiftUI
+import PhotosUI
 
 struct ProfileView: View {
     
+        // MARK: - Environment
     @Environment(DIContainer.self) private var container
     @Environment(\.openURL) private var openURL
-    @State private var vm: ProfileViewModel
     
+        // MARK: - State
+    @State private var vm: ProfileViewModel
     @State private var isIdExpanded = false
     @State private var isNationalIDAppearance = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
     
+        // MARK: - Init
     init(vm: ProfileViewModel) {
         _vm = State(initialValue: vm)
     }
     
+        // MARK: - Body
     var body: some View {
         NavigationStack {
             Group {
@@ -29,6 +35,17 @@ struct ProfileView: View {
             .navigationTitle("\(vm.user?.displayName ?? "Guest")'s Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                        if vm.isUploadingAvatar {
+                            ProgressView()
+                        } else {
+                            Label("Change Photo", systemImage: "camera.fill")
+                        }
+                    }
+                    .disabled(vm.isUploadingAvatar || vm.user == nil)
+                }
+                
                 ToolbarItem(placement: .destructiveAction) {
                     Button(role: .destructive) {
                         Task {
@@ -47,21 +64,25 @@ struct ProfileView: View {
             .refreshable {
                 await vm.loadProfile()
             }
+            .onChange(of: selectedPhotoItem) { _, newItem in
+                Task {
+                    guard let newItem,
+                          let data = try? await newItem.loadTransferable(type: Data.self) else { return }
+                    await vm.uploadAvatar(imageData: data)
+                }
+            }
         }
     }
     
+        // MARK: - Private Views
     private func profileContent(for user: UserModel) -> some View {
         List {
             Section {
-                VStack(alignment: .center, spacing: 8) {
-                    AvatarView(profile: user, size: 64)
-                    Text(user.displayName)
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                }
-                .frame(maxWidth: .infinity)
-                .listRowBackground(Color.clear)
-                .listRowInsets(.all, 0)
+                AvatarView(profile: user, size: 125, nameLayout: .vertical, nameFont: .title2)
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(.all, 0)
+                    .padding(.vertical, 8)
             }
             
             Section("Account") {
@@ -198,6 +219,7 @@ struct ProfileView: View {
         return "\(id.prefix(9))...."
     }
     
+        // MARK: - Private Methods
     private func submit() async {
         guard await vm.signout() else { return }
         container.setAppState(.auth)

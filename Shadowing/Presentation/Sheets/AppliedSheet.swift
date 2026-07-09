@@ -2,13 +2,18 @@ import SwiftUI
 
 struct AppliedSheet: View {
     
+        // MARK: - Environment
     @Environment(\.dismiss) private var dismiss
+    
+        // MARK: - Properties
     var vm: ExecutorViewModel
     
+        // MARK: - State
     @State private var proposedBudget: Double = 0
     
     private var task: TaskModel? { vm.selectedTaskForApply }
     
+        // MARK: - Body
     var body: some View {
         NavigationStack {
             Form {

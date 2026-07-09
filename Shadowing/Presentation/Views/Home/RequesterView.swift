@@ -2,13 +2,18 @@ import SwiftUI
 
 struct RequesterView: View {
     
+    // MARK: - Environment
     @Environment(DIContainer.self) private var container
+    
+    // MARK: - State
     @State private var vm: RequesterViewModel
     
+    // MARK: - Init
     init(vm: RequesterViewModel) {
         _vm = State(initialValue: vm)
     }
     
+    // MARK: - Body
     var body: some View {
         VStack(spacing: 16) {
             Picker(

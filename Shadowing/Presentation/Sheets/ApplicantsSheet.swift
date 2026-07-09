@@ -2,13 +2,17 @@ import SwiftUI
 
 struct ApplicantsSheet: View {
     
+        // MARK: - Environment
     @Environment(\.dismiss) private var dismiss
     @Environment(DIContainer.self) private var container
-
+    
+        // MARK: - Properties
     var vm: RequesterViewModel
     
+        // MARK: - State
     @State private var applicantPendingDecline: ApplicantModel?
     
+        // MARK: - Body
     var body: some View {
         NavigationStack {
             content
@@ -16,8 +20,11 @@ struct ApplicantsSheet: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Close") { dismiss() }
+                        Button("Cancel") { dismiss() }
+                            .buttonStyle(.glassProminent)
                             .disabled(vm.isAssigningExecutor)
+                            .tint(.red)
+                            .buttonStyle(.glassProminent)
                     }
                 }
                 .alert(item: $applicantPendingDecline) { applicant in
@@ -33,6 +40,7 @@ struct ApplicantsSheet: View {
         }
     }
     
+        // MARK: - Private Views
     @ViewBuilder
     private var content: some View {
         if vm.isLoadingApplicants {
@@ -61,27 +69,19 @@ struct ApplicantsSheet: View {
                     }
                 }
             }
-            .listStyle(.insetGrouped)
+            .listStyle(.plain)
             .disabled(vm.isAssigningExecutor)
         }
     }
     
     @ViewBuilder
     private func applicantRow(_ applicant: ApplicantModel) -> some View {
-        HStack(spacing: 14) {
-            
-            AvatarView(profile: applicant)
+        HStack(alignment: .center ,spacing: 14) {
             
             VStack(alignment: .leading, spacing: 6) {
-                
-                Text(applicant.displayName)
-                    .font(.headline)
+                AvatarView(profile: applicant, nameLayout: .horizontal, subtitle: applicant.appliedAt.toRelativeString(), borderColor: .primary, borderWidth: 2)
                 
                 CompletedTaskRatingLabel(rating: applicant.rating ?? 0.0, completedTasks: applicant.completedTasks)
-                
-                Text("Applied \(applicant.appliedAt.toRelativeString())")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
                 
                 if let proposedBudget = applicant.proposedBudget {
                     Text(proposedBudget.formatted(.currency(code: "EGP")))
@@ -97,10 +97,10 @@ struct ApplicantsSheet: View {
                     await vm.assignExecutor(applicant)
                 }
             } label: {
-                Image(systemName: "checkmark")
+                Image(systemName: "checkmark.circle.fill")
+                    .imageScale(.large)
             }
-            .buttonStyle(.glassProminent)
-            .buttonBorderShape(.circle)
+            .tint(.accentColor)
         }
         .contentShape(Rectangle())
     }

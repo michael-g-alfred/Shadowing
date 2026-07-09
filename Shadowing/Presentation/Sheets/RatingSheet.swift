@@ -2,14 +2,21 @@ import SwiftUI
 
 struct RatingSheet: View {
     
-    @State var vm: RatingViewModel
+        // MARK: - Environment
     @Environment(\.dismiss) private var dismiss
+    
+        // MARK: - State
+    @State var vm: RatingViewModel
+    
+        // MARK: - Focus
     @FocusState private var commentFocused: Bool
     
+        // MARK: - Init
     init(vm: RatingViewModel) {
         _vm = State(initialValue: vm)
     }
     
+        // MARK: - Body
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -50,13 +57,14 @@ struct RatingSheet: View {
         }
     }
     
+        // MARK: - Private Views
     private var starPicker: some View {
         VStack(spacing: 16) {
             HStack(spacing: 12) {
                 ForEach(1...5, id: \.self) { star in
                     Image(systemName: star <= Int(vm.rating) ? "star.fill" : "star")
                         .imageScale(.large)
-                        .foregroundStyle(star <= Int(vm.rating) ? .yellow : .gray.opacity(0.5))
+                        .foregroundStyle(star <= Int(vm.rating) ? .orange : .gray.opacity(0.5))
                         .animation(.easeInOut, value: vm.rating)
                         .onTapGesture {
                             withAnimation(.easeInOut) {

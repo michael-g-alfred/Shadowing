@@ -7,6 +7,7 @@ struct ApplicantsDataDTO: Codable {
 struct ApplicantDTO: Codable {
     let id: String
     let displayName: String
+    let avatarUrl: String?
     let rating: Double?
     let completedTasks: Int
     let appliedAt: Date
@@ -16,6 +17,7 @@ struct ApplicantDTO: Codable {
         ApplicantModel(
             id: id,
             displayName: displayName,
+            avatarUrl: avatarUrl,
             rating: rating,
             completedTasks: completedTasks,
             appliedAt: appliedAt,
