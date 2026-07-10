@@ -26,6 +26,7 @@ struct RootView: View {
         .environment(\.layoutDirection, container.languageManager.currentLanguage == .arabic ? .rightToLeft : .leftToRight)
         .environment(\.locale, Locale(identifier: container.languageManager.currentLanguage.rawValue))
         .id(container.rootID)
+        .id(container.languageManager.currentLanguage)
         .animation(.easeInOut, value: container.appState)
     }
 }

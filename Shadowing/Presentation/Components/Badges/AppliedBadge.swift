@@ -1,11 +1,3 @@
-//
-//  AppliedBadge.swift
-//  Shadowing
-//
-//  Created by Michael George on 09/07/2026.
-//
-
-
 import SwiftUI
 
 struct AppliedBadge: View {
@@ -14,7 +6,7 @@ struct AppliedBadge: View {
             Circle()
                 .fill(.white)
                 .frame(width: 5, height: 5)
-
+            
             Text("Applied")
                 .font(.caption2)
                 .fontWeight(.bold)

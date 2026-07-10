@@ -2,26 +2,26 @@ import SwiftUI
 
 struct SignInView: View {
     
-    // MARK: - Environment
+        // MARK: - Environment
     @Environment(DIContainer.self) private var container
     
-    // MARK: - Bindings
+        // MARK: - Bindings
     @Binding var screen: AuthScreen
     
-    // MARK: - State
+        // MARK: - State
     @State private var vm: SignInViewModel
     
-    // MARK: - Focus
+        // MARK: - Focus
     @FocusState private var focusedField: Field?
     enum Field: Hashable { case email, password }
     
-    // MARK: - Init
+        // MARK: - Init
     init(screen: Binding<AuthScreen>, vm: SignInViewModel) {
         _screen = screen
         _vm = State(initialValue: vm)
     }
-
-    // MARK: - Body
+    
+        // MARK: - Body
     var body: some View {
         ZStack {
             AppBackground()
@@ -35,15 +35,29 @@ struct SignInView: View {
                             .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     }
                     .padding(.top, 40)
-
+                    
                     VStack(spacing: 16) {
-                        customTextField(title: "Email", text: $vm.email, icon: "envelope", type: .emailAddress)
-                            .focused($focusedField, equals: .email)
-                        customSecureField(title: "Password", text: $vm.password, icon: "lock")
-                            .focused($focusedField, equals: .password)
+                        AppInputField(
+                            icon: "envelope",
+                            title: "Email",
+                            text: $vm.email,
+                            keyboardType: .emailAddress,
+                            textContentType: .emailAddress,
+                            isFocused: focusedField == .email
+                        )
+                        .focused($focusedField, equals: .email)
+                        
+                        AppInputField(
+                            icon: "lock",
+                            title: "Password",
+                            text: $vm.password,
+                            isSecure: true,
+                            isFocused: focusedField == .password
+                        )
+                        .focused($focusedField, equals: .password)
                     }
                     .padding(.horizontal)
-
+                    
                     if let errorMessage = vm.errorMessage {
                         Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
                             .font(.footnote).foregroundStyle(.red)
@@ -54,7 +68,7 @@ struct SignInView: View {
                         Task { await submit() }
                     })
                     .disabled(!vm.isFormValid)
-
+                    
                     Button {
                         withAnimation(.spring()) { screen = .signUp }
                     } label: {
@@ -70,8 +84,8 @@ struct SignInView: View {
             .navigationBarHidden(true)
         }
     }
-
-    // MARK: - Private Methods
+    
+        // MARK: - Private Methods
     private func submit() async {
         guard await vm.submit() else { return }
         container.setAppState(vm.isAdmin ? .admin : .main)

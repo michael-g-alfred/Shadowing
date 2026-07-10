@@ -15,6 +15,8 @@ struct InfoRow<Value: View>: View {
                 Text(title)
             } icon: {
                 Image(systemName: systemImage)
+                    .imageScale(.large)
+                    .symbolColorRenderingMode(.gradient)
                     .foregroundStyle(iconColor)
             }
         }

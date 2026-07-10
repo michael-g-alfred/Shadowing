@@ -21,14 +21,17 @@ struct ProfileView: View {
         // MARK: - Body
     var body: some View {
         NavigationStack {
-            Group {
-                if vm.isLoading && vm.user == nil {
-                    LoadingState.loading(title: "Loading profile…", subtitle: "Please wait a moment").view
-                } else if let user = vm.user {
-                    profileContent(for: user)
-                } else {
-                    EmptyState.noProfile.view {
-                        await vm.loadProfile()
+            ZStack {
+                AppBackground()
+                Group {
+                    if vm.isLoading && vm.user == nil {
+                        LoadingState.loading(title: "Loading profile…", subtitle: "Please wait a moment").view
+                    } else if let user = vm.user {
+                        profileContent(for: user)
+                    } else {
+                        EmptyState.noProfile.view {
+                            await vm.loadProfile()
+                        }
                     }
                 }
             }
@@ -78,11 +81,21 @@ struct ProfileView: View {
     private func profileContent(for user: UserModel) -> some View {
         List {
             Section {
-                AvatarView(profile: user, size: 125, nameLayout: .vertical, nameFont: .title2)
+                AvatarView(profile: user, size: 90, nameLayout: .vertical, nameFont: .title2)
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
                     .listRowInsets(.all, 0)
                     .padding(.vertical, 8)
+            }
+            
+            if let errorMessage = vm.errorMessage {
+                Section {
+                    Text(errorMessage)
+                        .foregroundStyle(.orange)
+                        .font(.footnote).bold()
+                } header: {
+                    Label("Error Message", systemImage: "exclamationmark.triangle")
+                }
             }
             
             Section("Account") {
@@ -132,14 +145,6 @@ struct ProfileView: View {
             locationSection
             
             languageSection
-            
-            if let errorMessage = vm.errorMessage {
-                Section {
-                    Label(errorMessage, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
-                        .font(.footnote)
-                }
-            }
         }
     }
     

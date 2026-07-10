@@ -27,8 +27,8 @@ struct TaskDetailsView: View {
                 descriptionSection(task)
                 overviewSection(task)
                 schedulingSection(task)
-                taskInfoSection(task)
                 locationSection(task)
+                taskInfoSection(task)
                 requesterSection(task.requester)
                 if let executor = task.executor {
                     executorSection(executor)
@@ -115,6 +115,18 @@ struct TaskDetailsView: View {
         }
     }
     
+        // MARK: - Location
+    
+    private func locationSection(_ task: TaskModel) -> some View {
+        Section("Location") {
+            InfoRow(
+                title: "Address",
+                systemImage: "map",
+                value: task.address
+            )
+        }
+    }
+    
         // MARK: - Task Info
     
     private func taskInfoSection(_ task: TaskModel) -> some View {
@@ -129,18 +141,6 @@ struct TaskDetailsView: View {
                 title: "Applicants",
                 systemImage: "person.3",
                 localizedValue: "\(task.applicantsCount)"
-            )
-        }
-    }
-    
-        // MARK: - Location
-    
-    private func locationSection(_ task: TaskModel) -> some View {
-        Section("Location") {
-            InfoRow(
-                title: "Address",
-                systemImage: "map",
-                value: task.address
             )
         }
     }
@@ -162,7 +162,9 @@ struct TaskDetailsView: View {
     @ViewBuilder
     private func userRows(for user: TaskUserModel) -> some View {
         
-        AvatarView(profile: user, size: 26, nameLayout: .horizontal, borderColor: .primary)
+        AvatarView(profile: user, size: 36, nameLayout: .horizontal)
+            .listRowBackground(Color(.systemGray4))
+            .listRowSeparator(.hidden)
         
         InfoRow(
             title: "Completed Tasks",

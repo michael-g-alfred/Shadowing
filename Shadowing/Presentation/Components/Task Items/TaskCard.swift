@@ -2,10 +2,14 @@ import SwiftUI
 import CoreLocation
 
 struct TaskCard: View {
+
+        // MARK: - Properties
     let task: TaskModel
     
+        // MARK: - State
     @State private var appeared = false
     
+        // MARK: - Body
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             
@@ -74,16 +78,16 @@ struct TaskCard: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(.systemGroupedBackground))
+                .fill(.thinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(task.priority.color.opacity(0.05))
+                )
         )
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .strokeBorder(
-                    LinearGradient(
-                        colors: [task.priority.color, task.priority.color.opacity(0.5), task.priority.color.opacity(0.25)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
+                    task.priority.color,
                     lineWidth: 1.5
                 )
         }

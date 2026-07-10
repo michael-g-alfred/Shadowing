@@ -32,10 +32,7 @@ struct TaskListView: View {
     @ViewBuilder
     private var content: some View {
         if isLoading {
-            LoadingState.loading(
-                title: loadingTitle,
-                subtitle: loadingSubtitle
-            ).view
+            LoadingState.loading(title: loadingTitle, subtitle: loadingSubtitle).view
             
         } else if let error = errorMessage {
             LoadingState.error(message: error).view
@@ -49,11 +46,12 @@ struct TaskListView: View {
             List {
                 ForEach(tasks) { task in
                     TaskCard(task: task)
-                        .background(content: {
+                        .background(
                             NavigationLink(value: task.id) {
                                 EmptyView()
                             }
-                        })
+                                .opacity(0)
+                        )
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)

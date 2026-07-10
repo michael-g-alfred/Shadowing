@@ -15,21 +15,16 @@ final class ProfileViewModel {
         languageManager.currentLanguage
     }
     
-    private let onLanguageChanged: () -> Void
-    
     private let authRepo: AuthRepositoryProtocol
     private let userRepo: UserRepositoryProtocol
     private let locationService: LocationService
     private let languageManager: LanguageManager
     
-    init(authRepo: AuthRepositoryProtocol, userRepo: UserRepositoryProtocol,
-         locationService: LocationService, languageManager: LanguageManager,
-         onLanguageChanged: @escaping () -> Void) {
+    init(authRepo: AuthRepositoryProtocol, userRepo: UserRepositoryProtocol, locationService: LocationService, languageManager: LanguageManager) {
         self.authRepo = authRepo
         self.userRepo = userRepo
         self.locationService = locationService
         self.languageManager = languageManager
-        self.onLanguageChanged = onLanguageChanged
     }
     
         // MARK: - Location
@@ -112,7 +107,6 @@ final class ProfileViewModel {
     
     func setLanguage(_ language: AppLanguage) {
         languageManager.setLanguage(language)
-        onLanguageChanged()
     }
     
         // MARK: - Avatar

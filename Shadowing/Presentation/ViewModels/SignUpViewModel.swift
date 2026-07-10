@@ -8,26 +8,25 @@ final class SignUpViewModel {
     var email = ""
     var password = ""
     var confirmPassword = ""
-    var nationalIDCells: [String] = Array(repeating: "", count: 14)
+    var nationalID: String = ""
     
     var isLoading = false
     var errorMessage: String?
-
+    
     private let authRepo: AuthRepositoryProtocol
-
+    
     init(authRepo: AuthRepositoryProtocol) {
         self.authRepo = authRepo
     }
-
+    
     var isFormValid: Bool {
-        let fullID = nationalIDCells.joined()
         return !displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && email.contains("@") && email.contains(".")
-            && fullID.count == 14
-            && password.count >= 6
-            && password == confirmPassword
+        && email.contains("@") && email.contains(".")
+        && nationalID.count == 14
+        && password.count >= 6
+        && password == confirmPassword
     }
-
+    
     func submit() async -> Bool {
         isLoading = true
         defer { isLoading = false }
@@ -36,7 +35,7 @@ final class SignUpViewModel {
                 email: email,
                 password: password,
                 displayName: displayName.trimmingCharacters(in: .whitespacesAndNewlines),
-                nationalId: nationalIDCells.joined()
+                nationalId: nationalID
             )
             return true
         } catch {

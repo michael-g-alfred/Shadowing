@@ -40,7 +40,6 @@ final class DIContainer {
     
     func setLanguage(_ language: AppLanguage) {
         languageManager.setLanguage(language)
-        relaunchRoot()
     }
     
         // MARK: - Repositories
@@ -159,9 +158,6 @@ final class DIContainer {
             userRepo: userRepository,
             locationService: locationService,
             languageManager: languageManager,
-            onLanguageChanged: { [weak self] in
-                self?.relaunchRoot()
-            }
         )
     }
     

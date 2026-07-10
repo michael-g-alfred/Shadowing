@@ -3,17 +3,21 @@ import MapKit
 
 struct MapView: View {
     
+        // MARK: - Properties
+    private let makeTaskDetails: (String) -> AnyView
+    
+        // MARK: - State
     @State private var vm: MapViewModel
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var navigationPath = NavigationPath()
     
-    private let makeTaskDetails: (String) -> AnyView
-    
+        // MARK: - Init
     init(vm: MapViewModel, makeTaskDetails: @escaping (String) -> AnyView) {
         _vm = State(initialValue: vm)
         self.makeTaskDetails = makeTaskDetails
     }
     
+        // MARK: - Body
     var body: some View {
         NavigationStack(path: $navigationPath) {
             Map(position: $cameraPosition) {

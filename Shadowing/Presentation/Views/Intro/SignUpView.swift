@@ -2,29 +2,29 @@ import SwiftUI
 
 struct SignUpView: View {
     
-    // MARK: - Environment
+        // MARK: - Environment
     @Environment(DIContainer.self) private var container
     
-    // MARK: - Bindings
+        // MARK: - Bindings
     @Binding var screen: AuthScreen
     
-    // MARK: - State
+        // MARK: - State
     @State private var vm: SignUpViewModel
     
-    // MARK: - Focus
+        // MARK: - Focus
     @FocusState private var focusedField: Field?
     enum Field: Hashable {
         case name, email, password, confirm
-        case nationalID(Int)
+        case nationalID
     }
     
-    // MARK: - Init
+        // MARK: - Init
     init(screen: Binding<AuthScreen>, vm: SignUpViewModel) {
         _screen = screen
         _vm = State(initialValue: vm)
     }
-
-    // MARK: - Body
+    
+        // MARK: - Body
     var body: some View {
         ZStack {
             AppBackground()
@@ -38,35 +38,62 @@ struct SignUpView: View {
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
                     .padding(.top, 40)
-
+                    
                     VStack(spacing: 16) {
-                        customTextField(title: "Full Name", text: $vm.displayName, icon: "person", type: .name)
-                            .focused($focusedField, equals: .name)
-                        customTextField(title: "Email Address", text: $vm.email, icon: "envelope", type: .emailAddress)
-                            .focused($focusedField, equals: .email)
-                        NationalIDView(nationalIDCells: $vm.nationalIDCells, focusedField: $focusedField)
-                        customSecureField(title: "Password", text: $vm.password, icon: "lock")
-                            .focused($focusedField, equals: .password)
-                        customSecureField(
-                            title: "Confirm Password", text: $vm.confirmPassword, icon: "lock.shield",
+                        AppInputField(
+                            icon: "person",
+                            title: "Full Name",
+                            text: $vm.displayName,
+                            textContentType: .name,
+                            isFocused: focusedField == .name
+                        )
+                        .focused($focusedField, equals: .name)
+                        
+                        AppInputField(
+                            icon: "envelope",
+                            title: "Email Address",
+                            text: $vm.email,
+                            keyboardType: .emailAddress,
+                            textContentType: .emailAddress,
+                            isFocused: focusedField == .email
+                        )
+                        .focused($focusedField, equals: .email)
+                        
+                        NationalIDView(nationalID: $vm.nationalID, focusedField: $focusedField)
+                        
+                        AppInputField(
+                            icon: "lock",
+                            title: "Password",
+                            text: $vm.password,
+                            isSecure: true,
+                            isFocused: focusedField == .password
+                        )
+                        .focused($focusedField, equals: .password)
+                        
+                        AppInputField(
+                            icon: "lock.shield",
+                            title: "Confirm Password",
+                            text: $vm.confirmPassword,
                             iconColor: vm.confirmPassword.isEmpty
-                                ? .blue
-                                : (vm.password == vm.confirmPassword ? .green : .red)
+                            ? .blue
+                            : (vm.password == vm.confirmPassword ? .green : .red),
+                            isSecure: true,
+                            isFocused: focusedField == .confirm
                         )
                         .focused($focusedField, equals: .confirm)
                     }
                     .padding(.horizontal)
-
+                    
                     if let errorMessage = vm.errorMessage {
                         Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
                             .font(.footnote).foregroundStyle(.red).padding(.horizontal)
                     }
-
+                    
                     ActionButton(title: "Create Account", systemImage: "plus", tint: .blue, isLoading: vm.isLoading) {
                         Task { await submit() }
                     }
                     .disabled(!vm.isFormValid)
-
+                    
                     Button {
                         withAnimation(.spring()) { screen = .signIn }
                     } label: {
@@ -82,8 +109,8 @@ struct SignUpView: View {
             .navigationBarHidden(true)
         }
     }
-
-    // MARK: - Private Methods
+    
+        // MARK: - Private Methods
     private func submit() async {
         guard await vm.submit() else { return }
         container.setAppState(.main)

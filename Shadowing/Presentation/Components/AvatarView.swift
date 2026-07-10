@@ -2,6 +2,10 @@ import SwiftUI
 
 struct AvatarView: View {
     
+        // MARK: - Environment
+    @Environment(\.colorScheme) private var colorScheme
+    
+        // MARK: - Enums
     enum NameLayout {
         case none
         case horizontal
@@ -11,12 +15,22 @@ struct AvatarView: View {
         // MARK: - Properties
     let profile: Profile?
     var size: CGFloat = 44
-    var accentColor: Color = .accentColor
+    var accentColor: Color = .accent
     var nameLayout: NameLayout = .none
     var nameFont: Font = .body
     var subtitle: String? = nil
-    var borderColor: Color? = nil
-    var borderWidth: CGFloat = 1
+    
+    private var avatarBackground: Color {
+        colorScheme == .dark
+        ? accentColor.opacity(0.35)
+        : accentColor.opacity(0.15)
+    }
+    
+    private var avatarForeground: Color {
+        colorScheme == .dark
+        ? accentColor.opacity(0.9)
+        : accentColor
+    }
     
         // MARK: - Body
     var body: some View {
@@ -24,7 +38,7 @@ struct AvatarView: View {
             case .none:
                 avatar
             case .horizontal:
-                HStack(spacing: 16) {
+                HStack(spacing: 8) {
                     avatar
                     nameBlock(alignment: .leading)
                 }
@@ -40,7 +54,7 @@ struct AvatarView: View {
     private var avatar: some View {
         ZStack {
             Circle()
-                .fill(accentColor.opacity(0.12))
+                .fill(avatarBackground.opacity(1))
             
             Group {
                 if let urlString = profile?.avatarUrl,
@@ -63,12 +77,6 @@ struct AvatarView: View {
                     initialsOrPlaceholder
                 }
             }
-            .overlay {
-                if let borderColor {
-                    Circle()
-                        .strokeBorder(borderColor, lineWidth: borderWidth)
-                }
-            }
         }
         .frame(width: size, height: size)
     }
@@ -80,11 +88,11 @@ struct AvatarView: View {
                     .font(.system(size: size * 0.4))
                     .bold()
                     .fontDesign(.rounded)
-                    .foregroundStyle(accentColor)
+                    .foregroundStyle(avatarForeground)
             } else {
                 Image(systemName: "person.fill")
                     .font(.system(size: size * 0.4))
-                    .foregroundStyle(accentColor)
+                    .foregroundStyle(avatarForeground)
             }
         }
     }

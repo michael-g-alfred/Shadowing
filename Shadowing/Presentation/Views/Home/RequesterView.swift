@@ -30,6 +30,7 @@ struct RequesterView: View {
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
+            .padding(.top, 8)
             
             Group {
                 switch vm.selectedTab {

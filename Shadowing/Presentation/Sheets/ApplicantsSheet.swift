@@ -79,7 +79,7 @@ struct ApplicantsSheet: View {
         HStack(alignment: .center ,spacing: 14) {
             
             VStack(alignment: .leading, spacing: 6) {
-                AvatarView(profile: applicant, nameLayout: .horizontal, subtitle: applicant.appliedAt.toRelativeString(), borderColor: .primary, borderWidth: 2)
+                AvatarView(profile: applicant, nameLayout: .horizontal, subtitle: applicant.appliedAt.toRelativeString())
                 
                 CompletedTaskRatingLabel(rating: applicant.rating ?? 0.0, completedTasks: applicant.completedTasks)
                 

@@ -1,5 +1,5 @@
 {
-  "originHash" : "b7dceba1b1c353940daf7b906a89a201231b847d397ddfc1b9deb7c665b58643",
+  "originHash" : "f80180089bcd99b23363cc9e1bff2655c167cdd03e6e65a2cd92a0e6da0f6196",
   "pins" : [
     {
       "identity" : "mgnetworkingkit",
@@ -7,7 +7,7 @@
       "location" : "https://github.com/michael-g-alfred/MGNetworkingKit.git",
       "state" : {
         "branch" : "main",
-        "revision" : "819779ad37ad905817ba2ec7048eb3787828943a"
+        "revision" : "2bd64db9d3f0b4a8b9d002b17f498c9f4d10250f"
       }
     },
     {
