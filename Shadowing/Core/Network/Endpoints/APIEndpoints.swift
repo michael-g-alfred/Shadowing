@@ -94,4 +94,10 @@ enum APIEndpoints {
     static let lookupPath = lookupRoute + "/lookups"
     static func lookupTypePath(type: String) -> String {
         return lookupRoute + "/lookups/\(type)"
-        }}
+    }
+        // MARK: - Payments
+    static let payRoute = "/pay"
+    static func payInitiatePath(id: String) -> String {
+        return payRoute + "/\(id)/initiate"
+    }
+}

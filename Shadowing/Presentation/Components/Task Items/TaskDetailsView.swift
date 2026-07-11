@@ -3,6 +3,7 @@ import SwiftUI
 struct TaskDetailsView: View {
     
     @State private var vm: TaskDetailsViewModel
+    @State private var isIdExpanded = false
     
     init(taskId: String, vm: TaskDetailsViewModel) {
         _vm = State(initialValue: vm)
@@ -34,6 +35,7 @@ struct TaskDetailsView: View {
                     executorSection(executor)
                 }
                 historySection(task)
+                idSection(for: task)
             }
             .listStyle(.insetGrouped)
         }
@@ -207,4 +209,36 @@ struct TaskDetailsView: View {
         }
     }
     
+        // MARK: - Id
+    
+    private func idSection(for task: TaskModel) -> some View {
+        Section("ID") {
+            InfoRow(title: "Id", systemImage: "number.circle") {
+                Text(task.id.isEmpty ? "—" : displayedId(for: task.id))
+                    .font(.caption)
+                    .contentTransition(.numericText())
+            }
+            
+            .contentShape(Rectangle())
+            .onTapGesture {
+                withAnimation {
+                    isIdExpanded.toggle()
+                }
+            }
+        }
+        .contextMenu {
+            Button {
+                UIPasteboard.general.string = task.id
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+            } label: {
+                Label("Copy ID", systemImage: "doc.on.doc")
+            }
+        }
+    }
+    
+    private func displayedId(for id: String) -> String {
+        guard !isIdExpanded else { return id }
+        return "\(id.prefix(9))...."
+    }
 }

@@ -282,17 +282,44 @@ final class TaskRepository: TaskRepositoryProtocol {
         return response.data.applicants.map { $0.toDomain() }
     }
     
-    func assignExecutor(taskId: String, executorId: String) async throws {
+    func assignExecutor(taskId: String, executorId: String) async throws -> URL {
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("🧑‍🔧 Assigning Executor \(executorId) to Task \(taskId)")
         
         let token = try await getValidToken()
         let body = APIConfig.RequesterAssignTaskBody(executorId: executorId)
         let config = APIConfig.requesterAssignTask(id: taskId, body: body, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<PaymentResponseDTO> = try await network.request(config)
         
-        DebugLogger.log("✅ Executor Assigned")
+        guard let url = URL(string: response.data.paymentUrl) else {
+            DebugLogger.log("❌ Invalid payment URL received")
+            return URL(string: "https://example.com")!
+        }
+        
+        DebugLogger.log("✅ Executor Assigned, payment initiated")
         DebugLogger.log("══════════════════════════════════════")
+        
+        return url
+    }
+    
+        // Retry payment for a task that's already assigned but whose escrow
+        // is still "not_paid" (e.g. a previous payment attempt failed).
+    func retryPayment(taskId: String) async throws -> URL {
+        DebugLogger.log("══════════════════════════════════════")
+        DebugLogger.log("💳 Retrying Payment for Task \(taskId)")
+        
+        let token = try await getValidToken()
+        let config = APIConfig.initiatePayment(taskId: taskId, accessToken: token)
+        let response: APIResponseDTO<PaymentResponseDTO> = try await network.request(config)
+        
+        guard let url = URL(string: response.data.paymentUrl) else {
+            return URL(string: "https://example.com")!
+        }
+        
+        DebugLogger.log("✅ Payment retry initiated")
+        DebugLogger.log("══════════════════════════════════════")
+        
+        return url
     }
     
     func declineApplicant(taskId: String, applicantId: String) async throws {

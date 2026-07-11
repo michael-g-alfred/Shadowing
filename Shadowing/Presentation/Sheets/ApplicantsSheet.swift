@@ -59,7 +59,7 @@ struct ApplicantsSheet: View {
                     } label: {
                         applicantRow(applicant)
                     }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
                         Button(role: .destructive) {
                             applicantPendingDecline = applicant
                         } label: {
@@ -67,9 +67,19 @@ struct ApplicantsSheet: View {
                         }
                         .tint(.red)
                     }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .confirm) {
+                            Task {
+                                await vm.assignExecutor(applicant)
+                            }
+                        } label: {
+                            Label("Accept", systemImage: "checkmark.circle.fill")
+                        }
+                        .tint(.blue)
+                    }
                 }
             }
-            .listStyle(.plain)
+            .listStyle(.insetGrouped)
             .disabled(vm.isAssigningExecutor)
         }
     }
@@ -89,18 +99,6 @@ struct ApplicantsSheet: View {
                         .foregroundStyle(.green)
                 }
             }
-            
-            Spacer(minLength: 12)
-            
-            Button {
-                Task {
-                    await vm.assignExecutor(applicant)
-                }
-            } label: {
-                Image(systemName: "checkmark.circle.fill")
-                    .imageScale(.large)
-            }
-            .tint(.accentColor)
         }
         .contentShape(Rectangle())
     }
