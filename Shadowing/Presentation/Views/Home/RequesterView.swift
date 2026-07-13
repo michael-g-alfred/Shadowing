@@ -65,12 +65,12 @@ struct RequesterView: View {
                     .presentationDragIndicator(.visible)
             }
         }
-        .sheet(isPresented: $vm.showPaymentSheet) {
-            if let url = vm.paymentURL {
-                PaymentWebView(url: url) {
-                    await vm.paymentSheetDismissed()
-                }
-            }
-        }
+//        .sheet(isPresented: $vm.showPaymentSheet) {
+//            if let url = vm.paymentURL {
+//                PaymentWebView(url: url) {
+//                    await vm.paymentSheetDismissed()
+//                }
+//            }
+//        }
     }
 }

@@ -144,9 +144,10 @@ struct AddTaskSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .buttonSizing(.fitted)
                         .buttonStyle(.glassProminent)
-                        .disabled(vm.isLoading)
                         .tint(.red)
+                        .disabled(vm.isLoading)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if vm.isLoading {
@@ -157,6 +158,7 @@ struct AddTaskSheet: View {
                                 await vm.submitTask()
                             }
                         }
+                        .buttonSizing(.fitted)
                         .buttonStyle(.glassProminent)
                         .disabled(!vm.isValid)
                     }

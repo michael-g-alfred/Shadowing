@@ -12,6 +12,7 @@ enum EmptyState: CaseIterable {
     case noApplicantsYet
     case noNotifications
     case noProfile
+    case noTaskSelection
     
     var title: LocalizedStringResource {
         switch self {
@@ -33,6 +34,8 @@ enum EmptyState: CaseIterable {
                 return "No Notifications"
             case .noProfile:
                 return "No Profile"
+            case .noTaskSelection:
+                return "No Task Selection"
         }
     }
     
@@ -58,6 +61,8 @@ enum EmptyState: CaseIterable {
                 return "You have no notifications yet."
             case .noProfile:
                 return "You have no profile yet."
+            case .noTaskSelection:
+                return "Select a task from the list to view its details."
         }
     }
     

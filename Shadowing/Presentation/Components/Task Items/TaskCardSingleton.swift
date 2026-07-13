@@ -134,7 +134,7 @@ struct TaskCardSingleton: View {
 struct TaskCardSingletonList: View {
     let count: Int
 
-    init(count: Int = 10) {
+    init(count: Int = 5) {
         self.count = count
     }
 

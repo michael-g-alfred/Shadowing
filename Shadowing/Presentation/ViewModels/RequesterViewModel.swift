@@ -33,10 +33,10 @@ final class RequesterViewModel {
     var selectedTaskForApplicants: TaskModel?
     var isAssigningExecutor = false
     
-        // Payment sheet state
-    var showPaymentSheet: Bool = false
-    var paymentURL: URL?
-    var paymentTaskId: String?
+//        // Payment sheet state
+//    var showPaymentSheet: Bool = false
+//    var paymentURL: URL?
+//    var paymentTaskId: String?
     
     private let repository: TaskRepositoryProtocol
     
@@ -121,16 +121,17 @@ final class RequesterViewModel {
         defer { isAssigningExecutor = false }
         
         do {
-            let url = try await repository.assignExecutor(taskId: task.id, executorId: applicant.id)
+            try await repository.assignExecutor(taskId: task.id, executorId: applicant.id)
+//            let url = try await repository.assignExecutor(taskId: task.id, executorId: applicant.id)
             DebugLogger.log("✅ Assigned executor \(applicant.id) to task \(task.id)")
             
             showApplicantsSheet = false
             selectedTaskApplicants = []
             selectedTaskForApplicants = nil
             
-            paymentURL = url
-            paymentTaskId = task.id
-            showPaymentSheet = true
+//            paymentURL = url
+//            paymentTaskId = task.id
+//            showPaymentSheet = true
             
             await loadPublishedTasks()
         } catch {
@@ -142,27 +143,27 @@ final class RequesterViewModel {
         /// Called when the payment sheet (WebView) is dismissed, either because
         /// the user finished paying or cancelled. We just refresh the task list
         /// — the backend webhook is the source of truth for escrow state.
-    func paymentSheetDismissed() async {
-        showPaymentSheet = false
-        paymentURL = nil
-        paymentTaskId = nil
-        await loadPublishedTasks()
-    }
+//    func paymentSheetDismissed() async {
+//        showPaymentSheet = false
+//        paymentURL = nil
+//        paymentTaskId = nil
+//        await loadPublishedTasks()
+//    }
     
         /// For a task that's assigned but payment failed/was abandoned
         /// (escrowStatus still .notPaid). Lets the requester retry from
         /// the published tasks list.
-    func retryPayment(for task: TaskModel) async {
-        do {
-            let url = try await repository.retryPayment(taskId: task.id)
-            paymentURL = url
-            paymentTaskId = task.id
-            showPaymentSheet = true
-        } catch {
-            errorMessage = error.localizedDescription
-            DebugLogger.log("❌ Failed to retry payment for task \(task.id): \(error.localizedDescription)")
-        }
-    }
+//    func retryPayment(for task: TaskModel) async {
+//        do {
+//            let url = try await repository.retryPayment(taskId: task.id)
+//            paymentURL = url
+//            paymentTaskId = task.id
+//            showPaymentSheet = true
+//        } catch {
+//            errorMessage = error.localizedDescription
+//            DebugLogger.log("❌ Failed to retry payment for task \(task.id): \(error.localizedDescription)")
+//        }
+//    }
     
     func declineApplicant(_ applicant: ApplicantModel) async {
         guard let task = selectedTaskForApplicants else { return }

@@ -65,7 +65,6 @@ struct AvatarView: View {
                                 image
                                     .resizable()
                                     .scaledToFill()
-                                
                             case .failure, .empty:
                                 initialsOrPlaceholder
                             @unknown default:
@@ -87,8 +86,8 @@ struct AvatarView: View {
                 Text(profile.displayName.prefix(1).uppercased())
                     .font(.system(size: size * 0.4))
                     .bold()
-                    .fontDesign(.rounded)
                     .foregroundStyle(avatarForeground)
+                    .lineLimit(1)
             } else {
                 Image(systemName: "person.fill")
                     .font(.system(size: size * 0.4))

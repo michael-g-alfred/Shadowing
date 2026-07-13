@@ -21,10 +21,10 @@ struct ApplicantsSheet: View {
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") { dismiss() }
+                            .buttonSizing(.fitted)
                             .buttonStyle(.glassProminent)
-                            .disabled(vm.isAssigningExecutor)
                             .tint(.red)
-                            .buttonStyle(.glassProminent)
+                            .disabled(vm.isAssigningExecutor)
                     }
                 }
                 .alert(item: $applicantPendingDecline) { applicant in

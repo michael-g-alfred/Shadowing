@@ -31,7 +31,8 @@ protocol TaskRepositoryProtocol {
     func publishTask(id: String) async throws
     func confirmTask(id: String) async throws
     func getApplicants(taskId: String) async throws -> [ApplicantModel]
-    func assignExecutor(taskId: String, executorId: String) async throws -> URL
+//    func assignExecutor(taskId: String, executorId: String) async throws -> URL
+    func assignExecutor(taskId: String, executorId: String) async throws
     func declineApplicant(taskId: String, applicantId: String) async throws
     
         // MARK: - Payments
