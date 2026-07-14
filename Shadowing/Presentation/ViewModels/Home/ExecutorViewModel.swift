@@ -43,6 +43,8 @@ final class ExecutorViewModel {
     var selectedTaskIdForRating: String?
     var requesterName: String?
     
+    var selectedTaskId: String?
+    
     init(repository: TaskRepositoryProtocol) {
         self.repository = repository
     }

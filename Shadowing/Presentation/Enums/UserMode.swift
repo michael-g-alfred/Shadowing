@@ -22,8 +22,8 @@ enum UserMode: String, Identifiable {
 
     var image: String {
         switch self {
-            case .requester: return "arrow.up.doc.fill"
-            case .executor:  return "arrow.down.doc.fill"
+            case .requester: return "person.fill.questionmark"
+            case .executor:  return "person.fill.checkmark.and.xmark"
         }
     }
 }

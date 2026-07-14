@@ -17,4 +17,11 @@ enum RequesterTab: String, CaseIterable {
             case .completedTasks: return "Completed Tasks"
         }
     }
+    
+    var symbolName: String {
+        switch self {
+            case .publishedTasks: return "tray.full"
+            case .completedTasks: return "checkmark.seal"
+        }
+    }
 }

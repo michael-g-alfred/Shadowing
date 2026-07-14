@@ -33,15 +33,19 @@ final class RequesterViewModel {
     var selectedTaskForApplicants: TaskModel?
     var isAssigningExecutor = false
     
+    var selectedTaskId: String?
+    
 //        // Payment sheet state
 //    var showPaymentSheet: Bool = false
 //    var paymentURL: URL?
 //    var paymentTaskId: String?
     
     private let repository: TaskRepositoryProtocol
+    private let chatRepo: ChatRepositoryProtocol
     
-    init(repository: TaskRepositoryProtocol) {
+    init(repository: TaskRepositoryProtocol, chatRepo: ChatRepositoryProtocol) {
         self.repository = repository
+        self.chatRepo = chatRepo
         DebugLogger.log("🚀 RequesterViewModel initialized")
     }
     
@@ -88,6 +92,11 @@ final class RequesterViewModel {
     func confirmTaskCompletion(_ task: TaskModel) async {
         do {
             try await repository.confirmTask(id: task.id)
+            
+                // Chat lifecycle: conversation is deleted once the task is
+                // confirmed as completed by the requester.
+            try? await chatRepo.deleteConversation(taskId: task.id)
+            
             requesterPublishedTasks.removeAll { $0.id == task.id }
             DebugLogger.log("✅ Task \(task.id) confirmed as completed")
             
@@ -124,6 +133,25 @@ final class RequesterViewModel {
             try await repository.assignExecutor(taskId: task.id, executorId: applicant.id)
 //            let url = try await repository.assignExecutor(taskId: task.id, executorId: applicant.id)
             DebugLogger.log("✅ Assigned executor \(applicant.id) to task \(task.id)")
+            
+                // Chat lifecycle: create the Firestore conversation now that the
+                // task has moved to inProgress. We build the executor's
+                // TaskUserModel from the applicant since `task.executor` is
+                // still nil at this point (task hasn't been re-fetched yet).
+            let executorProfile = TaskUserModel(
+                id: applicant.id,
+                displayName: applicant.displayName,
+                avatarUrl: applicant.avatarUrl,
+                rating: applicant.rating ?? 0,
+                totalRatings: 0,
+                completedTasks: applicant.completedTasks
+            )
+            try? await chatRepo.ensureConversationExists(
+                taskId: task.id,
+                taskTitle: task.title,
+                requester: task.requester,
+                executor: executorProfile
+            )
             
             showApplicantsSheet = false
             selectedTaskApplicants = []

@@ -20,4 +20,12 @@ enum ExecutorTab: String, CaseIterable {
             case .completedTasks: return "Completed Tasks"
         }
     }
+    
+    var symbolName: String {
+        switch self {
+            case .availableTasks: return "list.bullet"
+            case .assignedTasks: return "person.crop.circle.badge.checkmark"
+            case .completedTasks: return "checkmark.seal"
+        }
+    }
 }
