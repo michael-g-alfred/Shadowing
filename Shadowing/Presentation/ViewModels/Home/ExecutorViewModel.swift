@@ -31,7 +31,7 @@ final class ExecutorViewModel {
     private var completedTasksCursor: String?
     private var completedTasksHasMore = true
     
-    private let repository: TaskRepositoryProtocol
+    private let taskRepo: TaskRepositoryProtocol
     
         // Applied sheet state
     var showAppliedSheet: Bool = false
@@ -45,8 +45,8 @@ final class ExecutorViewModel {
     
     var selectedTaskId: String?
     
-    init(repository: TaskRepositoryProtocol) {
-        self.repository = repository
+    init(taskRepo: TaskRepositoryProtocol) {
+        self.taskRepo = taskRepo
     }
     
     func beginApply(to task: TaskModel) {
@@ -65,7 +65,7 @@ final class ExecutorViewModel {
         defer { isApplying = false }
         
         do {
-            try await repository.applyToTask(id: task.id, proposedBudget: proposedBudget)
+            try await taskRepo.applyToTask(id: task.id, proposedBudget: proposedBudget)
             showAppliedSheet = false
             selectedTaskForApply = nil
             await loadAvailableTasks()
@@ -76,7 +76,7 @@ final class ExecutorViewModel {
     
     func withdrawFromTask(_ task: TaskModel) async {
         do {
-            try await repository.withdrawFromTask(id: task.id)
+            try await taskRepo.withdrawFromTask(id: task.id)
             await loadAvailableTasks()
         } catch {
             errorMessage = error.localizedDescription
@@ -85,7 +85,7 @@ final class ExecutorViewModel {
     
     func markTaskDone(_ task: TaskModel) async {
         do {
-            try await repository.markTaskDone(id: task.id)
+            try await taskRepo.markTaskDone(id: task.id)
             await loadAssignedTasks()
             
             selectedTaskIdForRating = task.id
@@ -105,7 +105,7 @@ final class ExecutorViewModel {
         defer { isLoading = false }
         
         do {
-            let result = try await repository.getAllTasks(cursor: nil, limit: nil)
+            let result = try await taskRepo.getAllTasks(cursor: nil, limit: nil)
             executorAllTasks = result.tasks
             allTasksHasMore = result.hasMore
             allTasksCursor = result.cursor
@@ -124,7 +124,7 @@ final class ExecutorViewModel {
         defer { isLoadingMoreAllTasks = false }
         
         do {
-            let result = try await repository.getAllTasks(cursor: availableTasksCursor, limit: nil)
+            let result = try await taskRepo.getAllTasks(cursor: availableTasksCursor, limit: nil)
             executorAllTasks.append(contentsOf: result.tasks)
             allTasksHasMore = result.hasMore
             allTasksCursor = result.cursor
@@ -143,7 +143,7 @@ final class ExecutorViewModel {
         defer { isLoading = false }
         
         do {
-            let result = try await repository.getExecutorAvailableTasks(cursor: nil, limit: nil)
+            let result = try await taskRepo.getExecutorAvailableTasks(cursor: nil, limit: nil)
             executorAvailableTasks = result.tasks
             availableTasksHasMore = result.hasMore
             availableTasksCursor = result.cursor
@@ -162,7 +162,7 @@ final class ExecutorViewModel {
         defer { isLoadingMoreAvailableTasks = false }
         
         do {
-            let result = try await repository.getExecutorAvailableTasks(cursor: availableTasksCursor, limit: nil)
+            let result = try await taskRepo.getExecutorAvailableTasks(cursor: availableTasksCursor, limit: nil)
             executorAvailableTasks.append(contentsOf: result.tasks)
             availableTasksHasMore = result.hasMore
             availableTasksCursor = result.cursor
@@ -181,7 +181,7 @@ final class ExecutorViewModel {
         defer { isLoading = false }
         
         do {
-            let result = try await repository.getExecutorAssignedTasks(cursor: nil, limit: nil)
+            let result = try await taskRepo.getExecutorAssignedTasks(cursor: nil, limit: nil)
             executorAssignedTasks = result.tasks
             assignedTasksHasMore = result.hasMore
             assignedTasksCursor = result.cursor
@@ -200,7 +200,7 @@ final class ExecutorViewModel {
         defer { isLoadingMoreAssignedTasks = false }
         
         do {
-            let result = try await repository.getExecutorAssignedTasks(cursor: assignedTasksCursor, limit: nil)
+            let result = try await taskRepo.getExecutorAssignedTasks(cursor: assignedTasksCursor, limit: nil)
             executorAssignedTasks.append(contentsOf: result.tasks)
             assignedTasksHasMore = result.hasMore
             assignedTasksCursor = result.cursor
@@ -219,7 +219,7 @@ final class ExecutorViewModel {
         defer { isLoading = false }
         
         do {
-            let result = try await repository.getExecutorCompletedTasks(cursor: nil, limit: nil)
+            let result = try await taskRepo.getExecutorCompletedTasks(cursor: nil, limit: nil)
             executorCompletedTasks = result.tasks
             completedTasksHasMore = result.hasMore
             completedTasksCursor = result.cursor
@@ -238,7 +238,7 @@ final class ExecutorViewModel {
         defer { isLoadingMoreCompletedTasks = false }
         
         do {
-            let result = try await repository.getExecutorCompletedTasks(cursor: completedTasksCursor, limit: nil)
+            let result = try await taskRepo.getExecutorCompletedTasks(cursor: completedTasksCursor, limit: nil)
             executorCompletedTasks.append(contentsOf: result.tasks)
             completedTasksHasMore = result.hasMore
             completedTasksCursor = result.cursor

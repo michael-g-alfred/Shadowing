@@ -1,9 +1,14 @@
 import SwiftUI
+//import FirebaseCore
 
 @main
 struct Shadowing: App {
     
     @State private var container = DIContainer()
+    
+//    init() {
+//        FirebaseApp.configure()
+//    }
     
     var body: some Scene {
         WindowGroup {

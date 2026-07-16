@@ -8,7 +8,7 @@ enum EmptyState: CaseIterable {
     case noAssignedTasks
     case noExecutorCompletedTasks
     case noExecutorFavoriteTasks
-    case noConversations
+    case noChats
     case noApplicantsYet
     case noNotifications
     case noProfile
@@ -26,8 +26,8 @@ enum EmptyState: CaseIterable {
                 return "No Completed Tasks"
             case .noExecutorFavoriteTasks:
                 return "No Favorite Tasks"
-            case .noConversations:
-                return "No Conversations"
+            case .noChats:
+                return "No Chats Available"
             case .noApplicantsYet:
                 return "No Applicants Yet"
             case .noNotifications:
@@ -53,8 +53,8 @@ enum EmptyState: CaseIterable {
                 return "Your completed tasks will appear here."
             case .noExecutorFavoriteTasks:
                 return "Your favorite tasks will appear here."
-            case .noConversations:
-                return "Chats with task requesters and executors will appear here."
+            case .noChats:
+                return "Active conversations will appear here."
             case .noApplicantsYet:
                 return "No one has accepted this task yet."
             case .noNotifications:
@@ -72,8 +72,8 @@ enum EmptyState: CaseIterable {
                 return "checklist.unchecked"
             case .noExecutorFavoriteTasks:
                 return "star.slash"
-            case .noConversations:
-                return "questionmark.message"
+            case .noChats:
+                return "bubble.left.and.text.bubble.right"
             case .noApplicantsYet:
                 return "person.slash"
             case .noNotifications:

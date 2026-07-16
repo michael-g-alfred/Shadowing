@@ -67,10 +67,10 @@ final class DIContainer {
         // MARK: - Shared ViewModels
     
     @ObservationIgnored
-    lazy var requesterViewModel = RequesterViewModel(repository: taskRepository)
+    lazy var requesterViewModel = RequesterViewModel(taskRepo: taskRepository)
     
     @ObservationIgnored
-    lazy var executorViewModel = ExecutorViewModel(repository: taskRepository)
+    lazy var executorViewModel = ExecutorViewModel(taskRepo: taskRepository)
     
         // MARK: - Root
     

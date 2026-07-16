@@ -40,12 +40,10 @@ final class RequesterViewModel {
 //    var paymentURL: URL?
 //    var paymentTaskId: String?
     
-    private let repository: TaskRepositoryProtocol
-    private let chatRepo: ChatRepositoryProtocol
+    private let taskRepo: TaskRepositoryProtocol
     
-    init(repository: TaskRepositoryProtocol, chatRepo: ChatRepositoryProtocol) {
-        self.repository = repository
-        self.chatRepo = chatRepo
+    init(taskRepo: TaskRepositoryProtocol) {
+        self.taskRepo = taskRepo
         DebugLogger.log("🚀 RequesterViewModel initialized")
     }
     
@@ -58,7 +56,7 @@ final class RequesterViewModel {
     
     func deleteTask(_ task: TaskModel) async {
         do {
-            try await repository.deleteTask(id: task.id)
+            try await taskRepo.deleteTask(id: task.id)
             requesterPublishedTasks.removeAll { $0.id == task.id }
             DebugLogger.log("✅ Task \(task.id) deleted locally")
         } catch {
@@ -69,7 +67,7 @@ final class RequesterViewModel {
     
     func cancelTask(_ task: TaskModel) async {
         do {
-            try await repository.cancelTask(id: task.id)
+            try await taskRepo.cancelTask(id: task.id)
             await loadPublishedTasks()
             DebugLogger.log("✅ Task \(task.id) cancelled")
         } catch {
@@ -80,7 +78,7 @@ final class RequesterViewModel {
     
     func publishTask (_ task: TaskModel) async {
         do {
-            try await repository.publishTask(id: task.id)
+            try await taskRepo.publishTask(id: task.id)
             await loadPublishedTasks()
             DebugLogger.log("✅ Task \(task.id) Published")
         } catch {
@@ -91,11 +89,7 @@ final class RequesterViewModel {
     
     func confirmTaskCompletion(_ task: TaskModel) async {
         do {
-            try await repository.confirmTask(id: task.id)
-            
-                // Chat lifecycle: conversation is deleted once the task is
-                // confirmed as completed by the requester.
-            try? await chatRepo.deleteConversation(taskId: task.id)
+            try await taskRepo.confirmTask(id: task.id)
             
             requesterPublishedTasks.removeAll { $0.id == task.id }
             DebugLogger.log("✅ Task \(task.id) confirmed as completed")
@@ -116,7 +110,7 @@ final class RequesterViewModel {
         defer { isLoadingApplicants = false }
         
         do {
-            selectedTaskApplicants = try await repository.getApplicants(taskId: task.id)
+            selectedTaskApplicants = try await taskRepo.getApplicants(taskId: task.id)
             DebugLogger.log("✅ Loaded \(selectedTaskApplicants.count) applicants for task \(task.id)")
         } catch {
             errorMessage = error.localizedDescription
@@ -130,14 +124,9 @@ final class RequesterViewModel {
         defer { isAssigningExecutor = false }
         
         do {
-            try await repository.assignExecutor(taskId: task.id, executorId: applicant.id)
-//            let url = try await repository.assignExecutor(taskId: task.id, executorId: applicant.id)
+            try await taskRepo.assignExecutor(taskId: task.id, executorId: applicant.id)
             DebugLogger.log("✅ Assigned executor \(applicant.id) to task \(task.id)")
             
-                // Chat lifecycle: create the Firestore conversation now that the
-                // task has moved to inProgress. We build the executor's
-                // TaskUserModel from the applicant since `task.executor` is
-                // still nil at this point (task hasn't been re-fetched yet).
             let executorProfile = TaskUserModel(
                 id: applicant.id,
                 displayName: applicant.displayName,
@@ -145,12 +134,6 @@ final class RequesterViewModel {
                 rating: applicant.rating ?? 0,
                 totalRatings: 0,
                 completedTasks: applicant.completedTasks
-            )
-            try? await chatRepo.ensureConversationExists(
-                taskId: task.id,
-                taskTitle: task.title,
-                requester: task.requester,
-                executor: executorProfile
             )
             
             showApplicantsSheet = false
@@ -183,7 +166,7 @@ final class RequesterViewModel {
         /// the published tasks list.
 //    func retryPayment(for task: TaskModel) async {
 //        do {
-//            let url = try await repository.retryPayment(taskId: task.id)
+//            let url = try await taskRepo.retryPayment(taskId: task.id)
 //            paymentURL = url
 //            paymentTaskId = task.id
 //            showPaymentSheet = true
@@ -197,7 +180,7 @@ final class RequesterViewModel {
         guard let task = selectedTaskForApplicants else { return }
         
         do {
-            try await repository.declineApplicant(taskId: task.id, applicantId: applicant.id)
+            try await taskRepo.declineApplicant(taskId: task.id, applicantId: applicant.id)
             selectedTaskApplicants.removeAll { $0.id == applicant.id }
             DebugLogger.log("✅ Declined applicant \(applicant.id) for task \(task.id)")
         } catch {
@@ -224,7 +207,7 @@ final class RequesterViewModel {
         }
         
         do {
-            let result = try await repository.getRequesterPublishedTasks(cursor: nil, limit: nil)
+            let result = try await taskRepo.getRequesterPublishedTasks(cursor: nil, limit: nil)
             requesterPublishedTasks = result.tasks
             publishedTasksHasMore = result.hasMore
             publishedTasksCursor = result.cursor
@@ -251,7 +234,7 @@ final class RequesterViewModel {
         defer { isLoadingMorePublishedTasks = false }
         
         do {
-            let result = try await repository.getRequesterPublishedTasks(cursor: publishedTasksCursor, limit: nil)
+            let result = try await taskRepo.getRequesterPublishedTasks(cursor: publishedTasksCursor, limit: nil)
             requesterPublishedTasks.append(contentsOf: result.tasks)
             publishedTasksHasMore = result.hasMore
             publishedTasksCursor = result.cursor
@@ -281,7 +264,7 @@ final class RequesterViewModel {
         }
         
         do {
-            let result = try await repository.getRequesterCompletedTasks(cursor: nil, limit: nil)
+            let result = try await taskRepo.getRequesterCompletedTasks(cursor: nil, limit: nil)
             requesterCompletedTasks = result.tasks
             completedTasksHasMore = result.hasMore
             completedTasksCursor = result.cursor
@@ -308,7 +291,7 @@ final class RequesterViewModel {
         defer { isLoadingMoreCompletedTasks = false }
         
         do {
-            let result = try await repository.getRequesterCompletedTasks(cursor: completedTasksCursor, limit: nil)
+            let result = try await taskRepo.getRequesterCompletedTasks(cursor: completedTasksCursor, limit: nil)
             requesterCompletedTasks.append(contentsOf: result.tasks)
             completedTasksHasMore = result.hasMore
             completedTasksCursor = result.cursor
