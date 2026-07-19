@@ -8,6 +8,7 @@ enum EmptyState: CaseIterable {
     case noAssignedTasks
     case noExecutorCompletedTasks
     case noExecutorFavoriteTasks
+    case noFilteredRequesterTasks
     case noChats
     case noApplicantsYet
     case noNotifications
@@ -26,6 +27,8 @@ enum EmptyState: CaseIterable {
                 return "No Completed Tasks"
             case .noExecutorFavoriteTasks:
                 return "No Favorite Tasks"
+            case .noFilteredRequesterTasks:
+                return "No Matching Tasks"
             case .noChats:
                 return "No Chats Available"
             case .noApplicantsYet:
@@ -53,6 +56,8 @@ enum EmptyState: CaseIterable {
                 return "Your completed tasks will appear here."
             case .noExecutorFavoriteTasks:
                 return "Your favorite tasks will appear here."
+            case .noFilteredRequesterTasks:
+                return "No tasks match this filter.\nTry a different status."
             case .noChats:
                 return "Active conversations will appear here."
             case .noApplicantsYet:
@@ -72,6 +77,8 @@ enum EmptyState: CaseIterable {
                 return "checklist.unchecked"
             case .noExecutorFavoriteTasks:
                 return "star.slash"
+            case .noFilteredRequesterTasks:
+                return "line.3.horizontal.decrease.circle"
             case .noChats:
                 return "bubble.left.and.text.bubble.right"
             case .noApplicantsYet:
@@ -86,13 +93,22 @@ enum EmptyState: CaseIterable {
     }
     
     @ViewBuilder
-    func view(retryAction: (() async -> Void)? = nil) -> some View {
+    func view(
+        retryAction: (() async -> Void)? = nil,
+        clearFilterAction: (() -> Void)? = nil
+    ) -> some View {
         ContentUnavailableView {
             Label(title, systemImage: systemImage)
         } description: {
             Text(description)
         } actions: {
-            if let retryAction {
+            if self == .noFilteredRequesterTasks, let clearFilterAction {
+                Button("Remove Filter") {
+                    clearFilterAction()
+                }
+                .controlSize(.regular)
+                .buttonStyle(.glassProminent)
+            } else if let retryAction {
                 Button("Try Again") {
                     Task { await retryAction() }
                 }

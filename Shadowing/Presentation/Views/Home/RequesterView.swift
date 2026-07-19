@@ -43,7 +43,16 @@ struct RequesterView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .toolbar {
-            if vm.selectedTab == .publishedTasks && vm.requesterPublishedTasks.isEmpty == false && vm.requesterPublishedTasks.count > 1 && vm.errorMessage == nil {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Show Add Task Sheet", systemImage: "plus") {
+                    vm.showAddTaskSheet.toggle()
+                }
+                .buttonStyle(.glassProminent)
+            }
+            if vm.selectedTab == .publishedTasks
+                && vm.requesterPublishedTasks.isEmpty == false
+                && vm.requesterPublishedTasks.count > 1
+                && vm.errorMessage == nil {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         ForEach(RequesterStatusFilter.allCases) { filter in
@@ -62,12 +71,6 @@ struct RequesterView: View {
                     }
                     .tint(.accent)
                 }
-            }
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Show Add Task Sheet", systemImage: "plus") {
-                    vm.showAddTaskSheet.toggle()
-                }
-                .buttonStyle(.glassProminent)
             }
         }
         .sheet(isPresented: $vm.showAddTaskSheet) {

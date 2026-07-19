@@ -10,9 +10,10 @@ extension DIContainer {
             isLoadingMore: requesterViewModel.isLoadingMorePublishedTasks,
             loadingTitle: "Loading",
             loadingSubtitle: "Fetching your published tasks.",
-            emptyState: .noRequesterPublishedTasks,
+            emptyState: requesterViewModel.statusFilter == .all ? .noRequesterPublishedTasks : .noFilteredRequesterTasks,
             onLoad: { [requesterViewModel] in await requesterViewModel.loadPublishedTasks() },
             onLoadMoreIfNeeded: { [requesterViewModel] in await requesterViewModel.loadMorePublishedTasksIfNeeded() },
+            onClearFilter: { [requesterViewModel] in requesterViewModel.setStatusFilter(.all) },
             leadingSwipe: { [requesterViewModel] task in
                 AnyView(
                     Group {
@@ -61,6 +62,18 @@ extension DIContainer {
                                 Label("Completed", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
+                        }
+                        if task.status == .inProgress, let executorId = task.executor?.id {
+                            NavigationLink(
+                                value: TaskChatRoute(
+                                    taskId: task.id,
+                                    requesterId: task.requester.id,
+                                    executorId: executorId
+                                )
+                            ) {
+                                Label("Chat", systemImage: "message.fill")
+                            }
+                            .tint(.blue)
                         }
                     }
                 )
@@ -138,6 +151,19 @@ extension DIContainer {
                                 Label("Mark Done", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
+                            
+                            if let executorId = task.executor?.id {
+                                NavigationLink(
+                                    value: TaskChatRoute(
+                                        taskId: task.id,
+                                        requesterId: task.requester.id,
+                                        executorId: executorId
+                                    )
+                                ) {
+                                    Label("Chat", systemImage: "message.fill")
+                                }
+                                .tint(.blue)
+                            }
                         }
                     }
                 )
