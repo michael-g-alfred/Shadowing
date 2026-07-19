@@ -8,6 +8,7 @@ extension APIConfig {
     static func requesterPublishedTasks(
         cursor: String? = nil,
         limit: Int? = nil,
+        status: String? = nil,
         accessToken: String
     ) -> MGRequestConfig {
         MGRequestConfig(
@@ -16,7 +17,8 @@ extension APIConfig {
             method: .get,
             queryItems: Self.queryItems([
                 ("cursor", cursor),
-                ("limit", limit.map(String.init))
+                ("limit", limit.map(String.init)),
+                ("status", status)
             ]),
             headers: ["Authorization": "Bearer \(accessToken)"]
         )

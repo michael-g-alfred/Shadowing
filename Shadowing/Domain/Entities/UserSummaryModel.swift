@@ -1,6 +1,6 @@
 import Foundation
 
-struct TaskUserModel: Identifiable, Profile {
+struct UserSummaryModel: Identifiable, Profile {
     let id: String
     let displayName: String
     let avatarUrl: String?

@@ -64,10 +64,19 @@ final class DIContainer {
         network: networkService, authRepository: authRepository
     )
     
+        // MARK: - Chat Repository
+    @ObservationIgnored
+    private(set) lazy var chatRepository: ChatRepositoryProtocol? = {
+        FirebaseChatRepository(authRepository: authRepository)
+    }()
+    
         // MARK: - Shared ViewModels
     
     @ObservationIgnored
-    lazy var requesterViewModel = RequesterViewModel(taskRepo: taskRepository)
+    lazy var authViewModel = AuthViewModel(authRepo: authRepository)
+    
+    @ObservationIgnored
+    lazy var requesterViewModel = RequesterViewModel(taskRepo: taskRepository, chatRepo: chatRepository)
     
     @ObservationIgnored
     lazy var executorViewModel = ExecutorViewModel(taskRepo: taskRepository)
@@ -91,19 +100,11 @@ final class DIContainer {
         // MARK: - Auth
     
     func makeSigninView(screen: Binding<AuthScreen>) -> SignInView {
-        SignInView(screen: screen, vm: makeSigninViewModel())
-    }
-    
-    func makeSigninViewModel() -> SignInViewModel {
-        SignInViewModel(authRepo: authRepository)
+        SignInView(screen: screen, vm: authViewModel)
     }
     
     func makeSignupView(screen: Binding<AuthScreen>) -> SignUpView {
-        SignUpView(screen: screen, vm: makeSignupViewModel())
-    }
-    
-    func makeSignupViewModel() -> SignUpViewModel {
-        SignUpViewModel(authRepo: authRepository)
+        SignUpView(screen: screen, vm: authViewModel)
     }
     
         // MARK: - Main
@@ -234,5 +235,34 @@ final class DIContainer {
     
     func makeTaskDetailsViewModel(taskId: String) -> TaskDetailsViewModel {
         TaskDetailsViewModel(taskId: taskId, taskRepo: taskRepository)
+    }
+    
+        // MARK: - Chat
+    
+    func makeChatViewModel() -> ChatViewModel? {
+        guard let chatRepo = chatRepository else { return nil }
+        return ChatViewModel(chatRepo: chatRepo, authRepo: authRepository)
+    }
+    
+    func makeChatListView() -> ChatListView {
+        ChatListView(vm: makeChatViewModel())
+    }
+    
+    func makeChatView(conversationId: String) -> some View {
+        if let viewModel = makeChatViewModel() {
+            return AnyView(ChatView(
+                conversationId: conversationId,
+                viewModel: viewModel
+            ))
+        }
+        return AnyView(Text("Error loading chat"))
+    }
+    
+        /// Opens (or creates) the chat for a specific task, resolving the
+        /// conversation before handing off to `ChatView`. Used by the "Chat"
+        /// swipe action on assigned/in-progress tasks for both requester and
+        /// executor.
+    func makeTaskChatView(route: TaskChatRoute) -> some View {
+        TaskChatContainerView(route: route)
     }
 }

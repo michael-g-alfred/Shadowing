@@ -9,17 +9,11 @@ struct SignInView: View {
     @Binding var screen: AuthScreen
     
         // MARK: - State
-    @State private var vm: SignInViewModel
+    @Bindable var vm: AuthViewModel
     
         // MARK: - Focus
     @FocusState private var focusedField: Field?
     enum Field: Hashable { case email, password }
-    
-        // MARK: - Init
-    init(screen: Binding<AuthScreen>, vm: SignInViewModel) {
-        _screen = screen
-        _vm = State(initialValue: vm)
-    }
     
         // MARK: - Body
     var body: some View {
@@ -67,7 +61,7 @@ struct SignInView: View {
                     ActionButton(title: "Sign In", systemImage: "arrow.right", tint: .blue, isLoading: vm.isLoading, action: {
                         Task { await submit() }
                     })
-                    .disabled(!vm.isFormValid)
+                    .disabled(!vm.isSignInFormValid)
                     
                     Button {
                         withAnimation(.spring()) { screen = .signUp }
@@ -87,7 +81,7 @@ struct SignInView: View {
     
         // MARK: - Private Methods
     private func submit() async {
-        guard await vm.submit() else { return }
+        guard await vm.signIn() else { return }
         container.setAppState(vm.isAdmin ? .admin : .main)
         container.relaunchRoot()
     }

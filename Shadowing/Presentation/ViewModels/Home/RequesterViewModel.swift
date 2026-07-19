@@ -35,15 +35,19 @@ final class RequesterViewModel {
     
     var selectedTaskId: String?
     
+    var statusFilter: RequesterStatusFilter = .all
+    
 //        // Payment sheet state
 //    var showPaymentSheet: Bool = false
 //    var paymentURL: URL?
 //    var paymentTaskId: String?
     
     private let taskRepo: TaskRepositoryProtocol
+    private let chatRepo: ChatRepositoryProtocol?
     
-    init(taskRepo: TaskRepositoryProtocol) {
+    init(taskRepo: TaskRepositoryProtocol, chatRepo: ChatRepositoryProtocol? = nil) {
         self.taskRepo = taskRepo
+        self.chatRepo = chatRepo
         DebugLogger.log("🚀 RequesterViewModel initialized")
     }
     
@@ -94,6 +98,13 @@ final class RequesterViewModel {
             requesterPublishedTasks.removeAll { $0.id == task.id }
             DebugLogger.log("✅ Task \(task.id) confirmed as completed")
             
+            do {
+                try await chatRepo?.deleteConversation(id: task.id.conversationIdForTask())
+                DebugLogger.log("✅ Chat conversation for task \(task.id) deleted")
+            } catch {
+                DebugLogger.log("❌ Failed to delete chat conversation for task \(task.id): \(error.localizedDescription)")
+            }
+            
             selectedTaskIdForRating = task.id
             executorName = task.executor?.displayName
             showRateExecutorSheet = true
@@ -127,7 +138,7 @@ final class RequesterViewModel {
             try await taskRepo.assignExecutor(taskId: task.id, executorId: applicant.id)
             DebugLogger.log("✅ Assigned executor \(applicant.id) to task \(task.id)")
             
-            let executorProfile = TaskUserModel(
+            let executorProfile = UserSummaryModel(
                 id: applicant.id,
                 displayName: applicant.displayName,
                 avatarUrl: applicant.avatarUrl,
@@ -191,58 +202,48 @@ final class RequesterViewModel {
     
         // MARK: - Published Tasks
     
+    func setStatusFilter(_ filter: RequesterStatusFilter) {
+        statusFilter = filter
+        Task { await loadPublishedTasks() }
+    }
+    
     func loadPublishedTasks() async {
-        DebugLogger.log("══════════════════════════════════════")
-        DebugLogger.log("📤 Loading Requester Published Tasks...")
-        
         isLoading = true
         errorMessage = nil
         publishedTasksCursor = nil
         publishedTasksHasMore = true
-        
-        defer {
-            isLoading = false
-            DebugLogger.log("⏹️ Loading Finished")
-            DebugLogger.log("══════════════════════════════════════")
-        }
+        defer { isLoading = false }
         
         do {
-            let result = try await taskRepo.getRequesterPublishedTasks(cursor: nil, limit: nil)
+            let result = try await taskRepo.getRequesterPublishedTasks(
+                cursor: nil,
+                limit: nil,
+                status: statusFilter.apiValue
+            )
             requesterPublishedTasks = result.tasks
             publishedTasksHasMore = result.hasMore
             publishedTasksCursor = result.cursor
-            
-            DebugLogger.log("✅ Published Tasks Loaded")
-            DebugLogger.log("📋 Tasks Count: \(requesterPublishedTasks.count), hasMore: \(publishedTasksHasMore)")
         } catch {
             errorMessage = error.localizedDescription
-            
-            DebugLogger.log("❌ Failed to Load Published Tasks")
-            DebugLogger.log("🚨 Error: \(error.localizedDescription)")
         }
     }
     
     func loadMorePublishedTasksIfNeeded() async {
-        guard shouldLoadMore(
-            hasMore: publishedTasksHasMore,
-            isLoadingMore: isLoadingMorePublishedTasks
-        ) else { return }
-        
-        DebugLogger.log("📤 Loading more Requester Published Tasks (cursor: \(publishedTasksCursor ?? "nil"))")
-        
+        guard shouldLoadMore(hasMore: publishedTasksHasMore, isLoadingMore: isLoadingMorePublishedTasks) else { return }
         isLoadingMorePublishedTasks = true
         defer { isLoadingMorePublishedTasks = false }
         
         do {
-            let result = try await taskRepo.getRequesterPublishedTasks(cursor: publishedTasksCursor, limit: nil)
+            let result = try await taskRepo.getRequesterPublishedTasks(
+                cursor: publishedTasksCursor,
+                limit: nil,
+                status: statusFilter.apiValue
+            )
             requesterPublishedTasks.append(contentsOf: result.tasks)
             publishedTasksHasMore = result.hasMore
             publishedTasksCursor = result.cursor
-            
-            DebugLogger.log("✅ More Published Tasks Loaded. Total: \(requesterPublishedTasks.count)")
         } catch {
             errorMessage = error.localizedDescription
-            DebugLogger.log("❌ Failed to Load More Published Tasks: \(error.localizedDescription)")
         }
     }
     

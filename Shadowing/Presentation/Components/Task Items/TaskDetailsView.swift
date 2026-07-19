@@ -149,20 +149,20 @@ struct TaskDetailsView: View {
     
         // MARK: - Requester / Executor
     
-    private func requesterSection(_ user: TaskUserModel) -> some View {
+    private func requesterSection(_ user: UserSummaryModel) -> some View {
         Section("Requester") {
             userRows(for: user)
         }
     }
     
-    private func executorSection(_ user: TaskUserModel) -> some View {
+    private func executorSection(_ user: UserSummaryModel) -> some View {
         Section("Executor") {
             userRows(for: user)
         }
     }
     
     @ViewBuilder
-    private func userRows(for user: TaskUserModel) -> some View {
+    private func userRows(for user: UserSummaryModel) -> some View {
         
         AvatarView(profile: user, size: 36, nameLayout: .horizontal)
             .listRowBackground(Color(.systemGray4))

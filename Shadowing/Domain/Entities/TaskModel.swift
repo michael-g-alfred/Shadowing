@@ -26,8 +26,8 @@ struct TaskModel: Identifiable {
     let isRatedByExecutor: Bool
     let createdAt: Date
     let updatedAt: Date
-    let requester: TaskUserModel
-    let executor: TaskUserModel?
+    let requester: UserSummaryModel
+    let executor: UserSummaryModel?
     let applicantsCount: Int
     let isApplicant: Bool
     

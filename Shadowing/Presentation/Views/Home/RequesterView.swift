@@ -43,6 +43,26 @@ struct RequesterView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .toolbar {
+            if vm.selectedTab == .publishedTasks {
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu {
+                        ForEach(RequesterStatusFilter.allCases) { filter in
+                            Button {
+                                vm.setStatusFilter(filter)
+                            } label: {
+                                if vm.statusFilter == filter {
+                                    Label(filter.title, systemImage: "checkmark")
+                                } else {
+                                    Text(filter.title)
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: vm.statusFilter == .all ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill")
+                    }
+                    .tint(.accent)
+                }
+            }
             ToolbarItem(placement: .topBarLeading) {
                 Button("Show Add Task Sheet", systemImage: "plus") {
                     vm.showAddTaskSheet.toggle()

@@ -33,8 +33,8 @@ struct TaskDTO: Codable {
     let createdAt: Date
     let updatedAt: Date
     
-    let requester: TaskParticipantDTO
-    let executor: TaskParticipantDTO?
+    let requester: UserSummaryDTO
+    let executor: UserSummaryDTO?
     
     let applicantsCount: Int
     let isApplicant: Bool

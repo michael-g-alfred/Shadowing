@@ -105,20 +105,10 @@ final class TaskRepository: TaskRepositoryProtocol {
         }
     }
     
-    func getRequesterPublishedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
-        DebugLogger.log("══════════════════════════════════════")
-        DebugLogger.log("📤 Fetching Requester Published Tasks (cursor: \(cursor ?? "nil"))")
-        
+    func getRequesterPublishedTasks(cursor: String?, limit: Int?, status: String? = nil) async throws -> PaginatedTasksResult {
         let token = try await getValidToken()
-        
-        DebugLogger.log("🌐 Sending request...")
-        
-        let config = APIConfig.requesterPublishedTasks( cursor: cursor, limit: limit, accessToken: token )
+        let config = APIConfig.requesterPublishedTasks(cursor: cursor, limit: limit, status: status, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
-        
-        DebugLogger.log("✅ Request succeeded")
-        DebugLogger.log("📋 Tasks Count: \(response.data.tasks.count), hasMore: \(response.data.hasMore)")
-        DebugLogger.log("══════════════════════════════════════")
         
         return PaginatedTasksResult(
             tasks: response.data.tasks.map { $0.toDomain() },

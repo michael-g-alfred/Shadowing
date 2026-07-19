@@ -1,6 +1,6 @@
 import Foundation
 
-struct TaskParticipantDTO: Codable {
+struct UserSummaryDTO: Codable {
     let id: String
     let displayName: String
     let avatarUrl: String?
@@ -9,9 +9,9 @@ struct TaskParticipantDTO: Codable {
     let completedTasks: Int
 }
 
-extension TaskParticipantDTO {
-    func toDomain() -> TaskUserModel {
-        TaskUserModel(
+extension UserSummaryDTO {
+    func toDomain() -> UserSummaryModel {
+        UserSummaryModel(
             id: id,
             displayName: displayName,
             avatarUrl: avatarUrl,

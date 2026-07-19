@@ -30,7 +30,7 @@ struct MainView: View {
         switch tab {
             case .home: container.makeHomeView()
             case .map: container.makeMapView()
-            case .chat: ChatView()
+            case .chat: container.makeChatListView()
             case .profile: container.makeProfileView()
         }
     }

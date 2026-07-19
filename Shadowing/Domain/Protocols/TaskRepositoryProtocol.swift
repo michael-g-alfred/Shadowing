@@ -15,7 +15,7 @@ protocol TaskRepositoryProtocol {
     
     func postTask( title: String, description: String, budget: Double, priority: TaskPriority, serviceType: String, address: String, latitude: Double?, longitude: Double?, scheduledAt: Date?, preferredTimeOfDay: PreferredTimeOfDay? ) async throws -> TaskModel
     
-    func getRequesterPublishedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
+    func getRequesterPublishedTasks(cursor: String?, limit: Int?, status: String?) async throws -> PaginatedTasksResult
     func getRequesterCompletedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
     
         // MARK: - Executor
