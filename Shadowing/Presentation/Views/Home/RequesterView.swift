@@ -59,15 +59,20 @@ struct RequesterView: View {
                             Button {
                                 vm.setStatusFilter(filter)
                             } label: {
-                                if vm.statusFilter == filter {
-                                    Label(filter.title, systemImage: "checkmark")
-                                } else {
-                                    Text(filter.title)
-                                }
+                                Label(
+                                    filter.title,
+                                    systemImage: vm.statusFilter == filter
+                                    ? "checkmark.circle.fill"
+                                    : "circle"
+                                )
                             }
                         }
                     } label: {
-                        Image(systemName: vm.statusFilter == .all ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill")
+                        Image(
+                            systemName: vm.statusFilter == .all
+                            ? "line.3.horizontal.decrease"
+                            : "line.3.horizontal.decrease.circle.fill"
+                        )
                     }
                     .tint(.accent)
                 }
