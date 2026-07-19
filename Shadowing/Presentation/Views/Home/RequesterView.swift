@@ -43,7 +43,7 @@ struct RequesterView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .toolbar {
-            if vm.selectedTab == .publishedTasks {
+            if vm.selectedTab == .publishedTasks && vm.requesterPublishedTasks.isEmpty == false && vm.requesterPublishedTasks.count > 1 && vm.errorMessage == nil {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         ForEach(RequesterStatusFilter.allCases) { filter in
