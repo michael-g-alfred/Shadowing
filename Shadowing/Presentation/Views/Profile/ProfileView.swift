@@ -5,14 +5,17 @@ struct ProfileView: View {
     
         // MARK: - Environment
     @Environment(DIContainer.self) private var container
-    @Environment(\.openURL) private var openURL
+    @Environment(\.colorScheme) private var colorScheme
+    
+        // MARK: - Properties
+    private var listRowColor: Color? {
+        colorScheme == .dark
+        ? Color.accentColor.opacity(0.12)
+        : nil
+    }
     
         // MARK: - State
     @State private var vm: ProfileViewModel
-    @State private var isIdExpanded = false
-    @State private var isNationalIDAppearance = false
-    @State private var selectedPhotoItem: PhotosPickerItem?
-    @State private var isRatingsPresented = false
     
         // MARK: - Init
     init(vm: ProfileViewModel) {
@@ -39,14 +42,24 @@ struct ProfileView: View {
             .navigationTitle("\(vm.user?.displayName ?? "Guest")'s Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        vm.isSettingsPresented = true
+                    } label: {
+                        Label("Settings", systemImage: "gearshape.fill")
+                    }
+                    .buttonStyle(.glassProminent)
+                }
+                
                 ToolbarItem(placement: .topBarTrailing) {
-                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                    PhotosPicker(selection: Bindable(vm).selectedPhotoItem, matching: .images) {
                         if vm.isUploadingAvatar {
                             ProgressView()
                         } else {
                             Label("Change Photo", systemImage: "camera.fill")
                         }
                     }
+                    .buttonStyle(.glassProminent)
                     .disabled(vm.isUploadingAvatar || vm.user == nil)
                 }
                 
@@ -68,19 +81,17 @@ struct ProfileView: View {
             .refreshable {
                 await vm.loadProfile()
             }
-            .onChange(of: selectedPhotoItem) { _, newItem in
-                Task {
-                    guard let newItem,
-                          let data = try? await newItem.loadTransferable(type: Data.self) else { return }
-                    await vm.uploadAvatar(imageData: data)
+            .sheet(isPresented: Bindable(vm).isRatingsPresented) {
+                if let user = vm.user {
+                    container.makeRatingsView(userId: user.id, userName: user.displayName)
+                        .presentationDetents([.fraction(0.75)])
+                        .presentationDragIndicator(.visible)
                 }
             }
-            .sheet(isPresented: $isRatingsPresented) {
-                if let user = vm.user {
-                        container.makeRatingsView(userId: user.id, userName: user.displayName)
-                            .presentationDetents([.fraction(0.75)])
-                            .presentationDragIndicator(.visible)
-                }
+            .sheet(isPresented: Bindable(vm).isSettingsPresented) {
+                container.makeSettingsView()
+                    .presentationDetents([.fraction(0.5)])
+                    .presentationDragIndicator(.visible)
             }
         }
     }
@@ -95,6 +106,7 @@ struct ProfileView: View {
                     .listRowInsets(.all, 0)
                     .padding(.vertical, 8)
             }
+            .listRowBackground(Color.clear)
             
             if let errorMessage = vm.errorMessage {
                 Section {
@@ -132,7 +144,7 @@ struct ProfileView: View {
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    isRatingsPresented = true
+                    vm.isRatingsPresented = true
                 }
                 
                 InfoRow(
@@ -153,71 +165,35 @@ struct ProfileView: View {
                 
                 idRow(for: user)
             }
-            
-            locationSection
-            
-            languageSection
+            .listRowBackground(listRowColor)
         }
-    }
-    
-    private var locationSection: some View {
-        Section("Location Access") {
-            Label(vm.locationStatusTitle, systemImage: vm.locationStatusIcon)
-                .bold()
-                .foregroundStyle(vm.locationStatusTint)
-            
-            if vm.needsLocationSettingsRedirect {
-                Button("Open Settings") {
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                        openURL(url)
-                    }
-                }
-            } else if vm.needsLocationRequest {
-                Button("Enable Location") {
-                    vm.requestLocationAccess()
-                }
-            }
-        }
-    }
-    
-    private var languageSection: some View {
-        Section("Language") {
-            Picker("App Language", selection: Binding(
-                get: { vm.currentLanguage },
-                set: { vm.setLanguage($0) }
-            )) {
-                ForEach(AppLanguage.allCases, id: \.self) { language in
-                    Text(language.title).tag(language)
-                }
-            }
-            .pickerStyle(.segmented)
-        }
+        .scrollContentBackground(.hidden)
     }
     
     private func nationalIdRow(nationalId: String) -> some View {
         InfoRow(title: "National ID", systemImage: "person.text.rectangle") {
-            Text(isNationalIDAppearance ? nationalId : String(repeating: "*", count: 14))
+            Text(vm.isNationalIDAppearance ? nationalId : String(repeating: "*", count: 14))
                 .bold()
                 .contentTransition(.numericText())
         }
         .contentShape(Rectangle())
         .onTapGesture {
             withAnimation {
-                isNationalIDAppearance.toggle()
+                vm.toggleNationalIDAppearance()
             }
         }
     }
     
     private func idRow(for user: UserModel) -> some View {
         InfoRow(title: "Id", systemImage: "person.badge.key") {
-            Text(user.id.isEmpty ? "—" : displayedId(for: user.id))
+            Text(user.id.isEmpty ? "—" : vm.displayedId(for: user.id))
                 .font(.caption)
                 .contentTransition(.numericText())
         }
         .contentShape(Rectangle())
         .onTapGesture {
             withAnimation {
-                isIdExpanded.toggle()
+                vm.toggleIdExpanded()
             }
         }
         .contextMenu {
@@ -229,11 +205,6 @@ struct ProfileView: View {
                 Label("Copy ID", systemImage: "doc.on.doc")
             }
         }
-    }
-    
-    private func displayedId(for id: String) -> String {
-        guard !isIdExpanded else { return id }
-        return "\(id.prefix(9))...."
     }
     
         // MARK: - Private Methods

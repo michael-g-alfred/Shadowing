@@ -1,5 +1,5 @@
 import SwiftUI
-import CoreLocation
+import PhotosUI
 
 @MainActor
 @Observable
@@ -11,67 +11,26 @@ final class ProfileViewModel {
     
     var user: UserModel?
     
-    var currentLanguage: AppLanguage {
-        languageManager.currentLanguage
+        // MARK: - UI State
+    var isIdExpanded = false
+    var isNationalIDAppearance = false
+    var selectedPhotoItem: PhotosPickerItem? {
+        didSet {
+            guard let selectedPhotoItem else { return }
+            Task {
+                await handlePhotoSelection(selectedPhotoItem)
+            }
+        }
     }
+    var isRatingsPresented = false
+    var isSettingsPresented = false
     
     private let authRepo: AuthRepositoryProtocol
     private let userRepo: UserRepositoryProtocol
-    private let locationService: LocationService
-    private let languageManager: LanguageManager
     
-    init(authRepo: AuthRepositoryProtocol, userRepo: UserRepositoryProtocol, locationService: LocationService, languageManager: LanguageManager) {
+    init(authRepo: AuthRepositoryProtocol, userRepo: UserRepositoryProtocol) {
         self.authRepo = authRepo
         self.userRepo = userRepo
-        self.locationService = locationService
-        self.languageManager = languageManager
-    }
-    
-        // MARK: - Location
-    
-    var locationAuthorizationStatus: CLAuthorizationStatus {
-        locationService.authorizationStatus
-    }
-    
-    var locationStatusTitle: String {
-        switch locationAuthorizationStatus {
-            case .authorizedAlways: return "Always Allowed"
-            case .authorizedWhenInUse: return "Allowed While Using App"
-            case .denied: return "Denied"
-            case .restricted: return "Restricted"
-            case .notDetermined: return "Not Determined"
-            @unknown default: return "Unknown"
-        }
-    }
-    
-    var locationStatusIcon: String {
-        switch locationAuthorizationStatus {
-            case .authorizedAlways, .authorizedWhenInUse: return "location.fill"
-            case .denied, .restricted: return "location.slash"
-            case .notDetermined: return "location"
-            @unknown default: return "location"
-        }
-    }
-    
-    var locationStatusTint: Color {
-        switch locationAuthorizationStatus {
-            case .authorizedAlways, .authorizedWhenInUse: return .green
-            case .denied, .restricted: return .red
-            case .notDetermined: return .orange
-            @unknown default: return .gray
-        }
-    }
-    
-    var needsLocationSettingsRedirect: Bool {
-        locationAuthorizationStatus == .denied || locationAuthorizationStatus == .restricted
-    }
-    
-    var needsLocationRequest: Bool {
-        locationAuthorizationStatus == .notDetermined
-    }
-    
-    func requestLocationAccess() {
-        locationService.requestLocation()
     }
     
         // MARK: - Profile
@@ -105,11 +64,12 @@ final class ProfileViewModel {
         }
     }
     
-    func setLanguage(_ language: AppLanguage) {
-        languageManager.setLanguage(language)
-    }
-    
         // MARK: - Avatar
+    
+    private func handlePhotoSelection(_ item: PhotosPickerItem) async {
+        guard let data = try? await item.loadTransferable(type: Data.self) else { return }
+        await uploadAvatar(imageData: data)
+    }
     
     func uploadAvatar(imageData: Data) async {
         guard let userId = user?.id else { return }
@@ -130,5 +90,20 @@ final class ProfileViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+    
+        // MARK: - ID Display
+    
+    func toggleIdExpanded() {
+        isIdExpanded.toggle()
+    }
+    
+    func toggleNationalIDAppearance() {
+        isNationalIDAppearance.toggle()
+    }
+    
+    func displayedId(for id: String) -> String {
+        guard !isIdExpanded else { return id }
+        return "\(id.prefix(9))...."
     }
 }

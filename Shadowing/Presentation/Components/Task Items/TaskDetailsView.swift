@@ -2,6 +2,16 @@ import SwiftUI
 
 struct TaskDetailsView: View {
     
+        // MARK: - Environment
+    @Environment(\.colorScheme) private var colorScheme
+    
+        // MARK: - Properties
+    private var listRowColor: Color? {
+        colorScheme == .dark
+        ? Color.accentColor.opacity(0.12)
+        : nil
+    }
+    
     @State private var vm: TaskDetailsViewModel
     @State private var isIdExpanded = false
     
@@ -10,10 +20,13 @@ struct TaskDetailsView: View {
     }
     
     var body: some View {
-        content
-            .task { await vm.loadDetails() }
-            .navigationTitle("Task Details")
-            .navigationBarTitleDisplayMode(.inline)
+        ZStack {
+            AppBackground()
+            content
+        }
+        .task { await vm.loadDetails() }
+        .navigationTitle("Task Details")
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     @ViewBuilder
@@ -38,6 +51,7 @@ struct TaskDetailsView: View {
                 idSection(for: task)
             }
             .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
         }
     }
     
@@ -48,6 +62,7 @@ struct TaskDetailsView: View {
             Text(task.title)
                 .font(.headline)
         }
+        .listRowBackground(listRowColor)
     }
     
     private func descriptionSection(_ task: TaskModel) -> some View {
@@ -56,6 +71,7 @@ struct TaskDetailsView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
+        .listRowBackground(listRowColor)
     }
     
         // MARK: - Overview
@@ -90,6 +106,7 @@ struct TaskDetailsView: View {
                 valueColor: task.priority.color
             )
         }
+        .listRowBackground(listRowColor)
     }
     
         // MARK: - Scheduling
@@ -114,6 +131,7 @@ struct TaskDetailsView: View {
                     )
                 }
             }
+            .listRowBackground(listRowColor)
         }
     }
     
@@ -127,6 +145,7 @@ struct TaskDetailsView: View {
                 value: task.address
             )
         }
+        .listRowBackground(listRowColor)
     }
     
         // MARK: - Task Info
@@ -145,6 +164,7 @@ struct TaskDetailsView: View {
                 localizedValue: "\(task.applicantsCount)"
             )
         }
+        .listRowBackground(listRowColor)
     }
     
         // MARK: - Requester / Executor
@@ -153,19 +173,22 @@ struct TaskDetailsView: View {
         Section("Requester") {
             userRows(for: user)
         }
+        .listRowBackground(listRowColor)
     }
     
     private func executorSection(_ user: UserSummaryModel) -> some View {
         Section("Executor") {
             userRows(for: user)
         }
+        .listRowBackground(listRowColor)
     }
     
     @ViewBuilder
     private func userRows(for user: UserSummaryModel) -> some View {
         
         AvatarView(profile: user, size: 36, nameLayout: .horizontal)
-            .listRowBackground(Color(.systemGray4))
+//            .listRowBackground(colorScheme == .dark ? Color(.systemGray3) : Color(.systemGray4))
+            .listRowBackground(Color(.tertiaryLabel))
             .listRowSeparator(.hidden)
         
         InfoRow(
@@ -207,6 +230,7 @@ struct TaskDetailsView: View {
                 value: task.updatedAt.formatted(date: .abbreviated, time: .shortened)
             )
         }
+        .listRowBackground(listRowColor)
     }
     
         // MARK: - Id
@@ -226,6 +250,7 @@ struct TaskDetailsView: View {
                 }
             }
         }
+        .listRowBackground(listRowColor)
         .contextMenu {
             Button {
                 UIPasteboard.general.string = task.id

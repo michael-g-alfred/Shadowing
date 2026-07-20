@@ -63,7 +63,7 @@ final class DIContainer {
     private(set) lazy var lookupRepository: LookupRepository = LookupRepository(
         network: networkService, authRepository: authRepository
     )
-
+    
     
         // MARK: - Shared ViewModels
     
@@ -151,9 +151,20 @@ final class DIContainer {
     func makeProfileViewModel() -> ProfileViewModel {
         ProfileViewModel(
             authRepo: authRepository,
-            userRepo: userRepository,
+            userRepo: userRepository
+        )
+    }
+    
+        // MARK: - Settings
+    
+    func makeSettingsView() -> SettingsSheet {
+        SettingsSheet(vm: makeSettingsViewModel())
+    }
+    
+    func makeSettingsViewModel() -> SettingsViewModel {
+        SettingsViewModel(
             locationService: locationService,
-            languageManager: languageManager,
+            languageManager: languageManager
         )
     }
     
@@ -233,5 +244,5 @@ final class DIContainer {
     }
     
         // MARK: - Chat
-
+    
 }

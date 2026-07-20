@@ -74,7 +74,7 @@ struct RequesterView: View {
                             : "line.3.horizontal.decrease.circle.fill"
                         )
                     }
-                    .tint(.accent)
+//                    .tint(.accent)
                 }
             }
         }
