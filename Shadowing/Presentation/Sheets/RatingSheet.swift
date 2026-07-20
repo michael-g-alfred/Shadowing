@@ -81,7 +81,7 @@ struct RatingSheet: View {
             }, set: { v in
                 vm.selectRating(Int(v))
             }), in: 1...5, step: 1)
-            .tint(.yellow)
+            .tint(.orange)
             .frame(width: 250)
             .onChange(of: vm.rating) { _,_ in
                 withAnimation(.easeInOut) {
@@ -99,7 +99,7 @@ struct RatingSheet: View {
             TextEditor(text: $vm.comment)
                 .scrollContentBackground(.hidden)
                 .padding(12)
-                .frame(minHeight: 100)
+                .frame(height: 100)
                 .overlay {
                     RoundedRectangle(cornerRadius: 12)
                         .strokeBorder(.gray.opacity(0.5), lineWidth: 1)

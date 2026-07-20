@@ -18,6 +18,8 @@ struct TaskListView: View {
     
     let onLoad: () async -> Void
     let onLoadMoreIfNeeded: () async -> Void
+    var onClearFilter: (() -> Void)? = nil
+
     
     var leadingSwipe: ((TaskModel) -> AnyView)? = nil
     var trailingSwipe: ((TaskModel) -> AnyView)? = nil
@@ -52,9 +54,10 @@ struct TaskListView: View {
         } else if let error = errorMessage {
             LoadingState.error(message: error).view
         } else if tasks.isEmpty {
-            emptyState.view {
-                await onLoad()
-            }
+            emptyState.view(
+                retryAction: { await onLoad() },
+                clearFilterAction: onClearFilter
+            )
         } else {
             listContent
         }
@@ -83,9 +86,10 @@ struct TaskListView: View {
         } else if let error = errorMessage {
             LoadingState.error(message: error).view
         } else if tasks.isEmpty {
-            emptyState.view {
-                await onLoad()
-            }
+            emptyState.view(
+                retryAction: { await onLoad() },
+                clearFilterAction: onClearFilter
+            )
         } else {
             gridContent
         }

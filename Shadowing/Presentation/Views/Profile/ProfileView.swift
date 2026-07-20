@@ -12,6 +12,7 @@ struct ProfileView: View {
     @State private var isIdExpanded = false
     @State private var isNationalIDAppearance = false
     @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var isRatingsPresented = false
     
         // MARK: - Init
     init(vm: ProfileViewModel) {
@@ -74,6 +75,13 @@ struct ProfileView: View {
                     await vm.uploadAvatar(imageData: data)
                 }
             }
+            .sheet(isPresented: $isRatingsPresented) {
+                if let user = vm.user {
+                        container.makeRatingsView(userId: user.id, userName: user.displayName)
+                            .presentationDetents([.fraction(0.75)])
+                            .presentationDragIndicator(.visible)
+                }
+            }
         }
     }
     
@@ -122,6 +130,10 @@ struct ProfileView: View {
                     ? "\(user.totalRatings)"
                     : "No ratings yet"
                 )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isRatingsPresented = true
+                }
                 
                 InfoRow(
                     title: "Rating",

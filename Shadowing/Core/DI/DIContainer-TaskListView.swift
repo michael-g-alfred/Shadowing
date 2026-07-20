@@ -63,18 +63,6 @@ extension DIContainer {
                             }
                             .tint(.green)
                         }
-                        if task.status == .inProgress, let executorId = task.executor?.id {
-                            NavigationLink(
-                                value: TaskChatRoute(
-                                    taskId: task.id,
-                                    requesterId: task.requester.id,
-                                    executorId: executorId
-                                )
-                            ) {
-                                Label("Chat", systemImage: "message.fill")
-                            }
-                            .tint(.blue)
-                        }
                     }
                 )
             }
@@ -151,19 +139,6 @@ extension DIContainer {
                                 Label("Mark Done", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
-                            
-                            if let executorId = task.executor?.id {
-                                NavigationLink(
-                                    value: TaskChatRoute(
-                                        taskId: task.id,
-                                        requesterId: task.requester.id,
-                                        executorId: executorId
-                                    )
-                                ) {
-                                    Label("Chat", systemImage: "message.fill")
-                                }
-                                .tint(.blue)
-                            }
                         }
                     }
                 )

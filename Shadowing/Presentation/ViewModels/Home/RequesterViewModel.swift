@@ -43,11 +43,9 @@ final class RequesterViewModel {
 //    var paymentTaskId: String?
     
     private let taskRepo: TaskRepositoryProtocol
-    private let chatRepo: ChatRepositoryProtocol?
     
-    init(taskRepo: TaskRepositoryProtocol, chatRepo: ChatRepositoryProtocol? = nil) {
+    init(taskRepo: TaskRepositoryProtocol) {
         self.taskRepo = taskRepo
-        self.chatRepo = chatRepo
         DebugLogger.log("🚀 RequesterViewModel initialized")
     }
     
@@ -97,13 +95,6 @@ final class RequesterViewModel {
             
             requesterPublishedTasks.removeAll { $0.id == task.id }
             DebugLogger.log("✅ Task \(task.id) confirmed as completed")
-            
-            do {
-                try await chatRepo?.deleteConversation(id: task.id.conversationIdForTask())
-                DebugLogger.log("✅ Chat conversation for task \(task.id) deleted")
-            } catch {
-                DebugLogger.log("❌ Failed to delete chat conversation for task \(task.id): \(error.localizedDescription)")
-            }
             
             selectedTaskIdForRating = task.id
             executorName = task.executor?.displayName
