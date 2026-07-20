@@ -4,7 +4,6 @@ struct SettingsSheet: View {
     
         // MARK: - Environment
     @Environment(\.openURL) private var openURL
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     
         // MARK: - Properties
@@ -42,13 +41,6 @@ struct SettingsSheet: View {
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
         }
     }
     

@@ -47,7 +47,6 @@ struct HomeView: View {
                         )
                         .labelStyle(.titleAndIcon)
                     }
-                    .buttonStyle(.glassProminent)
                 }
             }
         }

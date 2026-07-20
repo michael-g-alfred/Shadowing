@@ -47,34 +47,36 @@ struct RequesterView: View {
                 Button("Show Add Task Sheet", systemImage: "plus") {
                     vm.showAddTaskSheet.toggle()
                 }
-                .buttonStyle(.glassProminent)
             }
-            if vm.selectedTab == .publishedTasks
-                && vm.requesterPublishedTasks.isEmpty == false
-                && vm.requesterPublishedTasks.count > 1
-                && vm.errorMessage == nil {
-                ToolbarItem(placement: .topBarLeading) {
-                    Menu {
-                        ForEach(RequesterStatusFilter.allCases) { filter in
-                            Button {
-                                vm.setStatusFilter(filter)
-                            } label: {
-                                Label(
-                                    filter.title,
-                                    systemImage: vm.statusFilter == filter
-                                    ? "checkmark.circle.fill"
-                                    : "circle"
-                                )
+            ToolbarSpacer(placement: .topBarLeading)
+            ToolbarItem(placement: .topBarLeading) {
+                Group {
+                    if vm.selectedTab == .publishedTasks
+                        && !vm.requesterPublishedTasks.isEmpty
+                        && vm.requesterPublishedTasks.count > 1
+                        && vm.errorMessage == nil {
+                        
+                        Menu {
+                            ForEach(RequesterStatusFilter.allCases) { filter in
+                                Button {
+                                    vm.setStatusFilter(filter)
+                                } label: {
+                                    Label(
+                                        filter.title,
+                                        systemImage: vm.statusFilter == filter
+                                        ? "checkmark.circle.fill"
+                                        : "circle"
+                                    )
+                                }
                             }
+                        } label: {
+                            Image(
+                                systemName: vm.statusFilter == .all
+                                ? "line.3.horizontal.decrease"
+                                : "line.3.horizontal.decrease.circle.fill"
+                            )
                         }
-                    } label: {
-                        Image(
-                            systemName: vm.statusFilter == .all
-                            ? "line.3.horizontal.decrease"
-                            : "line.3.horizontal.decrease.circle.fill"
-                        )
                     }
-//                    .tint(.accent)
                 }
             }
         }

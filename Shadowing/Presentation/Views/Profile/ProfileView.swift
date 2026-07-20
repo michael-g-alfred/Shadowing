@@ -48,7 +48,6 @@ struct ProfileView: View {
                     } label: {
                         Label("Settings", systemImage: "gearshape.fill")
                     }
-                    .buttonStyle(.glassProminent)
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -59,7 +58,6 @@ struct ProfileView: View {
                             Label("Change Photo", systemImage: "camera.fill")
                         }
                     }
-                    .buttonStyle(.glassProminent)
                     .disabled(vm.isUploadingAvatar || vm.user == nil)
                 }
                 
@@ -90,7 +88,7 @@ struct ProfileView: View {
             }
             .sheet(isPresented: Bindable(vm).isSettingsPresented) {
                 container.makeSettingsView()
-                    .presentationDetents([.fraction(0.5)])
+                    .presentationDetents([.fraction(0.75)])
                     .presentationDragIndicator(.visible)
             }
         }
