@@ -10,6 +10,7 @@ struct MapView: View {
     @State private var vm: MapViewModel
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var navigationPath = NavigationPath()
+    @State private var locationManager = CLLocationManager()
     
         // MARK: - Init
     init(vm: MapViewModel, makeTaskDetails: @escaping (String) -> AnyView) {
@@ -21,6 +22,8 @@ struct MapView: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             Map(position: $cameraPosition) {
+                UserAnnotation()
+                
                 ForEach(vm.tasks) { task in
                     Annotation(task.title, coordinate: task.coordinate) {
                         Button {
@@ -57,6 +60,13 @@ struct MapView: View {
                 if vm.isLoading && vm.tasks.isEmpty {
                     ProgressView()
                 }
+            }
+            .mapControls {
+                MapUserLocationButton()
+                MapCompass()
+            }
+            .onAppear {
+                locationManager.requestWhenInUseAuthorization()
             }
         }
     }
