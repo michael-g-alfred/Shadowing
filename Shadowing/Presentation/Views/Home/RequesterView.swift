@@ -95,12 +95,24 @@ struct RequesterView: View {
                     .presentationDragIndicator(.visible)
             }
         }
-//        .sheet(isPresented: $vm.showPaymentSheet) {
-//            if let url = vm.paymentURL {
-//                PaymentWebView(url: url) {
-//                    await vm.paymentSheetDismissed()
-//                }
-//            }
-//        }
+        .sheet(isPresented: Binding(
+            get: { vm.selectedChatTaskId != nil },
+            set: { if !$0 { vm.selectedChatTaskId = nil } }
+        )) {
+            if let taskId = vm.selectedChatTaskId {
+                NavigationStack {
+                    container.makeDirectChatDetailView(taskId: taskId)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Close") {
+                                    vm.selectedChatTaskId = nil
+                                }
+                            }
+                        }
+                }
+                .presentationDetents([.fraction(0.75)])
+                .presentationDragIndicator(.visible)
+            }
+        }
     }
 }

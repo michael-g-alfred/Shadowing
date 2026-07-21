@@ -4,11 +4,12 @@ struct TaskDetailsView: View {
     
         // MARK: - Environment
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(DIContainer.self) private var container
     
         // MARK: - Properties
     private var listRowColor: Color? {
         colorScheme == .dark
-        ? Color.accentColor.opacity(0.12)
+        ? Color.accentColor.opacity(0.15)
         : nil
     }
     
@@ -27,6 +28,11 @@ struct TaskDetailsView: View {
         .task { await vm.loadDetails() }
         .navigationTitle("Task Details")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $vm.selectedUserForRatings) { user in
+            container.makeRatingsView(userId: user.id, userName: user.displayName)
+                .presentationDetents([.fraction(0.75)])
+                .presentationDragIndicator(.visible)
+        }
     }
     
     @ViewBuilder
@@ -87,7 +93,7 @@ struct TaskDetailsView: View {
             InfoRow(
                 title: "Budget",
                 systemImage: "wallet.bifold.fill",
-                value: task.budget.formatted(.currency(code: task.currency)),
+                value: task.budget.formatted(.currency(code: task.currency))
             )
             
             InfoRow(
@@ -185,9 +191,7 @@ struct TaskDetailsView: View {
     
     @ViewBuilder
     private func userRows(for user: UserSummaryModel) -> some View {
-        
         AvatarView(profile: user, size: 36, nameLayout: .horizontal)
-//            .listRowBackground(colorScheme == .dark ? Color(.systemGray3) : Color(.systemGray4))
             .listRowBackground(Color(.tertiaryLabel))
             .listRowSeparator(.hidden)
         
@@ -204,6 +208,12 @@ struct TaskDetailsView: View {
             ? "\(user.totalRatings)"
             : "No ratings yet"
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if user.totalRatings > 0 {
+                vm.selectedUserForRatings = user
+            }
+        }
         
         InfoRow(
             title: "Rating",
@@ -242,7 +252,6 @@ struct TaskDetailsView: View {
                     .font(.caption)
                     .contentTransition(.numericText())
             }
-            
             .contentShape(Rectangle())
             .onTapGesture {
                 withAnimation {

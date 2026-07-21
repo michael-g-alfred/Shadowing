@@ -1,5 +1,5 @@
 {
-  "originHash" : "09bf02662861b3163be35ce704c34664db1ba532bcad130b4a02bb8fd1a1dfb3",
+  "originHash" : "f480bb4e86cef05bd2a35aaa64a52f9f0ad3aaf985070dc7e5427e367265cdbe",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -106,7 +106,7 @@
       "location" : "https://github.com/michael-g-alfred/MGNetworkingKit.git",
       "state" : {
         "branch" : "main",
-        "revision" : "2bd64db9d3f0b4a8b9d002b17f498c9f4d10250f"
+        "revision" : "be4c2272c2c4821f6bd526b86b20efc50e427557"
       }
     },
     {
@@ -115,7 +115,7 @@
       "location" : "https://github.com/michael-g-alfred/MGOnboardingKit.git",
       "state" : {
         "branch" : "main",
-        "revision" : "ecca19ad8b105ca604e95d119781fa02d81c9990"
+        "revision" : "3db088dabeae30a6b009380c4a45a3c2013babcd"
       }
     },
     {

@@ -1,0 +1,10 @@
+import Foundation
+
+protocol ChatRepositoryProtocol: Sendable {
+    func createChat(taskId: String, requesterId: String, executorId: String) async throws
+    func deleteChat(taskId: String) async throws
+    func observeConversations(currentUserId: String) -> AsyncStream<[Conversation]>
+    func observeMessages(taskId: String, currentUserId: String) -> AsyncStream<[ChatMessage]>
+    func sendMessage(taskId: String, messageText: String, senderId: String) async throws
+    func markMessageAsRead(taskId: String, messageId: String) async throws
+}

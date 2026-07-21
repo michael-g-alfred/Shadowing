@@ -2,18 +2,18 @@ import SwiftUI
 
 struct ExecutorView: View {
     
-    // MARK: - Environment
+        // MARK: - Environment
     @Environment(DIContainer.self) private var container
     
-    // MARK: - State
+        // MARK: - State
     @State private var vm: ExecutorViewModel
     
-    // MARK: - Init
+        // MARK: - Init
     init(vm: ExecutorViewModel) {
         _vm = State(initialValue: vm)
     }
     
-    // MARK: - Body
+        // MARK: - Body
     var body: some View {
         VStack(spacing: 16) {
             Picker(
@@ -54,6 +54,25 @@ struct ExecutorView: View {
                 container.makeRatingSheet(taskId: taskId, target: .requester(displayName: name))
                     .presentationDetents([.fraction(0.75)])
                     .presentationDragIndicator(.visible)
+            }
+        }
+        .sheet(isPresented: Binding(
+            get: { vm.selectedChatTaskId != nil },
+            set: { if !$0 { vm.selectedChatTaskId = nil } }
+        )) {
+            if let taskId = vm.selectedChatTaskId {
+                NavigationStack {
+                    container.makeDirectChatDetailView(taskId: taskId)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Close") {
+                                    vm.selectedChatTaskId = nil
+                                }
+                            }
+                        }
+                }
+                .presentationDetents([.fraction(0.75)])
+                .presentationDragIndicator(.visible)
             }
         }
     }

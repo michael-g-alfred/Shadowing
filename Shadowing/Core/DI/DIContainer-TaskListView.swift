@@ -47,6 +47,15 @@ extension DIContainer {
             trailingSwipe: { [requesterViewModel] task in
                 AnyView(
                     Group {
+                        if task.status == .inProgress {
+                            Button {
+                                requesterViewModel.openChat(for: task.id)
+                            } label: {
+                                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
+                            }
+                            .tint(.blue)
+                        }
+                        
                         if task.status == .pending && task.applicantsCount > 0 {
                             Button {
                                 Task { await requesterViewModel.showApplicants(for: task) }
@@ -68,7 +77,6 @@ extension DIContainer {
             }
         )
     }
-    
     func makeRequesterCompletedTasksView() -> TaskListView {
         TaskListView(
             tasks: requesterViewModel.requesterCompletedTasks,
@@ -133,6 +141,13 @@ extension DIContainer {
                 AnyView(
                     Group {
                         if task.status == .inProgress {
+                            Button {
+                                executorViewModel.openChat(for: task.id)
+                            } label: {
+                                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
+                            }
+                            .tint(.blue)
+                            
                             Button(role: .confirm) {
                                 Task { await executorViewModel.markTaskDone(task) }
                             } label: {

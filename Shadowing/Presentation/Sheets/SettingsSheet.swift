@@ -15,7 +15,7 @@ struct SettingsSheet: View {
     
         // MARK: - State
     @State private var vm: SettingsViewModel
-    @AppStorage("appColorScheme") private var appColorScheme: AppColorScheme = .system
+    @AppStorage("appColorScheme") private var appColorScheme: AppColorScheme = .dark
     
         // MARK: - Init
     init(vm: SettingsViewModel) {
@@ -73,7 +73,7 @@ struct SettingsSheet: View {
                         .tag(option)
                 }
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
         }
     }
     

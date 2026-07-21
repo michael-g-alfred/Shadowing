@@ -1,6 +1,17 @@
 import SwiftUI
 
 struct AppInputField: View {
+    
+        // MARK: - Environment
+    @Environment(DIContainer.self) private var container
+    @Environment(\.colorScheme) private var colorScheme
+    
+        // MARK: - Properties
+    private var backgroundColor: Color? {
+        colorScheme == .dark
+        ? .accentColor.opacity(0.15)
+        : .gray.opacity(0.15)
+    }
 
     // MARK: Config
     let icon: String
@@ -13,6 +24,7 @@ struct AppInputField: View {
     var isFocused: Bool = false
 
     var textFilter: ((String) -> String)? = nil
+    
 
     var body: some View {
         HStack {
@@ -33,11 +45,11 @@ struct AppInputField: View {
             .textInputAutocapitalization(.never)
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(backgroundColor)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(.gray.opacity(0.5), lineWidth: 0.5)
+                .strokeBorder(.separator, lineWidth: 1)
         }
         .overlay {
             RoundedRectangle(cornerRadius: 12)

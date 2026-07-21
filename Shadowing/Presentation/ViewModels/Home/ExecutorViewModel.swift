@@ -45,6 +45,8 @@ final class ExecutorViewModel {
     
     var selectedTaskId: String?
     
+    var selectedChatTaskId: String?
+    
     init(taskRepo: TaskRepositoryProtocol) {
         self.taskRepo = taskRepo
     }
@@ -245,6 +247,13 @@ final class ExecutorViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+    
+        // MARK: - Chat
+    
+    func openChat(for taskId: String) {
+        DebugLogger.log("Opening chat for task: \(taskId)")
+        self.selectedChatTaskId = taskId
     }
     
         // MARK: - Helpers

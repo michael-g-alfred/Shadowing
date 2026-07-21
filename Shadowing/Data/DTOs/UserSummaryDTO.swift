@@ -1,5 +1,9 @@
 import Foundation
 
+struct UserSummaryResponseDTO: Codable {
+    let user: UserSummaryDTO
+}
+
 struct UserSummaryDTO: Codable {
     let id: String
     let displayName: String

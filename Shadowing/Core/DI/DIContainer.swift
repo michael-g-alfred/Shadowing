@@ -64,6 +64,10 @@ final class DIContainer {
         network: networkService, authRepository: authRepository
     )
     
+    @ObservationIgnored
+    private(set) lazy var chatRepository: ChatRepositoryProtocol = ChatRepository(
+        userRepo: userRepository
+    )
     
         // MARK: - Shared ViewModels
     
@@ -71,10 +75,21 @@ final class DIContainer {
     lazy var authViewModel = AuthViewModel(authRepo: authRepository)
     
     @ObservationIgnored
-    lazy var requesterViewModel = RequesterViewModel(taskRepo: taskRepository)
+    lazy var requesterViewModel = RequesterViewModel(
+        taskRepo: taskRepository,
+        chatRepo: chatRepository,
+        userRepo: userRepository
+    )
     
     @ObservationIgnored
     lazy var executorViewModel = ExecutorViewModel(taskRepo: taskRepository)
+    
+    @ObservationIgnored
+    lazy var chatViewModel = ChatViewModel(
+        authRepo: authRepository,
+        userRepo: userRepository,
+        chatRepo: chatRepository
+    )
     
         // MARK: - Root
     
@@ -245,4 +260,19 @@ final class DIContainer {
     
         // MARK: - Chat
     
+    func makeChatView() -> ChatView {
+        ChatView(vm: chatViewModel)
+    }
+    
+    func makeChatViewModel() -> ChatViewModel {
+        chatViewModel
+    }
+    
+    func makeConversationDetailView(conversation: Conversation) -> ConversationDetailView {
+        ConversationDetailView(conversation: conversation, vm: chatViewModel)
+    }
+    
+    func makeDirectChatDetailView(taskId: String) -> some View {
+        DirectChatLoaderView(taskId: taskId, vm: chatViewModel)
+    }
 }

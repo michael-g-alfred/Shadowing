@@ -23,6 +23,15 @@ extension APIConfig {
         )
     }
     
+    static func userSummary(id: String, accessToken: String) -> MGRequestConfig {
+        MGRequestConfig(
+            baseURL: APIEndpoints.baseURL,
+            path: APIEndpoints.userSummaryPath(id: id),
+            method: .get,
+            headers: ["Authorization": "Bearer \(accessToken)"]
+        )
+    }
+    
     static func uploadAvatar(userId: String, imageData: Data, fileName: String, mimeType: String, accessToken: String) -> MGRequestConfig {
         let boundary = UUID().uuidString
         var body = Data()

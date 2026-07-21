@@ -25,6 +25,9 @@ enum APIEndpoints {
     static func userPath(id: String) -> String {
         return userRoute + "/\(id)"
     }
+    static func userSummaryPath(id: String) -> String {
+        return userRoute + "/\(id)/summary"
+    }
     static func userRatingsPath(id: String) -> String {
         return userRoute + "/\(id)/ratings"
     }

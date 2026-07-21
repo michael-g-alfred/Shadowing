@@ -5,7 +5,7 @@ struct UserModel: Codable, Identifiable, Equatable, Profile {
     let email: String
     let displayName: String
     let nationalId: String?
-    let avatarUrl: String?
+    var avatarUrl: String?
     let role: String
     let rating: Double
     let totalRatings: Int

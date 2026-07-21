@@ -7,10 +7,10 @@ struct ProfileView: View {
     @Environment(DIContainer.self) private var container
     @Environment(\.colorScheme) private var colorScheme
     
-        // MARK: - Properties
+        // MARK: - Property
     private var listRowColor: Color? {
         colorScheme == .dark
-        ? Color.accentColor.opacity(0.12)
+        ? Color.accentColor.opacity(0.15)
         : nil
     }
     
@@ -61,6 +61,8 @@ struct ProfileView: View {
                     .disabled(vm.isUploadingAvatar || vm.user == nil)
                 }
                 
+                ToolbarSpacer(placement: .topBarTrailing)
+                
                 ToolbarItem(placement: .destructiveAction) {
                     Button(role: .destructive) {
                         Task {
@@ -70,7 +72,6 @@ struct ProfileView: View {
                         Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                     }
                     .tint(.red)
-                    .buttonStyle(.glassProminent)
                 }
             }
             .task {
@@ -98,7 +99,7 @@ struct ProfileView: View {
     private func profileContent(for user: UserModel) -> some View {
         List {
             Section {
-                AvatarView(profile: user, size: 90, nameLayout: .vertical, nameFont: .title2)
+                AvatarView(profile: user, size: 100, nameLayout: .vertical, nameFont: .title2)
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
                     .listRowInsets(.all, 0)

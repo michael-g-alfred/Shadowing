@@ -61,7 +61,7 @@ enum EmptyState: CaseIterable {
             case .noChats:
                 return "Active conversations will appear here."
             case .noApplicantsYet:
-                return "No one has accepted this task yet."
+                return "No one has applied for this task yet."
             case .noNotifications:
                 return "You have no notifications yet."
             case .noProfile:
@@ -84,7 +84,7 @@ enum EmptyState: CaseIterable {
             case .noApplicantsYet:
                 return "person.slash"
             case .noNotifications:
-                return "bell.badge"
+                return "bell.slash"
             case .noProfile:
                 return "person.crop.circle"
             default:
