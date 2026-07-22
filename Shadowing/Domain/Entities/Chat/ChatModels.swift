@@ -6,6 +6,7 @@ struct Conversation: Identifiable {
     let lastMessage: String
     let lastMessageStatus: MessageStatus
     let lastMessageTime: String
+    let unreadCount: Int
 }
 
 struct ChatMessage: Identifiable {
@@ -15,4 +16,5 @@ struct ChatMessage: Identifiable {
     let sender: UserSummaryModel
     let isCurrentUser: Bool
     let status: MessageStatus?
+    let reactions: [String: String] // [userId: emoji]
 }

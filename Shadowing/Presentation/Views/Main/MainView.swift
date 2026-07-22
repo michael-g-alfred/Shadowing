@@ -2,29 +2,30 @@ import SwiftUI
 
 struct MainView: View {
     
-    // MARK: - Environment
+        // MARK: - Environment
     @Environment(DIContainer.self) private var container
     
-    // MARK: - State
+        // MARK: - State
     @State private var vm: MainViewModel
     
-    // MARK: - Init
+        // MARK: - Init
     init(vm: MainViewModel) {
         _vm = State(initialValue: vm)
     }
     
-    // MARK: - Body
+        // MARK: - Body
     var body: some View {
         TabView(selection: $vm.selectedTab) {
             ForEach(AppTab.allCases) { tab in
                 Tab(tab.title, systemImage: tab.image, value: tab) {
                     view(for: tab)
                 }
+                .badge(tab == .chat ? container.chatViewModel.totalUnreadCount : 0)
             }
         }
     }
     
-    // MARK: - Private Views
+        // MARK: - Private Views
     @ViewBuilder
     private func view(for tab: AppTab) -> some View {
         switch tab {

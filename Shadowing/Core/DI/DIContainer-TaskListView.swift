@@ -24,6 +24,7 @@ extension DIContainer {
                                 Label("Delete", systemImage: "trash")
                             }
                             .tint(.red)
+                            .glassEffect()
                         }
                         if task.status == .published || task.status == .pending {
                             Button {
@@ -32,6 +33,7 @@ extension DIContainer {
                                 Label("Cancel", systemImage: "xmark.circle")
                             }
                             .tint(.yellow)
+                            .glassEffect()
                         }
                         if task.status == .cancelled {
                             Button {
@@ -40,6 +42,7 @@ extension DIContainer {
                                 Label("Publish", systemImage: "square.and.arrow.up.badge.checkmark")
                             }
                             .tint(.blue)
+                            .glassEffect()
                         }
                     }
                 )
@@ -54,6 +57,7 @@ extension DIContainer {
                                 Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tint(.blue)
+                            .glassEffect()
                         }
                         
                         if task.status == .pending && task.applicantsCount > 0 {
@@ -63,6 +67,7 @@ extension DIContainer {
                                 Label("Applicants", systemImage: "person.3.fill")
                             }
                             .tint(.orange)
+                            .glassEffect()
                         }
                         if task.status == .pendingCompleted {
                             Button(role: .destructive) {
@@ -71,6 +76,7 @@ extension DIContainer {
                                 Label("Completed", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
+                            .glassEffect()
                         }
                     }
                 )
@@ -112,6 +118,8 @@ extension DIContainer {
                                 Label("Accept", systemImage: "checkmark.circle")
                             }
                             .tint(.green)
+                            .glassEffect()
+                            
                         } else if task.isApplicant {
                             Button(role: .destructive) {
                                 Task { await executorViewModel.withdrawFromTask(task) }
@@ -119,6 +127,7 @@ extension DIContainer {
                                 Label("Withdraw", systemImage: "xmark.circle")
                             }
                             .tint(.orange)
+                            .glassEffect()
                         }
                     }
                 )
@@ -147,6 +156,7 @@ extension DIContainer {
                                 Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tint(.blue)
+                            .glassEffect()
                             
                             Button(role: .confirm) {
                                 Task { await executorViewModel.markTaskDone(task) }
@@ -154,6 +164,7 @@ extension DIContainer {
                                 Label("Mark Done", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
+                            .glassEffect()
                         }
                     }
                 )

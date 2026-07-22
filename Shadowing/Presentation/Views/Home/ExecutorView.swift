@@ -61,18 +61,9 @@ struct ExecutorView: View {
             set: { if !$0 { vm.selectedChatTaskId = nil } }
         )) {
             if let taskId = vm.selectedChatTaskId {
-                NavigationStack {
-                    container.makeDirectChatDetailView(taskId: taskId)
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("Close") {
-                                    vm.selectedChatTaskId = nil
-                                }
-                            }
-                        }
-                }
-                .presentationDetents([.fraction(0.75)])
-                .presentationDragIndicator(.visible)
+                container.makeDirectChatDetailView(taskId: taskId)
+                    .presentationDetents([.fraction(0.75)])
+                    .presentationDragIndicator(.visible)
             }
         }
     }

@@ -17,7 +17,8 @@ final class ChatRepository: ChatRepositoryProtocol {
             "executorId": executorId,
             "lastMessage": "",
             "lastMessageTime": FieldValue.serverTimestamp(),
-            "lastMessageStatus": MessageStatus.sent.rawValue
+            "lastMessageStatus": MessageStatus.sent.rawValue,
+            "unreadCounts": [requesterId: 0, executorId: 0]
         ]
         DebugLogger.log("👤 requesterId: \(requesterId) | executorId: \(executorId)")
         do {
@@ -77,6 +78,8 @@ final class ChatRepository: ChatRepositoryProtocol {
                             let statusRaw = data["lastMessageStatus"] as? String ?? "sent"
                             let status = MessageStatus(rawValue: statusRaw) ?? .sent
                             let timestamp = (data["lastMessageTime"] as? Timestamp)?.dateValue() ?? Date()
+                            let unreadCounts = data["unreadCounts"] as? [String: Int] ?? [:]
+                            let unreadCount = unreadCounts[currentUserId] ?? 0
                             
                             conversations.append(
                                 Conversation(
@@ -84,7 +87,8 @@ final class ChatRepository: ChatRepositoryProtocol {
                                     otherUser: otherUser,
                                     lastMessage: lastMessage,
                                     lastMessageStatus: status,
-                                    lastMessageTime: timestamp.formatted(date: .omitted, time: .shortened)
+                                    lastMessageTime: timestamp.formatted(date: .omitted, time: .shortened),
+                                    unreadCount: unreadCount
                                 )
                             )
                         }
@@ -131,6 +135,7 @@ final class ChatRepository: ChatRepositoryProtocol {
                             let status = MessageStatus(rawValue: statusRaw)
                             let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
                             let isCurrentUser = (senderId == currentUserId)
+                            let reactions = data["reactions"] as? [String: String] ?? [:]
                             
                             let senderUser = (try? await self.userRepo.fetchUserSummary(id: senderId))
                             ?? UserSummaryModel(id: senderId, displayName: "User", avatarUrl: nil, rating: 0, totalRatings: 0, completedTasks: 0)
@@ -142,7 +147,8 @@ final class ChatRepository: ChatRepositoryProtocol {
                                     time: timestamp.formatted(date: .omitted, time: .shortened),
                                     sender: senderUser,
                                     isCurrentUser: isCurrentUser,
-                                    status: isCurrentUser ? status : nil
+                                    status: isCurrentUser ? status : nil,
+                                    reactions: reactions
                                 )
                             )
                         }
@@ -160,7 +166,8 @@ final class ChatRepository: ChatRepositoryProtocol {
     
     func sendMessage(taskId: String, messageText: String, senderId: String) async throws {
         DebugLogger.log("➡️ sendMessage called | taskId: \(taskId) | senderId: \(senderId)")
-        let messageRef = db.collection("chats").document(taskId).collection("messages").document()
+        let chatRef = db.collection("chats").document(taskId)
+        let messageRef = chatRef.collection("messages").document()
         let messageData: [String: Any] = [
             "text": messageText,
             "senderId": senderId,
@@ -170,11 +177,22 @@ final class ChatRepository: ChatRepositoryProtocol {
         
         do {
             try await messageRef.setData(messageData)
-            try await db.collection("chats").document(taskId).updateData([
+            
+                // Determine recipient to bump their unread counter
+            let chatSnapshot = try await chatRef.getDocument()
+            let participants = chatSnapshot.data()?["participants"] as? [String] ?? []
+            let recipientId = participants.first(where: { $0 != senderId })
+            
+            var chatUpdateData: [String: Any] = [
                 "lastMessage": messageText,
                 "lastMessageTime": FieldValue.serverTimestamp(),
                 "lastMessageStatus": MessageStatus.sent.rawValue
-            ])
+            ]
+            if let recipientId {
+                chatUpdateData["unreadCounts.\(recipientId)"] = FieldValue.increment(Int64(1))
+            }
+            
+            try await chatRef.updateData(chatUpdateData)
             DebugLogger.log("✅ sendMessage succeeded | taskId: \(taskId)")
         } catch {
             DebugLogger.log("❌ sendMessage FAILED | taskId: \(taskId) | error: \(error)")
@@ -192,6 +210,49 @@ final class ChatRepository: ChatRepositoryProtocol {
             DebugLogger.log("✅ markMessageAsRead succeeded | taskId: \(taskId) | messageId: \(messageId)")
         } catch {
             DebugLogger.log("❌ markMessageAsRead FAILED | taskId: \(taskId) | messageId: \(messageId) | error: \(error)")
+            throw error
+        }
+    }
+    
+    func markAllMessagesAsRead(taskId: String, currentUserId: String) async throws {
+        let chatRef = db.collection("chats").document(taskId)
+        do {
+                // Reset this user's unread counter on the chat doc (drives the tab badge)
+            try await chatRef.updateData(["unreadCounts.\(currentUserId)": 0])
+            
+                // Update read receipts for messages sent by the other participant
+            let unreadMessages = try await chatRef.collection("messages")
+                .whereField("senderId", isNotEqualTo: currentUserId)
+                .getDocuments()
+            
+            for doc in unreadMessages.documents {
+                let currentStatus = doc.data()["status"] as? String
+                if currentStatus != MessageStatus.read.rawValue {
+                    try await doc.reference.updateData(["status": MessageStatus.read.rawValue])
+                }
+            }
+            DebugLogger.log("✅ markAllMessagesAsRead succeeded | taskId: \(taskId) | currentUserId: \(currentUserId)")
+        } catch {
+            DebugLogger.log("❌ markAllMessagesAsRead FAILED | taskId: \(taskId) | error: \(error)")
+            throw error
+        }
+    }
+    
+    func setReaction(taskId: String, messageId: String, userId: String, emoji: String?) async throws {
+        let messageRef = db.collection("chats")
+            .document(taskId)
+            .collection("messages")
+            .document(messageId)
+        
+        do {
+            if let emoji {
+                try await messageRef.updateData(["reactions.\(userId)": emoji])
+            } else {
+                try await messageRef.updateData(["reactions.\(userId)": FieldValue.delete()])
+            }
+            DebugLogger.log("✅ setReaction succeeded | taskId: \(taskId) | messageId: \(messageId) | emoji: \(emoji ?? "removed")")
+        } catch {
+            DebugLogger.log("❌ setReaction FAILED | taskId: \(taskId) | messageId: \(messageId) | error: \(error)")
             throw error
         }
     }

@@ -2,18 +2,18 @@ import SwiftUI
 
 struct RequesterView: View {
     
-    // MARK: - Environment
+        // MARK: - Environment
     @Environment(DIContainer.self) private var container
     
-    // MARK: - State
+        // MARK: - State
     @State private var vm: RequesterViewModel
     
-    // MARK: - Init
+        // MARK: - Init
     init(vm: RequesterViewModel) {
         _vm = State(initialValue: vm)
     }
     
-    // MARK: - Body
+        // MARK: - Body
     var body: some View {
         VStack(spacing: 16) {
             Picker(
@@ -100,18 +100,9 @@ struct RequesterView: View {
             set: { if !$0 { vm.selectedChatTaskId = nil } }
         )) {
             if let taskId = vm.selectedChatTaskId {
-                NavigationStack {
-                    container.makeDirectChatDetailView(taskId: taskId)
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("Close") {
-                                    vm.selectedChatTaskId = nil
-                                }
-                            }
-                        }
-                }
-                .presentationDetents([.fraction(0.75)])
-                .presentationDragIndicator(.visible)
+                container.makeDirectChatDetailView(taskId: taskId)
+                    .presentationDetents([.fraction(0.75)])
+                    .presentationDragIndicator(.visible)
             }
         }
     }

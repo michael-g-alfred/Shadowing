@@ -10,6 +10,10 @@ final class ChatViewModel {
     var isLoading: Bool = true
     var errorMessage: String?
     
+    var totalUnreadCount: Int {
+        conversations.reduce(0) { $0 + $1.unreadCount }
+    }
+    
     private let authRepo: AuthRepositoryProtocol
     private let userRepo: UserRepositoryProtocol
     private let chatRepo: ChatRepositoryProtocol
@@ -54,6 +58,31 @@ final class ChatViewModel {
         
         do {
             try await chatRepo.sendMessage(taskId: taskId, messageText: text, senderId: currentUserId)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+    
+    func markAsRead(taskId: String) async {
+        guard let currentUserId = authRepo.currentUser?.id else { return }
+        do {
+            try await chatRepo.markAllMessagesAsRead(taskId: taskId, currentUserId: currentUserId)
+        } catch {
+            DebugLogger.log("❌ markAsRead FAILED | taskId: \(taskId) | error: \(error)")
+        }
+    }
+    
+    var currentUserId: String? {
+        authRepo.currentUser?.id
+    }
+    
+    func toggleReaction(taskId: String, messageId: String, emoji: String) async {
+        guard let currentUserId = authRepo.currentUser?.id else { return }
+        let currentReaction = activeMessages.first(where: { $0.id == messageId })?.reactions[currentUserId]
+        let newEmoji: String? = (currentReaction == emoji) ? nil : emoji
+        
+        do {
+            try await chatRepo.setReaction(taskId: taskId, messageId: messageId, userId: currentUserId, emoji: newEmoji)
         } catch {
             errorMessage = error.localizedDescription
         }
