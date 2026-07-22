@@ -9,6 +9,6 @@ struct ServiceBadge: View {
             Image(systemName: task.serviceType.icon)
             Text(task.serviceType.localizedLabel)
         }
-        .font(.caption).fontWeight(.medium).foregroundStyle(.tertiary)
+        .font(.caption).fontWeight(.bold).foregroundStyle(.tertiary)
     }
 }

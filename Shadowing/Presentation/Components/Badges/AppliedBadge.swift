@@ -13,7 +13,10 @@ struct AppliedBadge: View {
                 .foregroundStyle(.white)
         }
         .padding(.horizontal, 10).padding(.vertical, 5)
-        .background { Capsule().fill(.green.opacity(0.8)) }
-        .overlay { Capsule().strokeBorder(.green.opacity(1), lineWidth: 1) }
+        .GlassCapsule(
+            overlayColor: .green.opacity(0.1),
+            strokeColor: .green.opacity(0.05),
+            shadowColor: .green.opacity(0.05)
+        )
     }
 }

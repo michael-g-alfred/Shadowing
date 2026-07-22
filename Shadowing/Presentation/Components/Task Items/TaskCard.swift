@@ -80,18 +80,17 @@ struct TaskCard: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(.thinMaterial)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(task.priority.color.opacity(0.05))
                 )
         )
         .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(
                     task.priority.color,
-                    lineWidth: 1.5
+                    lineWidth: 1
                 )
         }
-        .shadow(color: .black.opacity(0.03), radius: 8, x: 0, y: 4)
         .scaleEffect(appeared ? 1 : 0.5)
         .opacity(appeared ? 1 : 0)
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: appeared)

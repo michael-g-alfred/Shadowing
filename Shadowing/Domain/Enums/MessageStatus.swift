@@ -26,7 +26,7 @@ enum MessageStatus: String, Hashable, Codable, Sendable {
             case .sending, .sent, .delivered:
                 return .gray
             case .read:
-                return .blue
+                return .secondary
         }
     }
 }

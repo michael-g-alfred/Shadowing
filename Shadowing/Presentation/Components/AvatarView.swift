@@ -97,7 +97,7 @@ struct AvatarView: View {
     }
     
     private func nameBlock(alignment: HorizontalAlignment) -> some View {
-        VStack(alignment: alignment, spacing: 2) {
+        VStack(alignment: alignment, spacing: 0) {
             Text(profile?.displayName ?? "Guest")
                 .font(nameFont)
                 .bold()

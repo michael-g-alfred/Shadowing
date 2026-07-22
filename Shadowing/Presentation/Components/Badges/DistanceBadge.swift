@@ -19,8 +19,11 @@ struct DistanceBadge: View {
             }
             .foregroundStyle(.cyan)
             .padding(.horizontal, 8).padding(.vertical, 4)
-            .background { Capsule().fill(Color.cyan.opacity(0.1)) }
-            .overlay { Capsule().strokeBorder(Color.cyan.opacity(0.25), lineWidth: 1) }
+            .GlassCapsule(
+                overlayColor: .cyan.opacity(0.1),
+                strokeColor: .cyan.opacity(0.05),
+                shadowColor: .cyan.opacity(0.05)
+            )
         }
     }
 }

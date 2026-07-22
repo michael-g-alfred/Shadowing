@@ -24,8 +24,9 @@ extension DIContainer {
                                 Label("Delete", systemImage: "trash")
                             }
                             .tint(.red)
-                            .glassEffect()
+                            .GlassCapsule()
                         }
+                        
                         if task.status == .published || task.status == .pending {
                             Button {
                                 Task { await requesterViewModel.cancelTask(task) }
@@ -33,8 +34,9 @@ extension DIContainer {
                                 Label("Cancel", systemImage: "xmark.circle")
                             }
                             .tint(.yellow)
-                            .glassEffect()
+                            .GlassCapsule()
                         }
+                        
                         if task.status == .cancelled {
                             Button {
                                 Task { await requesterViewModel.publishTask(task) }
@@ -42,7 +44,7 @@ extension DIContainer {
                                 Label("Publish", systemImage: "square.and.arrow.up.badge.checkmark")
                             }
                             .tint(.blue)
-                            .glassEffect()
+                            .GlassCapsule()
                         }
                     }
                 )
@@ -57,7 +59,7 @@ extension DIContainer {
                                 Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tint(.blue)
-                            .glassEffect()
+                            .GlassCapsule()
                         }
                         
                         if task.status == .pending && task.applicantsCount > 0 {
@@ -67,8 +69,9 @@ extension DIContainer {
                                 Label("Applicants", systemImage: "person.3.fill")
                             }
                             .tint(.orange)
-                            .glassEffect()
+                            .GlassCapsule()
                         }
+                        
                         if task.status == .pendingCompleted {
                             Button(role: .destructive) {
                                 Task { await requesterViewModel.confirmTaskCompletion(task) }
@@ -76,7 +79,7 @@ extension DIContainer {
                                 Label("Completed", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
-                            .glassEffect()
+                            .GlassCapsule()
                         }
                     }
                 )
@@ -118,7 +121,7 @@ extension DIContainer {
                                 Label("Accept", systemImage: "checkmark.circle")
                             }
                             .tint(.green)
-                            .glassEffect()
+                            .GlassCapsule()
                             
                         } else if task.isApplicant {
                             Button(role: .destructive) {
@@ -127,7 +130,7 @@ extension DIContainer {
                                 Label("Withdraw", systemImage: "xmark.circle")
                             }
                             .tint(.orange)
-                            .glassEffect()
+                            .GlassCapsule()
                         }
                     }
                 )
@@ -156,15 +159,14 @@ extension DIContainer {
                                 Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tint(.blue)
-                            .glassEffect()
-                            
+                            .GlassCapsule()
                             Button(role: .confirm) {
                                 Task { await executorViewModel.markTaskDone(task) }
                             } label: {
                                 Label("Mark Done", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
-                            .glassEffect()
+                            .GlassCapsule()
                         }
                     }
                 )
