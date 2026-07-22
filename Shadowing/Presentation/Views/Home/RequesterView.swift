@@ -42,6 +42,9 @@ struct RequesterView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .task {
+            await vm.checkPendingRatings()
+        }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button("Show Add Task Sheet", systemImage: "plus") {
@@ -53,7 +56,6 @@ struct RequesterView: View {
                 Group {
                     if vm.selectedTab == .publishedTasks
                         && !vm.requesterPublishedTasks.isEmpty
-                        && vm.requesterPublishedTasks.count > 1
                         && vm.errorMessage == nil {
                         
                         Menu {
@@ -87,13 +89,6 @@ struct RequesterView: View {
             container.makeApplicantsSheet()
                 .presentationDetents([.fraction(0.75)])
                 .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $vm.showRateExecutorSheet) {
-            if let taskId = vm.selectedTaskIdForRating, let name = vm.executorName {
-                container.makeRatingSheet(taskId: taskId, target: .executor(displayName: name))
-                    .presentationDetents([.fraction(0.75)])
-                    .presentationDragIndicator(.visible)
-            }
         }
         .sheet(isPresented: Binding(
             get: { vm.selectedChatTaskId != nil },

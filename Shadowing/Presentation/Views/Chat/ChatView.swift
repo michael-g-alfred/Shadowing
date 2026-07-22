@@ -60,14 +60,13 @@ struct ConversationRow: View {
                 Spacer()
                 
                 if conversation.unreadCount > 0 {
-                    Text("\(conversation.unreadCount)")
+                    let text = "\(conversation.unreadCount)"
+                    Text(text)
                         .font(.caption2.bold())
                         .foregroundStyle(.white)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, text.count > 1 ? 6 : 0)
+                        .frame(minWidth: 16, minHeight: 16)
                         .GlassCapsule(overlayColor: .red.opacity(0.75), shadowColor: .red.opacity(0.25))
-                } else {
-                    MessageStatusView(status: conversation.lastMessageStatus)
                 }
             }
         }
@@ -139,11 +138,7 @@ struct MessageBubble: View {
     
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            if message.isCurrentUser {
-                Spacer(minLength: 40)
-            } else {
-                AvatarView(profile: message.sender, size: 32, nameLayout: .none)
-            }
+            if message.isCurrentUser { Spacer(minLength: 40) }
             
             VStack(alignment: message.isCurrentUser ? .trailing : .leading, spacing: 4) {
                 ZStack(alignment: message.isCurrentUser ? .bottomLeading : .bottomTrailing) {
@@ -176,11 +171,7 @@ struct MessageBubble: View {
                 .padding(.bottom, message.reactions.isEmpty ? 0 : 4)
             }
             
-            if message.isCurrentUser {
-                AvatarView(profile: message.sender, size: 32, nameLayout: .none)
-            } else {
-                Spacer(minLength: 40)
-            }
+            if !message.isCurrentUser { Spacer(minLength: 40) }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 2)
@@ -197,6 +188,7 @@ struct MessageBubble: View {
         }
     }
 }
+
 
     // MARK: - Main Chat List View
 
@@ -284,6 +276,7 @@ struct ConversationDetailView: View {
                         }
                         .onChange(of: vm.activeMessages.count) { _, _ in scrollToBottom(proxy: proxy) }
                         .onAppear { scrollToBottom(proxy: proxy) }
+                        .scrollIndicators(.hidden)
                     }
                     .onPreferenceChange(MessageFramePreferenceKey.self) { frames in self.messageFrames = frames }
                     

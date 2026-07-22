@@ -21,6 +21,9 @@ struct Shadowing: App {
                             container.setAppState(.admin)
                         } else if container.authRepository.isAuthenticated {
                             container.setAppState(.main)
+                            async let executorRatings: () = container.executorViewModel.checkPendingRatings()
+                            async let requesterRatings: () = container.requesterViewModel.checkPendingRatings()
+                            _ = await (executorRatings, requesterRatings)
                         }
                     } catch {
                         _ = AuthError.unauthorized

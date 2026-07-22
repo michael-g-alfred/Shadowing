@@ -1,25 +1,27 @@
 import Foundation
 import Observation
+import MGNetworkingKit
 
 enum RatingTarget {
-    case executor (displayName: String)
-    case requester (displayName: String)
+    case executor(displayName: String)
+    case requester(displayName: String)
     
-    var title: LocalizedStringResource {
+    var personTitle: LocalizedStringResource {
         switch self {
             case .executor(let displayName):
-                return "Rate \(displayName)"
+                return "\(displayName)"
             case .requester(let displayName):
-                return "Rate \(displayName)"
+                return "\(displayName)"
         }
     }
 }
 
 @MainActor
 @Observable
-final class RatingViewModel {
+final class RatingSheetViewModel {
     
     let taskId: String
+    let taskTitle: String
     let target: RatingTarget
     
     var rating: Int = 0
@@ -30,8 +32,9 @@ final class RatingViewModel {
     
     private let taskRepo: TaskRepositoryProtocol
     
-    init(taskId: String, target: RatingTarget, taskRepo: TaskRepositoryProtocol) {
+    init(taskId: String, taskTitle: String, target: RatingTarget, taskRepo: TaskRepositoryProtocol) {
         self.taskId = taskId
+        self.taskTitle = taskTitle
         self.target = target
         self.taskRepo = taskRepo
     }
@@ -74,6 +77,13 @@ final class RatingViewModel {
             }
             didSubmit = true
         } catch {
+            print("⚠️ Rating submit failed — taskId: \(taskId), target: \(target), error: \(error)")
+            
+            if case let .serverError(statusCode, data) = error as? MGNetworkingKit.NetworkError, let data {
+                let bodyString = String(data: data, encoding: .utf8) ?? "<non-utf8 body>"
+                print("⚠️ Server said (status \(statusCode)): \(bodyString)")
+            }
+            
             errorMessage = "Couldn't submit your rating. Please try again."
         }
     }

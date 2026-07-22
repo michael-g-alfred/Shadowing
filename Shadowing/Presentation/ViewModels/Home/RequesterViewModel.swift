@@ -19,9 +19,6 @@ final class RequesterViewModel {
     private var completedTasksHasMore = true
     
     var showAddTaskSheet: Bool = false
-    var showRateExecutorSheet: Bool = false
-    var executorName: String?
-    var selectedTaskIdForRating: String?
     
     var showApplicantsSheet: Bool = false
     var selectedTaskApplicants: [ApplicantModel] = []
@@ -34,6 +31,16 @@ final class RequesterViewModel {
     var statusFilter: RequesterStatusFilter = .all
     
     var selectedChatTaskId: String?
+    
+        // MARK: - Rating Queue
+        /// Completed tasks that this requester still needs to rate the executor for.
+        /// Driven by `status == .completed && !isRatedByRequester`, NOT by confirmTaskCompletion directly.
+    private(set) var pendingRatingTasks: [TaskModel] = []
+    
+        /// The task currently presented in the rating sheet. Drives `.sheet(item:)`.
+    var currentRatingTask: TaskModel? {
+        pendingRatingTasks.first
+    }
     
     private let taskRepo: TaskRepositoryProtocol
     private let chatRepo: ChatRepositoryProtocol
@@ -75,9 +82,9 @@ final class RequesterViewModel {
             try await chatRepo.deleteChat(taskId: task.id)
             
             requesterPublishedTasks.removeAll { $0.id == task.id }
-            selectedTaskIdForRating = task.id
-            executorName = task.executor?.displayName
-            showRateExecutorSheet = true
+                // Task is now completed server-side; pick it up as a pending rating
+                // the same way checkPendingRatings() would on next launch.
+            await checkPendingRatings()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -193,6 +200,9 @@ final class RequesterViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+        
+            // Piggyback the pending-rating check whenever completed tasks are (re)loaded.
+        await checkPendingRatings()
     }
     
     func loadMoreCompletedTasksIfNeeded() async {
@@ -207,6 +217,32 @@ final class RequesterViewModel {
             completedTasksCursor = result.cursor
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+    
+        // MARK: - Rating Queue
+    
+        /// Call this on tab appear / app launch to pick up any completed tasks
+        /// that are still missing this requester's rating of the executor.
+    func checkPendingRatings() async {
+        do {
+            let result = try await taskRepo.getRequesterCompletedTasks(cursor: nil, limit: nil)
+            let unrated = result.tasks.filter { $0.status == .completed && !$0.isRatedByRequester }
+            
+            for task in unrated where !pendingRatingTasks.contains(where: { $0.id == task.id }) {
+                pendingRatingTasks.append(task)
+            }
+            let unratedIds = Set(unrated.map(\.id))
+            pendingRatingTasks.removeAll { !unratedIds.contains($0.id) }
+        } catch {
+                // Silent failure — background catch-up check, not user-initiated.
+        }
+    }
+    
+        /// Called when the rating sheet for this task is dismissed (submitted or not).
+    func ratingSheetDismissed(for taskId: String, wasSubmitted: Bool) {
+        if wasSubmitted {
+            pendingRatingTasks.removeAll { $0.id == taskId }
         }
     }
     

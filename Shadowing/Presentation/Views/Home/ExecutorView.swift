@@ -44,17 +44,13 @@ struct ExecutorView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .task {
+            await vm.checkPendingRatings()
+        }
         .sheet(isPresented: $vm.showAppliedSheet) {
             AppliedSheet(vm: vm)
                 .presentationDetents([.fraction(0.75)])
                 .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $vm.showRateRequesterSheet) {
-            if let taskId = vm.selectedTaskIdForRating, let name = vm.requesterName {
-                container.makeRatingSheet(taskId: taskId, target: .requester(displayName: name))
-                    .presentationDetents([.fraction(0.75)])
-                    .presentationDragIndicator(.visible)
-            }
         }
         .sheet(isPresented: Binding(
             get: { vm.selectedChatTaskId != nil },

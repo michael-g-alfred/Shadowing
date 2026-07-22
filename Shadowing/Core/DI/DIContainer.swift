@@ -224,12 +224,12 @@ final class DIContainer {
     
         // MARK: - Rating Sheet
     
-    func makeRatingSheet(taskId: String, target: RatingTarget) -> some View {
-        RatingSheet(vm: makeRatingViewModel(taskId: taskId, target: target))
+    func makeRatingSheet(taskId: String, taskTitle: String, target: RatingTarget) -> some View {
+        RatingSheet(vm: makeRatingViewModel(taskId: taskId, taskTitle: taskTitle, target: target))
     }
     
-    func makeRatingViewModel(taskId: String, target: RatingTarget) -> RatingViewModel {
-        RatingViewModel(taskId: taskId, target: target, taskRepo: taskRepository)
+    func makeRatingViewModel(taskId: String, taskTitle: String, target: RatingTarget) -> RatingSheetViewModel {
+        RatingSheetViewModel(taskId: taskId, taskTitle: taskTitle, target: target, taskRepo: taskRepository)
     }
     
         // MARK: - Ratings

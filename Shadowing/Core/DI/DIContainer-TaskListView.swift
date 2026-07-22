@@ -52,15 +52,6 @@ extension DIContainer {
             trailingSwipe: { [requesterViewModel] task in
                 AnyView(
                     Group {
-                        if task.status == .inProgress {
-                            Button {
-                                requesterViewModel.openChat(for: task.id)
-                            } label: {
-                                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
-                            }
-                            .tint(.blue)
-                            .GlassCapsule()
-                        }
                         
                         if task.status == .pending && task.applicantsCount > 0 {
                             Button {
@@ -79,6 +70,16 @@ extension DIContainer {
                                 Label("Completed", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
+                            .GlassCapsule()
+                        }
+                        
+                        if task.status == .inProgress || task.status == .pendingCompleted {
+                            Button {
+                                requesterViewModel.openChat(for: task.id)
+                            } label: {
+                                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
+                            }
+                            .tint(.blue)
                             .GlassCapsule()
                         }
                     }
@@ -153,19 +154,22 @@ extension DIContainer {
                 AnyView(
                     Group {
                         if task.status == .inProgress {
-                            Button {
-                                executorViewModel.openChat(for: task.id)
-                            } label: {
-                                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
-                            }
-                            .tint(.blue)
-                            .GlassCapsule()
                             Button(role: .confirm) {
                                 Task { await executorViewModel.markTaskDone(task) }
                             } label: {
                                 Label("Mark Done", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
+                            .GlassCapsule()
+                        }
+                        
+                        if task.status == .inProgress || task.status == .pendingCompleted {
+                            Button {
+                                executorViewModel.openChat(for: task.id)
+                            } label: {
+                                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
+                            }
+                            .tint(.blue)
                             .GlassCapsule()
                         }
                     }

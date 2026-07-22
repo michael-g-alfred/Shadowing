@@ -210,9 +210,7 @@ struct TaskDetailsView: View {
         )
         .contentShape(Rectangle())
         .onTapGesture {
-            if user.totalRatings > 0 {
-                vm.selectedUserForRatings = user
-            }
+            vm.selectedUserForRatings = user
         }
         
         InfoRow(

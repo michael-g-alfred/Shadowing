@@ -18,6 +18,10 @@ final class ChatViewModel {
     private let userRepo: UserRepositoryProtocol
     private let chatRepo: ChatRepositoryProtocol
     
+        // MARK: - Listener task handles (prevents duplicate Firestore listeners)
+    private var conversationsTask: Task<Void, Never>?
+    private var messagesTask: Task<Void, Never>?
+    private var currentObservedTaskId: String?
     
     init(authRepo: AuthRepositoryProtocol, userRepo: UserRepositoryProtocol, chatRepo: ChatRepositoryProtocol) {
         self.authRepo = authRepo
@@ -26,29 +30,56 @@ final class ChatViewModel {
     }
     
     func listenToConversations() {
-        Task {
-            guard let currentUserId = authRepo.currentUser?.id else {
-                errorMessage = "Please login to continue"
-                isLoading = false
-                return
-            }
-            
-            isLoading = true
-            
+            // Already listening — don't spin up a second Firestore listener
+        guard conversationsTask == nil else { return }
+        
+        guard let currentUserId = authRepo.currentUser?.id else {
+            errorMessage = "Please login to continue"
+            isLoading = false
+            return
+        }
+        
+        isLoading = true
+        
+        conversationsTask = Task { [weak self] in
+            guard let self else { return }
             for await streamConversations in chatRepo.observeConversations(currentUserId: currentUserId) {
+                if Task.isCancelled { break }
                 self.conversations = streamConversations
                 self.isLoading = false
             }
         }
     }
     
+    func stopListeningToConversations() {
+        conversationsTask?.cancel()
+        conversationsTask = nil
+    }
+    
     func listenToMessages(taskId: String) {
+            // Already listening to this exact chat — no-op
+        if messagesTask != nil, currentObservedTaskId == taskId { return }
+        
         guard let currentUserId = authRepo.currentUser?.id else { return }
-        Task {
+        
+            // Switching chats — cancel the previous listener first
+        messagesTask?.cancel()
+        currentObservedTaskId = taskId
+        
+        messagesTask = Task { [weak self] in
+            guard let self else { return }
             for await streamMessages in chatRepo.observeMessages(taskId: taskId, currentUserId: currentUserId) {
+                if Task.isCancelled { break }
                 self.activeMessages = streamMessages
             }
         }
+    }
+    
+    func stopListeningToMessages() {
+        messagesTask?.cancel()
+        messagesTask = nil
+        currentObservedTaskId = nil
+        activeMessages = []
     }
     
     func sendMessage(taskId: String, text: String) async {

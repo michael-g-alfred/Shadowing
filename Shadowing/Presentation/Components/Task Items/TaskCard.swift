@@ -35,7 +35,7 @@ struct TaskCard: View {
                 if !task.description.isEmpty {
                     Text(task.description)
                         .font(.subheadline).foregroundStyle(.secondary)
-                        .lineLimit(2).multilineTextAlignment(.leading)
+                        .lineLimit(1).multilineTextAlignment(.leading)
                 }
             }
             

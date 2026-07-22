@@ -38,10 +38,15 @@ final class ExecutorViewModel {
     var selectedTaskForApply: TaskModel?
     var isApplying = false
     
-        // Rating sheet state
-    var showRateRequesterSheet: Bool = false
-    var selectedTaskIdForRating: String?
-    var requesterName: String?
+        // MARK: - Rating Queue
+        /// Completed tasks that this executor still needs to rate the requester for.
+        /// Driven by `status == .completed && !isRatedByExecutor`, NOT by markTaskDone.
+    private(set) var pendingRatingTasks: [TaskModel] = []
+    
+        /// The task currently presented in the rating sheet. Drives `.sheet(item:)`.
+    var currentRatingTask: TaskModel? {
+        pendingRatingTasks.first
+    }
     
     var selectedTaskId: String?
     
@@ -89,13 +94,42 @@ final class ExecutorViewModel {
         do {
             try await taskRepo.markTaskDone(id: task.id)
             await loadAssignedTasks()
-            
-            selectedTaskIdForRating = task.id
-            requesterName = task.requester.displayName
-            showRateRequesterSheet = true
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+    
+        // MARK: - Rating Queue
+    
+        /// Call this on tab appear / app launch to pick up any completed tasks
+        /// that are still missing this executor's rating of the requester.
+    func checkPendingRatings() async {
+        do {
+            let result = try await taskRepo.getExecutorCompletedTasks(cursor: nil, limit: nil)
+            let unrated = result.tasks.filter { $0.status == .completed && !$0.isRatedByExecutor }
+            
+                // Merge instead of overwrite so we don't yank a sheet that's
+                // already on screen out from under the user mid-flow.
+            for task in unrated where !pendingRatingTasks.contains(where: { $0.id == task.id }) {
+                pendingRatingTasks.append(task)
+            }
+                // Drop any that are no longer pending (e.g. rated on another device).
+            let unratedIds = Set(unrated.map(\.id))
+            pendingRatingTasks.removeAll { !unratedIds.contains($0.id) }
+        } catch {
+                // Silent failure here is fine — this is a background catch-up check,
+                // not a user-initiated action. Don't surface errorMessage for it.
+        }
+    }
+    
+        /// Called when the rating sheet for this task is dismissed (submitted or not).
+        /// If it wasn't submitted, checkPendingRatings() will pick it back up later.
+    func ratingSheetDismissed(for taskId: String, wasSubmitted: Bool) {
+        if wasSubmitted {
+            pendingRatingTasks.removeAll { $0.id == taskId }
+        }
+            // If not submitted, leave it in the queue so it re-shows next time
+            // (e.g. .sheet(item:) will re-present it since it's still first in queue).
     }
     
         // MARK: - All Tasks
@@ -228,6 +262,9 @@ final class ExecutorViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+        
+            // Piggyback the pending-rating check whenever completed tasks are (re)loaded.
+        await checkPendingRatings()
     }
     
     func loadMoreCompletedTasksIfNeeded() async {

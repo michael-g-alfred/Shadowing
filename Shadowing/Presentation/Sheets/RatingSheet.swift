@@ -6,13 +6,13 @@ struct RatingSheet: View {
     @Environment(\.dismiss) private var dismiss
     
         // MARK: - State
-    @State var vm: RatingViewModel
+    @State var vm: RatingSheetViewModel
     
         // MARK: - Focus
     @FocusState private var commentFocused: Bool
     
         // MARK: - Init
-    init(vm: RatingViewModel) {
+    init(vm: RatingSheetViewModel) {
         _vm = State(initialValue: vm)
     }
     
@@ -20,9 +20,17 @@ struct RatingSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
-                Text(vm.target.title)
-                    .font(.title2.bold())
-                    .padding(.top, 8)
+                VStack(spacing: 6) {
+                    Text("Rate \(vm.target.personTitle)")
+                        .font(.title2.bold())
+                        .multilineTextAlignment(.center)
+                    
+                    Text("for Task: \(vm.taskTitle)")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                .padding(.top, 16)
                 
                 Text("This step is required to complete the task.")
                     .font(.subheadline)
@@ -83,7 +91,7 @@ struct RatingSheet: View {
             }), in: 1...5, step: 1)
             .tint(.orange)
             .frame(width: 250)
-            .onChange(of: vm.rating) { _,_ in
+            .onChange(of: vm.rating) { _, _ in
                 withAnimation(.easeInOut) {
                     commentFocused = false
                 }
