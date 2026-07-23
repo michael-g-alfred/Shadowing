@@ -8,7 +8,7 @@ enum TaskPriority: String, Codable, CaseIterable {
     case urgent
     
     var localizedLabel: String {
-        if AppLanguage.current == "ar" {
+        if LanguageManager.shared.currentLanguage == .arabic {
             switch self {
                 case .low: return "منخفضة"
                 case .normal: return "عادية"

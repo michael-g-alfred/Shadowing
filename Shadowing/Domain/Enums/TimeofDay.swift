@@ -7,7 +7,7 @@ enum PreferredTimeOfDay: String, Codable, CaseIterable {
     case evening
     
     var localizedLabel: String {
-        if AppLanguage.current == "ar" {
+        if LanguageManager.shared.currentLanguage == .arabic {
             switch self {
                 case .morning: return "صباحاً"
                 case .midday: return "ظهراً"
@@ -20,7 +20,7 @@ enum PreferredTimeOfDay: String, Codable, CaseIterable {
     }
     
     var localizedSubtitle: String {
-        if AppLanguage.current == "ar" {
+        if LanguageManager.shared.currentLanguage == .arabic {
             switch self {
                 case .morning: return "قبل ١٠ صباحاً"
                 case .midday: return "١٠ صباحاً - ٢ ظهراً"

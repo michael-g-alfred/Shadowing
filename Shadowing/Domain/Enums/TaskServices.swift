@@ -43,7 +43,7 @@ enum TaskService: String, Codable, CaseIterable {
     case tutoring
     
     var localizedLabel: String {
-        if AppLanguage.current == "ar" {
+        if LanguageManager.shared.currentLanguage == .arabic {
             switch self {
                 case .accounting: return "محاسبة"
                 case .airportTransfer: return "توصيل من/إلى المطار"

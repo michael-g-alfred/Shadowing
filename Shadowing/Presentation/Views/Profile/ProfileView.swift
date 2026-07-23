@@ -186,7 +186,7 @@ struct ProfileView: View {
     private func idRow(for user: UserModel) -> some View {
         InfoRow(title: "Id", systemImage: "person.badge.key") {
             Text(user.id.isEmpty ? "—" : vm.displayedId(for: user.id))
-                .font(.caption)
+                .font(.caption2)
                 .contentTransition(.numericText())
         }
         .contentShape(Rectangle())

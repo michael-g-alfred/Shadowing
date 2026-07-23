@@ -10,7 +10,7 @@ enum TaskStatus: String, Codable {
     case cancelled
     
     var localizedLabel: String {
-        if AppLanguage.current == "ar" {
+        if LanguageManager.shared.currentLanguage == .arabic {
             switch self {
                 case .published: return "منشورة"
                 case .pending: return "قيد الانتظار"

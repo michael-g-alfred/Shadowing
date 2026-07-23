@@ -36,12 +36,6 @@ final class DIContainer {
     @ObservationIgnored
     lazy var languageManager: LanguageManager = .shared
     
-        // MARK: - Language
-    
-    func setLanguage(_ language: AppLanguage) {
-        languageManager.setLanguage(language)
-    }
-    
         // MARK: - Repositories
     
     @ObservationIgnored

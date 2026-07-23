@@ -7,7 +7,7 @@ enum EscrowStatus: String, Codable {
     case refunded
     
     var localizedLabel: String {
-        if AppLanguage.current == "ar" {
+        if LanguageManager.shared.currentLanguage == .arabic {
             switch self {
                 case .notPaid: return "غير مدفوع"
                 case .held: return "محتجز"

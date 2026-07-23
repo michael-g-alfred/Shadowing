@@ -12,7 +12,7 @@ struct TaskPriorityModel: Identifiable, Hashable, Sendable {
 
 extension TaskPriorityModel {
     var localizedLabel: String {
-        if AppLanguage.current == "ar" {
+        if LanguageManager.shared.currentLanguage == .arabic {
             "\(labelAr)"
         } else {
             "\(labelEn)"
