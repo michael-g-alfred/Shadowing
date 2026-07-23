@@ -39,7 +39,7 @@ struct ProfileView: View {
                     }
                 }
             }
-            .navigationTitle("\(vm.user?.displayName ?? "Guest")'s Profile")
+            .navigationTitle("\(vm.user?.displayName ?? "Guest")")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

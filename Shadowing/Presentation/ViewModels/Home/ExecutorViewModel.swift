@@ -101,21 +101,18 @@ final class ExecutorViewModel {
     
         // MARK: - Rating Queue
     
-        /// Call this on tab appear / app launch to pick up any completed tasks
-        /// that are still missing this executor's rating of the requester.
     func checkPendingRatings() async {
         do {
             let result = try await taskRepo.getExecutorCompletedTasks(cursor: nil, limit: nil)
             let unrated = result.tasks.filter { $0.status == .completed && !$0.isRatedByExecutor }
             
-                // Merge instead of overwrite so we don't yank a sheet that's
-                // already on screen out from under the user mid-flow.
             for task in unrated where !pendingRatingTasks.contains(where: { $0.id == task.id }) {
                 pendingRatingTasks.append(task)
             }
-                // Drop any that are no longer pending (e.g. rated on another device).
+            
             let unratedIds = Set(unrated.map(\.id))
             pendingRatingTasks.removeAll { !unratedIds.contains($0.id) }
+            
         } catch {
                 // Silent failure here is fine — this is a background catch-up check,
                 // not a user-initiated action. Don't surface errorMessage for it.
@@ -133,6 +130,7 @@ final class ExecutorViewModel {
     }
     
         // MARK: - All Tasks
+    
     func loadAllTasks() async {
         isLoading = true
         errorMessage = nil
