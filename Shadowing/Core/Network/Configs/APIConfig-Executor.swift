@@ -61,6 +61,23 @@ extension APIConfig {
         )
     }
     
+    static func executorUnratedTasks(
+        cursor: String? = nil,
+        limit: Int? = nil,
+        accessToken: String
+    ) -> MGRequestConfig {
+        MGRequestConfig(
+            baseURL: APIEndpoints.baseURL,
+            path: APIEndpoints.executorUnratedTasksPath,
+            method: .get,
+            queryItems: Self.queryItems([
+                ("cursor", cursor),
+                ("limit", limit.map(String.init))
+            ]),
+            headers: ["Authorization": "Bearer \(accessToken)"]
+        )
+    }
+    
     struct ExecutorApplyTaskBody: Encodable, Sendable {
         var proposedBudget: Double? = nil
     }

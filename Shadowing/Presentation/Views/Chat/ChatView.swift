@@ -138,7 +138,12 @@ struct MessageBubble: View {
     
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            if message.isCurrentUser { Spacer(minLength: 40) }
+            
+            if !message.isCurrentUser {
+                AvatarView(profile: message.sender, size: 28, nameLayout: .none)
+            } else {
+                Spacer()
+            }
             
             VStack(alignment: message.isCurrentUser ? .trailing : .leading, spacing: 4) {
                 ZStack(alignment: message.isCurrentUser ? .bottomLeading : .bottomTrailing) {
@@ -171,7 +176,12 @@ struct MessageBubble: View {
                 .padding(.bottom, message.reactions.isEmpty ? 0 : 4)
             }
             
-            if !message.isCurrentUser { Spacer(minLength: 40) }
+            if message.isCurrentUser {
+                AvatarView(profile: message.sender, size: 28, nameLayout: .none)
+            } else {
+                Spacer()
+            }
+            
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 2)

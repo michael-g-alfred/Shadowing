@@ -3,7 +3,14 @@ import Foundation
 enum APIEndpoints {
     
         // MARK: - Base URL
-    static let baseURL = "http://localhost:9000/mg/shadowing"
+    static let baseURL: String = {
+        guard let url = Bundle.main.object(
+            forInfoDictionaryKey: "BaseURL"
+        ) as? String else {
+            fatalError("BaseURL not found in Info.plist")
+        }
+        return url
+    }()
     
         // MARK: - Routes
     static let authRoute = "/auth"
@@ -45,6 +52,7 @@ enum APIEndpoints {
         // MARK: - Requester
     static let requesterPublishedTasksPath = taskRoute + "/req/published"
     static let requesterCompletedTasksPath = taskRoute + "/req/completed"
+    static let requesterUnratedTasksPath = taskRoute + "/req/unrated"
     static let requesterCreateTaskPath = taskRoute + "/req/create"
     static func requesterDeleteTaskPath(id: String) -> String {
         return taskRoute + "/req/delete/\(id)"
@@ -78,6 +86,7 @@ enum APIEndpoints {
     static let executorAvailableTasksPath = taskRoute + "/exe/available"
     static let executorAssignedTasksPath = taskRoute + "/exe/assigned"
     static let executorCompletedTasksPath = taskRoute + "/exe/completed"
+    static let executorUnratedTasksPath = taskRoute + "/exe/unrated"
     static func executorApplyTaskPath(id: String) -> String {
         return taskRoute + "/exe/\(id)/apply"
     }

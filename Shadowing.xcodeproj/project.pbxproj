@@ -21,9 +21,22 @@
 		BEDF5B952FFED85C00015FE5 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		BEDCD9E23012C8F000C23749 /* Exceptions for "Shadowing" folder in "Shadowing" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = BE5E81FC2FFCF43000DE012B /* Shadowing */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		BE5E81FF2FFCF43100DE012B /* Shadowing */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BEDCD9E23012C8F000C23749 /* Exceptions for "Shadowing" folder in "Shadowing" target */,
+			);
 			path = Shadowing;
 			sourceTree = "<group>";
 		};
@@ -287,6 +300,7 @@
 				DEVELOPMENT_TEAM = VR7J47FG2Q;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Shadowing/Info.plist;
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We use your location to provide location-based services even when the app is running in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show nearby services and provide a better experience.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -323,6 +337,7 @@
 				DEVELOPMENT_TEAM = VR7J47FG2Q;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Shadowing/Info.plist;
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We use your location to provide location-based services even when the app is running in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show nearby services and provide a better experience.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

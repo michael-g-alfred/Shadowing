@@ -103,8 +103,8 @@ final class ExecutorViewModel {
     
     func checkPendingRatings() async {
         do {
-            let result = try await taskRepo.getExecutorCompletedTasks(cursor: nil, limit: nil)
-            let unrated = result.tasks.filter { $0.status == .completed && !$0.isRatedByExecutor }
+            let result = try await taskRepo.getUnratedExecutorTasks(cursor: nil, limit: nil)
+            let unrated = result.tasks
             
             for task in unrated where !pendingRatingTasks.contains(where: { $0.id == task.id }) {
                 pendingRatingTasks.append(task)

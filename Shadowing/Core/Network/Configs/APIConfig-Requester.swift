@@ -41,6 +41,23 @@ extension APIConfig {
         )
     }
     
+    static func requesterUnratedTasks(
+        cursor: String? = nil,
+        limit: Int? = nil,
+        accessToken: String
+    ) -> MGRequestConfig {
+        MGRequestConfig(
+            baseURL: APIEndpoints.baseURL,
+            path: APIEndpoints.requesterUnratedTasksPath,
+            method: .get,
+            queryItems: Self.queryItems([
+                ("cursor", cursor),
+                ("limit", limit.map(String.init))
+            ]),
+            headers: ["Authorization": "Bearer \(accessToken)"]
+        )
+    }
+    
     struct RequesterCreateTaskBody: Codable, Sendable {
         let title: String
         let description: String

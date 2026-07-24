@@ -17,12 +17,14 @@ protocol TaskRepositoryProtocol {
     
     func getRequesterPublishedTasks(cursor: String?, limit: Int?, status: String?) async throws -> PaginatedTasksResult
     func getRequesterCompletedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
+    func getUnratedRequesterTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
     
         // MARK: - Executor
     
     func getExecutorAvailableTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
     func getExecutorAssignedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
     func getExecutorCompletedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
+    func getUnratedExecutorTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
     
         // MARK: - Requester Actions
     

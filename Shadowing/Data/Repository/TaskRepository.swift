@@ -139,6 +139,18 @@ final class TaskRepository: TaskRepositoryProtocol {
         )
     }
     
+    func getUnratedRequesterTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
+        let token = try await getValidToken()
+        let config = APIConfig.requesterUnratedTasks(cursor: cursor, limit: limit, accessToken: token)
+        let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
+        
+        return PaginatedTasksResult(
+            tasks: response.data.tasks.map { $0.toDomain() },
+            hasMore: response.data.hasMore,
+            cursor: response.data.cursor
+        )
+    }
+    
         // MARK: - Executor
     
     func getExecutorAvailableTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
@@ -199,6 +211,18 @@ final class TaskRepository: TaskRepositoryProtocol {
         DebugLogger.log("✅ Request succeeded")
         DebugLogger.log("📋 Tasks Count: \(response.data.tasks.count), hasMore: \(response.data.hasMore)")
         DebugLogger.log("══════════════════════════════════════")
+        
+        return PaginatedTasksResult(
+            tasks: response.data.tasks.map { $0.toDomain() },
+            hasMore: response.data.hasMore,
+            cursor: response.data.cursor
+        )
+    }
+    
+    func getUnratedExecutorTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
+        let token = try await getValidToken()
+        let config = APIConfig.executorUnratedTasks(cursor: cursor, limit: limit, accessToken: token)
+        let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
         
         return PaginatedTasksResult(
             tasks: response.data.tasks.map { $0.toDomain() },

@@ -226,8 +226,8 @@ final class RequesterViewModel {
         /// that are still missing this requester's rating of the executor.
     func checkPendingRatings() async {
         do {
-            let result = try await taskRepo.getRequesterCompletedTasks(cursor: nil, limit: nil)
-            let unrated = result.tasks.filter { $0.status == .completed && !$0.isRatedByRequester }
+            let result = try await taskRepo.getUnratedRequesterTasks(cursor: nil, limit: nil)
+            let unrated = result.tasks
             
             for task in unrated where !pendingRatingTasks.contains(where: { $0.id == task.id }) {
                 pendingRatingTasks.append(task)

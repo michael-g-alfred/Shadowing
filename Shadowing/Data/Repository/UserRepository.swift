@@ -9,6 +9,10 @@ final class UserRepository: UserRepositoryProtocol {
     private let network: MGNetworkServiceProtocol
     private let authRepository: AuthRepositoryProtocol
     
+        // MARK: - Summary Cache
+    private var summaryCache: [String: UserSummaryModel] = [:]
+    private var inFlightSummaryRequests: [String: Task<UserSummaryModel, Error>] = [:]
+    
     init(network: MGNetworkServiceProtocol, authRepository: AuthRepositoryProtocol) {
         self.network = network
         self.authRepository = authRepository
@@ -39,21 +43,55 @@ final class UserRepository: UserRepositoryProtocol {
         return fetchedUser
     }
     
-        // MARK: - Summary
+        // MARK: - Summary (cached)
     func fetchUserSummary(id: String) async throws -> UserSummaryModel {
+            // 1) Already cached — return immediately, no network call
+        if let cached = summaryCache[id] {
+            return cached
+        }
+        
+            // 2) A request for this same id is already in flight (e.g. two
+            // messages from the same sender arrived in the same snapshot
+            // batch) — await that one instead of firing a duplicate.
+        if let existingTask = inFlightSummaryRequests[id] {
+            return try await existingTask.value
+        }
+        
         DebugLogger.log("➡️ fetchUserSummary called for id: \(id)")
+        
+        let task = Task<UserSummaryModel, Error> {
+            do {
+                let accessToken = try await getValidToken()
+                let config = APIConfig.userSummary(id: id, accessToken: accessToken)
+                let response: APIResponseDTO<UserSummaryResponseDTO> = try await network.request(config)
+                let user = response.data.user.toDomain()
+                DebugLogger.log("✅ Fetched user summary: \(user)")
+                return user
+            } catch {
+                DebugLogger.log("❌ fetchUserSummary FAILED for id: \(id) | error: \(error)")
+                throw error
+            }
+        }
+        inFlightSummaryRequests[id] = task
+        
         do {
-            let accessToken = try await getValidToken()
-            let config = APIConfig.userSummary(id: id, accessToken: accessToken)
-            let response: APIResponseDTO<UserSummaryResponseDTO> = try await network.request(config)
-            let user = response.data.user.toDomain()
-            
-            DebugLogger.log("✅ Fetched user summary: \(user)")
-            
+            let user = try await task.value
+            summaryCache[id] = user
+            inFlightSummaryRequests[id] = nil
             return user
         } catch {
-            DebugLogger.log("❌ fetchUserSummary FAILED for id: \(id) | error: \(error)")
+            inFlightSummaryRequests[id] = nil
             throw error
+        }
+    }
+    
+        /// Call this if a user's profile/avatar/name changes and you need
+        /// fresh data on the next fetch (e.g. after editing your own profile).
+    func invalidateSummaryCache(id: String? = nil) {
+        if let id {
+            summaryCache[id] = nil
+        } else {
+            summaryCache.removeAll()
         }
     }
     
@@ -94,6 +132,7 @@ final class UserRepository: UserRepositoryProtocol {
             updatedUser.avatarUrl = newAvatarUrl
             self.currentUser = updatedUser
         }
+        invalidateSummaryCache(id: userId)
         return newAvatarUrl
     }
 }
