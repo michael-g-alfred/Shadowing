@@ -21,15 +21,19 @@ final class ExecutorViewModel {
     
     private var allTasksCursor: String?
     private var allTasksHasMore = true
+    private var allTasksGeneration = 0
     
     private var availableTasksCursor: String?
     private var availableTasksHasMore = true
+    private var availableTasksGeneration = 0
     
     private var assignedTasksCursor: String?
     private var assignedTasksHasMore = true
+    private var assignedTasksGeneration = 0
     
     private var completedTasksCursor: String?
     private var completedTasksHasMore = true
+    private var completedTasksGeneration = 0
     
     private let taskRepo: TaskRepositoryProtocol
     
@@ -84,7 +88,11 @@ final class ExecutorViewModel {
     func withdrawFromTask(_ task: TaskModel) async {
         do {
             try await taskRepo.withdrawFromTask(id: task.id)
-            await loadAvailableTasks()
+            if task.status == .inProgress {
+                await loadAssignedTasks()
+            } else {
+                await loadAvailableTasks()
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -136,10 +144,13 @@ final class ExecutorViewModel {
         errorMessage = nil
         allTasksCursor = nil
         allTasksHasMore = true
+        allTasksGeneration += 1
+        let myGeneration = allTasksGeneration
         defer { isLoading = false }
         
         do {
             let result = try await taskRepo.getAllTasks(cursor: nil, limit: nil)
+            guard myGeneration == allTasksGeneration else { return }
             executorAllTasks = result.tasks
             allTasksHasMore = result.hasMore
             allTasksCursor = result.cursor
@@ -152,13 +163,15 @@ final class ExecutorViewModel {
         guard shouldLoadMore(
             hasMore: allTasksHasMore,
             isLoadingMore: isLoadingMoreAllTasks
-        ) else { return }
+        ), !isLoading else { return }
         
         isLoadingMoreAllTasks = true
+        let myGeneration = allTasksGeneration
         defer { isLoadingMoreAllTasks = false }
         
         do {
-            let result = try await taskRepo.getAllTasks(cursor: availableTasksCursor, limit: nil)
+            let result = try await taskRepo.getAllTasks(cursor: allTasksCursor, limit: nil)
+            guard myGeneration == allTasksGeneration else { return }
             executorAllTasks.append(contentsOf: result.tasks)
             allTasksHasMore = result.hasMore
             allTasksCursor = result.cursor
@@ -174,10 +187,13 @@ final class ExecutorViewModel {
         errorMessage = nil
         availableTasksCursor = nil
         availableTasksHasMore = true
+        availableTasksGeneration += 1
+        let myGeneration = availableTasksGeneration
         defer { isLoading = false }
         
         do {
             let result = try await taskRepo.getExecutorAvailableTasks(cursor: nil, limit: nil)
+            guard myGeneration == availableTasksGeneration else { return }
             executorAvailableTasks = result.tasks
             availableTasksHasMore = result.hasMore
             availableTasksCursor = result.cursor
@@ -190,13 +206,15 @@ final class ExecutorViewModel {
         guard shouldLoadMore(
             hasMore: availableTasksHasMore,
             isLoadingMore: isLoadingMoreAvailableTasks
-        ) else { return }
+        ), !isLoading else { return }
         
         isLoadingMoreAvailableTasks = true
+        let myGeneration = availableTasksGeneration
         defer { isLoadingMoreAvailableTasks = false }
         
         do {
             let result = try await taskRepo.getExecutorAvailableTasks(cursor: availableTasksCursor, limit: nil)
+            guard myGeneration == availableTasksGeneration else { return }
             executorAvailableTasks.append(contentsOf: result.tasks)
             availableTasksHasMore = result.hasMore
             availableTasksCursor = result.cursor
@@ -212,10 +230,13 @@ final class ExecutorViewModel {
         errorMessage = nil
         assignedTasksCursor = nil
         assignedTasksHasMore = true
+        assignedTasksGeneration += 1
+        let myGeneration = assignedTasksGeneration
         defer { isLoading = false }
         
         do {
             let result = try await taskRepo.getExecutorAssignedTasks(cursor: nil, limit: nil)
+            guard myGeneration == assignedTasksGeneration else { return }
             executorAssignedTasks = result.tasks
             assignedTasksHasMore = result.hasMore
             assignedTasksCursor = result.cursor
@@ -228,13 +249,15 @@ final class ExecutorViewModel {
         guard shouldLoadMore(
             hasMore: assignedTasksHasMore,
             isLoadingMore: isLoadingMoreAssignedTasks
-        ) else { return }
+        ), !isLoading else { return }
         
         isLoadingMoreAssignedTasks = true
+        let myGeneration = assignedTasksGeneration
         defer { isLoadingMoreAssignedTasks = false }
         
         do {
             let result = try await taskRepo.getExecutorAssignedTasks(cursor: assignedTasksCursor, limit: nil)
+            guard myGeneration == assignedTasksGeneration else { return }
             executorAssignedTasks.append(contentsOf: result.tasks)
             assignedTasksHasMore = result.hasMore
             assignedTasksCursor = result.cursor
@@ -250,10 +273,13 @@ final class ExecutorViewModel {
         errorMessage = nil
         completedTasksCursor = nil
         completedTasksHasMore = true
+        completedTasksGeneration += 1
+        let myGeneration = completedTasksGeneration
         defer { isLoading = false }
         
         do {
             let result = try await taskRepo.getExecutorCompletedTasks(cursor: nil, limit: nil)
+            guard myGeneration == completedTasksGeneration else { return }
             executorCompletedTasks = result.tasks
             completedTasksHasMore = result.hasMore
             completedTasksCursor = result.cursor
@@ -269,13 +295,15 @@ final class ExecutorViewModel {
         guard shouldLoadMore(
             hasMore: completedTasksHasMore,
             isLoadingMore: isLoadingMoreCompletedTasks
-        ) else { return }
+        ), !isLoading else { return }
         
         isLoadingMoreCompletedTasks = true
+        let myGeneration = completedTasksGeneration
         defer { isLoadingMoreCompletedTasks = false }
         
         do {
             let result = try await taskRepo.getExecutorCompletedTasks(cursor: completedTasksCursor, limit: nil)
+            guard myGeneration == completedTasksGeneration else { return }
             executorCompletedTasks.append(contentsOf: result.tasks)
             completedTasksHasMore = result.hasMore
             completedTasksCursor = result.cursor

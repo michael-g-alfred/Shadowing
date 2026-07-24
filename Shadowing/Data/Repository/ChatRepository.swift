@@ -4,9 +4,11 @@ import FirebaseFirestore
 final class ChatRepository: ChatRepositoryProtocol {
     private let db = Firestore.firestore()
     private let userRepo: UserRepositoryProtocol
+    private let taskRepo: TaskRepositoryProtocol
     
-    init(userRepo: UserRepositoryProtocol) {
+    init(userRepo: UserRepositoryProtocol, taskRepo: TaskRepositoryProtocol) {
         self.userRepo = userRepo
+        self.taskRepo = taskRepo
     }
     
     func createChat(taskId: String, requesterId: String, executorId: String) async throws {
@@ -17,7 +19,6 @@ final class ChatRepository: ChatRepositoryProtocol {
             "executorId": executorId,
             "lastMessage": "",
             "lastMessageTime": FieldValue.serverTimestamp(),
-            "lastMessageStatus": MessageStatus.sent.rawValue,
             "unreadCounts": [requesterId: 0, executorId: 0]
         ]
         DebugLogger.log("👤 requesterId: \(requesterId) | executorId: \(executorId)")
@@ -74,20 +75,16 @@ final class ChatRepository: ChatRepositoryProtocol {
                             
                             DebugLogger.log("🔄 otherUser: \(otherUser)")
                             
-                            let lastMessage = data["lastMessage"] as? String ?? ""
-                            let statusRaw = data["lastMessageStatus"] as? String ?? "sent"
-                            let status = MessageStatus(rawValue: statusRaw) ?? .sent
-                            let timestamp = (data["lastMessageTime"] as? Timestamp)?.dateValue() ?? Date()
+                            let taskTitle = (try? await self.taskRepo.getTaskDetails(id: id))?.title ?? "Task"
+                            
                             let unreadCounts = data["unreadCounts"] as? [String: Int] ?? [:]
                             let unreadCount = unreadCounts[currentUserId] ?? 0
                             
                             conversations.append(
                                 Conversation(
                                     id: id,
+                                    taskTitle: taskTitle,
                                     otherUser: otherUser,
-                                    lastMessage: lastMessage,
-                                    lastMessageStatus: status,
-                                    lastMessageTime: timestamp.formatted(date: .omitted, time: .shortened),
                                     unreadCount: unreadCount
                                 )
                             )
@@ -131,8 +128,6 @@ final class ChatRepository: ChatRepositoryProtocol {
                             let messageId = doc.documentID
                             let text = data["text"] as? String ?? ""
                             let senderId = data["senderId"] as? String ?? ""
-                            let statusRaw = data["status"] as? String ?? "sent"
-                            let status = MessageStatus(rawValue: statusRaw)
                             let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
                             let isCurrentUser = (senderId == currentUserId)
                             let reactions = data["reactions"] as? [String: String] ?? [:]
@@ -147,7 +142,6 @@ final class ChatRepository: ChatRepositoryProtocol {
                                     time: timestamp.formatted(date: .omitted, time: .shortened),
                                     sender: senderUser,
                                     isCurrentUser: isCurrentUser,
-                                    status: isCurrentUser ? status : nil,
                                     reactions: reactions
                                 )
                             )
@@ -171,8 +165,7 @@ final class ChatRepository: ChatRepositoryProtocol {
         let messageData: [String: Any] = [
             "text": messageText,
             "senderId": senderId,
-            "timestamp": FieldValue.serverTimestamp(),
-            "status": MessageStatus.sent.rawValue
+            "timestamp": FieldValue.serverTimestamp()
         ]
         
         do {
@@ -185,8 +178,7 @@ final class ChatRepository: ChatRepositoryProtocol {
             
             var chatUpdateData: [String: Any] = [
                 "lastMessage": messageText,
-                "lastMessageTime": FieldValue.serverTimestamp(),
-                "lastMessageStatus": MessageStatus.sent.rawValue
+                "lastMessageTime": FieldValue.serverTimestamp()
             ]
             if let recipientId {
                 chatUpdateData["unreadCounts.\(recipientId)"] = FieldValue.increment(Int64(1))
@@ -200,37 +192,11 @@ final class ChatRepository: ChatRepositoryProtocol {
         }
     }
     
-    func markMessageAsRead(taskId: String, messageId: String) async throws {
-        do {
-            try await db.collection("chats")
-                .document(taskId)
-                .collection("messages")
-                .document(messageId)
-                .updateData(["status": MessageStatus.read.rawValue])
-            DebugLogger.log("✅ markMessageAsRead succeeded | taskId: \(taskId) | messageId: \(messageId)")
-        } catch {
-            DebugLogger.log("❌ markMessageAsRead FAILED | taskId: \(taskId) | messageId: \(messageId) | error: \(error)")
-            throw error
-        }
-    }
-    
     func markAllMessagesAsRead(taskId: String, currentUserId: String) async throws {
         let chatRef = db.collection("chats").document(taskId)
         do {
                 // Reset this user's unread counter on the chat doc (drives the tab badge)
             try await chatRef.updateData(["unreadCounts.\(currentUserId)": 0])
-            
-                // Update read receipts for messages sent by the other participant
-            let unreadMessages = try await chatRef.collection("messages")
-                .whereField("senderId", isNotEqualTo: currentUserId)
-                .getDocuments()
-            
-            for doc in unreadMessages.documents {
-                let currentStatus = doc.data()["status"] as? String
-                if currentStatus != MessageStatus.read.rawValue {
-                    try await doc.reference.updateData(["status": MessageStatus.read.rawValue])
-                }
-            }
             DebugLogger.log("✅ markAllMessagesAsRead succeeded | taskId: \(taskId) | currentUserId: \(currentUserId)")
         } catch {
             DebugLogger.log("❌ markAllMessagesAsRead FAILED | taskId: \(taskId) | error: \(error)")

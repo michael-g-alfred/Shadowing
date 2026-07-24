@@ -6,6 +6,7 @@ enum TaskStatus: String, Codable {
     case pending
     case inProgress = "in_progress"
     case pendingCompleted = "pending_completed"
+    case pendingWithdraw = "pending_withdraw"
     case completed
     case cancelled
     
@@ -16,6 +17,7 @@ enum TaskStatus: String, Codable {
                 case .pending: return "قيد الانتظار"
                 case .inProgress: return "قيد التنفيذ"
                 case .pendingCompleted: return "في انتظار التأكيد"
+                case .pendingWithdraw: return "طلب انسحاب"
                 case .completed: return "مكتملة"
                 case .cancelled: return "مُلغاة"
             }
@@ -23,6 +25,7 @@ enum TaskStatus: String, Codable {
             switch self {
                 case .inProgress: return "In Progress"
                 case .pendingCompleted: return "Pending Completed"
+                case .pendingWithdraw: return "Pending Withdraw"
                 default: return self.rawValue.capitalized
             }
         }
@@ -34,6 +37,7 @@ enum TaskStatus: String, Codable {
             case .pending: return .blue
             case .inProgress: return .purple
             case .pendingCompleted: return .orange
+            case .pendingWithdraw: return .orange
             case .completed: return .green
             case .cancelled: return .red
         }

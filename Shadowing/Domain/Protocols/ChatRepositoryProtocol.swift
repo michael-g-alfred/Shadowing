@@ -6,7 +6,6 @@ protocol ChatRepositoryProtocol: Sendable {
     func observeConversations(currentUserId: String) -> AsyncStream<[Conversation]>
     func observeMessages(taskId: String, currentUserId: String) -> AsyncStream<[ChatMessage]>
     func sendMessage(taskId: String, messageText: String, senderId: String) async throws
-    func markMessageAsRead(taskId: String, messageId: String) async throws
     func markAllMessagesAsRead(taskId: String, currentUserId: String) async throws
     func setReaction(taskId: String, messageId: String, userId: String, emoji: String?) async throws
 }

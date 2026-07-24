@@ -53,7 +53,7 @@ struct TaskCard: View {
             }
             
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 6) {
+                HStack(spacing: 4) {
                     PriorityBadge(priority: task.priority)
                     StatusBadge(status: task.status)
                     ApplicantsBadge(applicants: task.applicantsCount, color: .brown)
@@ -64,7 +64,7 @@ struct TaskCard: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 4) {
                         PriorityBadge(priority: task.priority)
                         StatusBadge(status: task.status)
                         ApplicantsBadge(applicants: task.applicantsCount, color: .brown)

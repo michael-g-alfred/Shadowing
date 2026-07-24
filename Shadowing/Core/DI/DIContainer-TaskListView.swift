@@ -46,6 +46,15 @@ extension DIContainer {
                             .tint(.blue)
                             .GlassCapsule()
                         }
+                        if task.status == .pendingWithdraw {
+                            Button {
+                                Task { await requesterViewModel.confirmWithdraw(task) }
+                            } label: {
+                                Label("Confirm Withdraw", systemImage: "checkmark.circle")
+                            }
+                            .tint(.blue)
+                            .GlassCapsule()
+                        }
                     }
                 )
             },
@@ -53,7 +62,7 @@ extension DIContainer {
                 AnyView(
                     Group {
                         
-                        if task.status == .pending && task.applicantsCount > 0 {
+                        if task.status == .published || task.status == .pending {
                             Button {
                                 Task { await requesterViewModel.showApplicants(for: task) }
                             } label: {
@@ -62,9 +71,8 @@ extension DIContainer {
                             .tint(.orange)
                             .GlassCapsule()
                         }
-                        
                         if task.status == .pendingCompleted {
-                            Button(role: .destructive) {
+                            Button {
                                 Task { await requesterViewModel.confirmTaskCompletion(task) }
                             } label: {
                                 Label("Completed", systemImage: "checkmark.seal")
@@ -73,7 +81,7 @@ extension DIContainer {
                             .GlassCapsule()
                         }
                         
-                        if task.status == .inProgress || task.status == .pendingCompleted {
+                        if task.status == .inProgress || task.status == .pendingCompleted || task.status == .pendingWithdraw {
                             Button {
                                 requesterViewModel.openChat(for: task.id)
                             } label: {
@@ -125,10 +133,10 @@ extension DIContainer {
                             .GlassCapsule()
                             
                         } else if task.isApplicant {
-                            Button(role: .destructive) {
+                            Button {
                                 Task { await executorViewModel.withdrawFromTask(task) }
                             } label: {
-                                Label("Withdraw", systemImage: "xmark.circle")
+                                Label("Withdraw", systemImage: "arrow.uturn.backward")
                             }
                             .tint(.orange)
                             .GlassCapsule()
@@ -150,6 +158,21 @@ extension DIContainer {
             emptyState: .noAssignedTasks,
             onLoad: { [executorViewModel] in await executorViewModel.loadAssignedTasks() },
             onLoadMoreIfNeeded: { [executorViewModel] in await executorViewModel.loadMoreAssignedTasksIfNeeded() },
+            leadingSwipe: { [executorViewModel] task in
+                AnyView(
+                    Group {
+                        if task.status == .inProgress {
+                            Button(role: .destructive) {
+                                Task { await executorViewModel.withdrawFromTask(task) }
+                            } label: {
+                                Label("Withdraw", systemImage: "arrow.uturn.backward")
+                            }
+                            .tint(.red)
+                            .GlassCapsule()
+                        }
+                    }
+                )
+            },
             trailingSwipe: { [executorViewModel] task in
                 AnyView(
                     Group {
@@ -163,7 +186,7 @@ extension DIContainer {
                             .GlassCapsule()
                         }
                         
-                        if task.status == .inProgress || task.status == .pendingCompleted {
+                        if task.status == .inProgress || task.status == .pendingCompleted || task.status == .pendingWithdraw {
                             Button {
                                 executorViewModel.openChat(for: task.id)
                             } label: {

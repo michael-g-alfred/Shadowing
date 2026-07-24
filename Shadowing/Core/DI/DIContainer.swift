@@ -60,7 +60,8 @@ final class DIContainer {
     
     @ObservationIgnored
     private(set) lazy var chatRepository: ChatRepositoryProtocol = ChatRepository(
-        userRepo: userRepository
+        userRepo: userRepository,
+        taskRepo: taskRepository
     )
     
         // MARK: - Shared ViewModels

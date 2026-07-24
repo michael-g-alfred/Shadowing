@@ -28,46 +28,26 @@ struct DirectChatLoaderView: View {
     }
 }
 
-    // MARK: - Message Status View Component
-
-struct MessageStatusView: View {
-    let status: MessageStatus
-    
-    var body: some View {
-        Image(systemName: status.iconName)
-            .font(.caption)
-            .foregroundStyle(status.iconColor)
-    }
-}
-
     // MARK: - Conversation Row View
 
 struct ConversationRow: View {
     let conversation: Conversation
     
     var body: some View {
-        HStack(alignment: .top) {
-            AvatarView(profile: conversation.otherUser, nameLayout: .horizontal, subtitle: conversation.lastMessage)
+        HStack(alignment: .bottom) {
+            AvatarView(profile: conversation.otherUser, nameLayout: .horizontal, subtitle: "Task title: \( conversation.taskTitle)")
             
             Spacer(minLength: 12)
             
-            VStack(alignment: .trailing) {
-                Text(conversation.lastMessageTime)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                
-                Spacer()
-                
-                if conversation.unreadCount > 0 {
-                    let text = "\(conversation.unreadCount)"
-                    Text(text)
-                        .font(.caption2.bold())
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, text.count > 1 ? 6 : 0)
-                        .frame(minWidth: 16, minHeight: 16)
-                        .GlassCapsule(overlayColor: .red.opacity(0.75), shadowColor: .red.opacity(0.25))
-                }
+            
+            if conversation.unreadCount > 0 {
+                let text = "\(conversation.unreadCount)"
+                Text(text)
+                    .font(.caption2.bold())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, text.count > 1 ? 6 : 0)
+                    .frame(minWidth: 16, minHeight: 16)
+                    .GlassCapsule(overlayColor: .red.opacity(0.75), shadowColor: .red.opacity(0.25))
             }
         }
     }
@@ -151,15 +131,9 @@ struct MessageBubble: View {
                         Text(message.text)
                             .foregroundStyle(message.isCurrentUser ? .white : .primary)
                         
-                        HStack(spacing: 4) {
-                            Text(message.time)
-                                .font(.caption2)
-                                .foregroundStyle(message.isCurrentUser ? .white.opacity(0.8) : .secondary)
-                            
-                            if message.isCurrentUser, let status = message.status {
-                                MessageStatusView(status: status)
-                            }
-                        }
+                        Text(message.time)
+                            .font(.caption2)
+                            .foregroundStyle(message.isCurrentUser ? .white.opacity(0.8) : .secondary)
                     }
                     .padding(.horizontal, 24)
                     .padding(.vertical, 6)
@@ -263,7 +237,7 @@ struct ConversationDetailView: View {
                 
                 VStack(alignment: .leading, spacing: 0) {
                         // MARK: Chat Header
-                    AvatarView(profile: conversation.otherUser, size: 48, nameLayout: .horizontal, subtitle: "Task id: \(conversation.id)")
+                    AvatarView(profile: conversation.otherUser, size: 48, nameLayout: .horizontal, subtitle: conversation.taskTitle)
                         .padding()
                     
                     Divider()
@@ -307,7 +281,7 @@ struct ConversationDetailView: View {
                                 .bold()
                                 .foregroundStyle(messageText.isEmpty ? .secondary : Color.accentColor)
                                 .frame(width: 44, height: 44)
-                            .GlassCapsule()
+                                .GlassCapsule()
                         }
                         .disabled(messageText.isEmpty)
                         .animation(.easeInOut(duration: 0.2), value: messageText.isEmpty)

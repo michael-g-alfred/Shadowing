@@ -15,8 +15,10 @@ final class RequesterViewModel {
     
     private var publishedTasksCursor: String?
     private var publishedTasksHasMore = true
+    private var publishedTasksGeneration = 0
     private var completedTasksCursor: String?
     private var completedTasksHasMore = true
+    private var completedTasksGeneration = 0
     
     var showAddTaskSheet: Bool = false
     
@@ -76,14 +78,22 @@ final class RequesterViewModel {
         }
     }
     
+    func confirmWithdraw(_ task: TaskModel) async {
+        do {
+            try await taskRepo.confirmWithdraw(taskId: task.id)
+            try await chatRepo.deleteChat(taskId: task.id)
+            requesterPublishedTasks.removeAll { $0.id == task.id }
+            await loadPublishedTasks()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+    
     func confirmTaskCompletion(_ task: TaskModel) async {
         do {
             try await taskRepo.confirmTask(id: task.id)
             try await chatRepo.deleteChat(taskId: task.id)
-            
             requesterPublishedTasks.removeAll { $0.id == task.id }
-                // Task is now completed server-side; pick it up as a pending rating
-                // the same way checkPendingRatings() would on next launch.
             await checkPendingRatings()
         } catch {
             errorMessage = error.localizedDescription
@@ -150,6 +160,8 @@ final class RequesterViewModel {
         errorMessage = nil
         publishedTasksCursor = nil
         publishedTasksHasMore = true
+        publishedTasksGeneration += 1
+        let myGeneration = publishedTasksGeneration
         defer { isLoading = false }
         
         do {
@@ -158,6 +170,7 @@ final class RequesterViewModel {
                 limit: nil,
                 status: statusFilter.apiValue
             )
+            guard myGeneration == publishedTasksGeneration else { return }
             requesterPublishedTasks = result.tasks
             publishedTasksHasMore = result.hasMore
             publishedTasksCursor = result.cursor
@@ -167,8 +180,10 @@ final class RequesterViewModel {
     }
     
     func loadMorePublishedTasksIfNeeded() async {
-        guard shouldLoadMore(hasMore: publishedTasksHasMore, isLoadingMore: isLoadingMorePublishedTasks) else { return }
+        guard shouldLoadMore(hasMore: publishedTasksHasMore, isLoadingMore: isLoadingMorePublishedTasks),
+              !isLoading else { return }
         isLoadingMorePublishedTasks = true
+        let myGeneration = publishedTasksGeneration
         defer { isLoadingMorePublishedTasks = false }
         
         do {
@@ -177,6 +192,7 @@ final class RequesterViewModel {
                 limit: nil,
                 status: statusFilter.apiValue
             )
+            guard myGeneration == publishedTasksGeneration else { return }
             requesterPublishedTasks.append(contentsOf: result.tasks)
             publishedTasksHasMore = result.hasMore
             publishedTasksCursor = result.cursor
@@ -190,10 +206,13 @@ final class RequesterViewModel {
         errorMessage = nil
         completedTasksCursor = nil
         completedTasksHasMore = true
+        completedTasksGeneration += 1
+        let myGeneration = completedTasksGeneration
         defer { isLoading = false }
         
         do {
             let result = try await taskRepo.getRequesterCompletedTasks(cursor: nil, limit: nil)
+            guard myGeneration == completedTasksGeneration else { return }
             requesterCompletedTasks = result.tasks
             completedTasksHasMore = result.hasMore
             completedTasksCursor = result.cursor
@@ -206,12 +225,15 @@ final class RequesterViewModel {
     }
     
     func loadMoreCompletedTasksIfNeeded() async {
-        guard shouldLoadMore(hasMore: completedTasksHasMore, isLoadingMore: isLoadingMoreCompletedTasks) else { return }
+        guard shouldLoadMore(hasMore: completedTasksHasMore, isLoadingMore: isLoadingMoreCompletedTasks),
+              !isLoading else { return }
         isLoadingMoreCompletedTasks = true
+        let myGeneration = completedTasksGeneration
         defer { isLoadingMoreCompletedTasks = false }
         
         do {
             let result = try await taskRepo.getRequesterCompletedTasks(cursor: completedTasksCursor, limit: nil)
+            guard myGeneration == completedTasksGeneration else { return }
             requesterCompletedTasks.append(contentsOf: result.tasks)
             completedTasksHasMore = result.hasMore
             completedTasksCursor = result.cursor

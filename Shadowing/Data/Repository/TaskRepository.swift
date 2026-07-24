@@ -260,13 +260,13 @@ final class TaskRepository: TaskRepositoryProtocol {
     
     func publishTask(id: String) async throws {
         DebugLogger.log("══════════════════════════════════════")
-        DebugLogger.log("🚫 Cancelling Task \(id)")
+        DebugLogger.log("📢 Publishing Task \(id)")
         
         let token = try await getValidToken()
         let config = APIConfig.requesterPublishTask(id: id, accessToken: token)
         let _: () = try await network.requestWithoutResponse(config)
         
-        DebugLogger.log("✅ Task Cancelled")
+        DebugLogger.log("✅ Task Published")
         DebugLogger.log("══════════════════════════════════════")
     }
     
@@ -296,26 +296,6 @@ final class TaskRepository: TaskRepositoryProtocol {
         return response.data.applicants.map { $0.toDomain() }
     }
     
-//    func assignExecutor(taskId: String, executorId: String) async throws -> URL {
-//        DebugLogger.log("══════════════════════════════════════")
-//        DebugLogger.log("🧑‍🔧 Assigning Executor \(executorId) to Task \(taskId)")
-//        
-//        let token = try await getValidToken()
-//        let body = APIConfig.RequesterAssignTaskBody(executorId: executorId)
-//        let config = APIConfig.requesterAssignTask(id: taskId, body: body, accessToken: token)
-//        let response: APIResponseDTO<PaymentResponseDTO> = try await network.request(config)
-//        
-//        guard let url = URL(string: response.data.paymentUrl) else {
-//            DebugLogger.log("❌ Invalid payment URL received")
-//            return URL(string: "https://example.com")!
-//        }
-//        
-//        DebugLogger.log("✅ Executor Assigned, payment initiated")
-//        DebugLogger.log("══════════════════════════════════════")
-//        
-//        return url
-//    }
-    
     func assignExecutor(taskId: String, executorId: String) async throws {
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("🧑‍🔧 Assigning Executor \(executorId) to Task \(taskId)")
@@ -325,6 +305,13 @@ final class TaskRepository: TaskRepositoryProtocol {
         let config = APIConfig.requesterAssignTask(id: taskId, body: body, accessToken: token)
         let _: () = try await network.requestWithoutResponse(config)
         DebugLogger.log("✅ Executor Assigned")
+    }
+    
+    func confirmWithdraw(taskId: String) async throws {
+        let token = try await getValidToken()
+        let config = APIConfig.requesterConfirmWithdraw(id: taskId, accessToken: token)
+        let _: () = try await network.requestWithoutResponse(config)
+        DebugLogger.log("✅ Task Withdraw Confirmed")
     }
     
         // Retry payment for a task that's already assigned but whose escrow

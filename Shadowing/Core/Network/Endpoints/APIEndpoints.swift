@@ -72,6 +72,9 @@ enum APIEndpoints {
     static func requesterAssignTaskPath(id: String) -> String {
         return taskRoute + "/req/\(id)/assign"
     }
+    static func requesterConfirmWithdrawPath(id: String) -> String {
+        return taskRoute + "/req/\(id)/confirm-withdraw"
+    }
     static func requesterDeclineApplicantPath(
         taskId: String,
         applicantId: String
