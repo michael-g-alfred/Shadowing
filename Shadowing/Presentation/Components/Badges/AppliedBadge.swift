@@ -12,7 +12,7 @@ struct AppliedBadge: View {
                 .fontWeight(.bold)
                 .foregroundStyle(.white)
         }
-        .padding(.horizontal, 10).padding(.vertical, 5)
+        .padding(.horizontal, 6).padding(.vertical, 4)
         .GlassCapsule(
             overlayColor: .green.opacity(0.1),
             strokeColor: .green.opacity(0.05),

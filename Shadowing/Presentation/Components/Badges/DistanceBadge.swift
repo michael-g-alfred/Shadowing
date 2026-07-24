@@ -18,7 +18,7 @@ struct DistanceBadge: View {
                 Text(distance).font(.caption2).fontWeight(.semibold)
             }
             .foregroundStyle(.cyan)
-            .padding(.horizontal, 8).padding(.vertical, 4)
+            .padding(.horizontal, 6).padding(.vertical, 4)
             .GlassCapsule(
                 overlayColor: .cyan.opacity(0.1),
                 strokeColor: .cyan.opacity(0.05),

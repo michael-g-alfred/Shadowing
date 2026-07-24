@@ -17,8 +17,8 @@ struct PriorityBadge: View {
                 .textCase(.uppercase)
                 .foregroundStyle(priority.color)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
         .GlassCapsule(
             overlayColor: priority.color.opacity(0.1),
             strokeColor: priority.color.opacity(0.05),

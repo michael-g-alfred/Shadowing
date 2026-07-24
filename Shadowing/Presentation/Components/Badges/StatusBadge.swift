@@ -10,7 +10,7 @@ struct StatusBadge: View {
             Text(status.localizedLabel)
                 .font(.caption2).fontWeight(.bold).textCase(.uppercase).foregroundStyle(status.color)
         }
-        .padding(.horizontal, 10).padding(.vertical, 5)
+        .padding(.horizontal, 6).padding(.vertical, 4)
         .GlassCapsule(
             overlayColor: status.color.opacity(0.1),
             strokeColor: status.color.opacity(0.05),
