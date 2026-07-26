@@ -180,7 +180,7 @@ extension DIContainer {
                             Button(role: .confirm) {
                                 Task { await executorViewModel.markTaskDone(task) }
                             } label: {
-                                Label("Mark Done", systemImage: "checkmark.seal")
+                                Label("Done", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
                             .GlassCapsule()

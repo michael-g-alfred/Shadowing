@@ -4,7 +4,25 @@ import Foundation
 @MainActor
 @Observable
 final class ChatViewModel {
-    var conversations: [Conversation] = []
+        // MARK: - Raw data from Firestore (do not read directly outside this file)
+    private var rawConversations: [Conversation] = []
+    
+        // MARK: - Single source of truth for read/unread state
+        // The currently-open conversation is always treated as read locally,
+        // regardless of what Firestore's snapshot says at any given instant.
+    var conversations: [Conversation] {
+        guard let currentObservedTaskId else { return rawConversations }
+        return rawConversations.map { convo in
+            guard convo.id == currentObservedTaskId, convo.unreadCount != 0 else { return convo }
+            return Conversation(
+                id: convo.id,
+                taskTitle: convo.taskTitle,
+                otherUser: convo.otherUser,
+                unreadCount: 0
+            )
+        }
+    }
+    
     var activeMessages: [ChatMessage] = []
     var isSending: Bool = false
     var isLoading: Bool = true
@@ -45,7 +63,7 @@ final class ChatViewModel {
             guard let self else { return }
             for await streamConversations in chatRepo.observeConversations(currentUserId: currentUserId) {
                 if Task.isCancelled { break }
-                self.conversations = streamConversations
+                self.rawConversations = streamConversations
                 self.isLoading = false
             }
         }

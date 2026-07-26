@@ -83,26 +83,26 @@ struct ApplicantsSheet: View {
             .disabled(vm.isAssigningExecutor)
         }
     }
-    
     @ViewBuilder
     private func applicantRow(_ applicant: ApplicantModel) -> some View {
         HStack(alignment: .center, spacing: 14) {
             VStack(alignment: .leading, spacing: 6) {
+                
                 AvatarView(profile: applicant, nameLayout: .horizontal, subtitle: applicant.appliedAt.toRelativeString())
                 
-                CompletedTaskRatingLabel(rating: applicant.rating ?? 0.0, completedTasks: applicant.completedTasks)
-                
-                if let proposedBudget = applicant.proposedBudget, let taskBudget = vm.selectedTaskForApplicants?.budget {
-                    if proposedBudget > taskBudget {
-                        Label(proposedBudget.formatted(.currency(code: "EGP")), systemImage: "arrow.up.circle")
-                            .font(.caption.weight(.semibold)).foregroundStyle(.green)
-                            .padding(.horizontal, 8).padding(.vertical, 4)
-                            .GlassCapsule(overlayColor: .green.opacity(0.1), strokeColor: .green.opacity(0.05), shadowColor: .green.opacity(0.05))
-                    } else if proposedBudget < taskBudget {
-                        Label(proposedBudget.formatted(.currency(code: "EGP")), systemImage: "arrow.down.circle")
-                            .font(.caption.weight(.semibold)).foregroundStyle(.orange)
-                            .padding(.horizontal, 8).padding(.vertical, 4)
-                            .GlassCapsule(overlayColor: .orange.opacity(0.1), strokeColor: .orange.opacity(0.05), shadowColor: .orange.opacity(0.05))
+                HStack(alignment: .center, spacing: 0) {
+                    
+                    CompletedTaskRatingLabel(rating: applicant.rating ?? 0.0, completedTasks: applicant.completedTasks)
+                    
+                    Spacer()
+                    Divider()
+                    Spacer()
+                    
+                    if let taskBudget = vm.selectedTaskForApplicants?.budget {
+                        ApplicantBudgetBadge(
+                            taskBudget: taskBudget,
+                            proposedBudget: applicant.proposedBudget
+                        )
                     }
                 }
             }

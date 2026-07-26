@@ -258,7 +258,10 @@ struct ConversationDetailView: View {
                             .padding(.top, 10)
                             .padding(.bottom, 10)
                         }
-                        .onChange(of: vm.activeMessages.count) { _, _ in scrollToBottom(proxy: proxy) }
+                        .onChange(of: vm.activeMessages.count) { _, _ in
+                            scrollToBottom(proxy: proxy)
+                            Task { await vm.markAsRead(taskId: conversation.id) }
+                        }
                         .onAppear { scrollToBottom(proxy: proxy) }
                         .scrollIndicators(.hidden)
                     }
@@ -311,6 +314,9 @@ struct ConversationDetailView: View {
         .onAppear {
             vm.listenToMessages(taskId: conversation.id)
             Task { await vm.markAsRead(taskId: conversation.id) }
+        }
+        .onDisappear {
+            vm.stopListeningToMessages()
         }
     }
     
