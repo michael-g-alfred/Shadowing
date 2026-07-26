@@ -71,9 +71,7 @@ struct RootView: View {
                                 taskTitle: pending.task.title,
                                 target: pending.target
                             )
-                            .presentationDetents([.fraction(0.75)])
-                            .presentationDragIndicator(.visible)
-                            .interactiveDismissDisabled(true)
+                            .appSheetStyle(interactiveDismissDisabled: true)
                         }
                     
                 case .admin:

@@ -47,7 +47,7 @@ struct ConversationRow: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, text.count > 1 ? 6 : 0)
                     .frame(minWidth: 16, minHeight: 16)
-                    .GlassCapsule(overlayColor: .red.opacity(0.75), shadowColor: .red.opacity(0.25))
+                    .appGlassCapsule(overlayColor: .red.opacity(0.75), shadowColor: .red.opacity(0.25))
             }
         }
     }
@@ -70,7 +70,7 @@ struct ReactionPickerView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 4)
-        .GlassCapsule()
+        .appGlassCapsule()
     }
 }
 
@@ -94,7 +94,7 @@ struct ReactionBadgeView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .GlassCapsule()
+        .appGlassCapsule()
     }
 }
 
@@ -137,7 +137,7 @@ struct MessageBubble: View {
                     }
                     .padding(.horizontal, 24)
                     .padding(.vertical, 6)
-                    .GlassCapsule(fill: bubbleBackground, overlayColor: bubbleOverlayColor, shadowColor: bubbleShadowColor)
+                    .appGlassCapsule(fill: bubbleBackground, overlayColor: bubbleOverlayColor, shadowColor: bubbleShadowColor)
                     
                     if !message.reactions.isEmpty {
                         ReactionBadgeView(reactions: message.reactions)
@@ -272,7 +272,7 @@ struct ConversationDetailView: View {
                         TextField("Type a message...", text: $messageText)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         
                         Button {
                             let text = messageText
@@ -284,7 +284,7 @@ struct ConversationDetailView: View {
                                 .bold()
                                 .foregroundStyle(messageText.isEmpty ? .secondary : Color.accentColor)
                                 .frame(width: 44, height: 44)
-                                .GlassCapsule()
+                                .appGlassCapsule()
                         }
                         .disabled(messageText.isEmpty)
                         .animation(.easeInOut(duration: 0.2), value: messageText.isEmpty)

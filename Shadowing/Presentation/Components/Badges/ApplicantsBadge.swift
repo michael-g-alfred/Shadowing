@@ -16,7 +16,7 @@ struct ApplicantsBadge: View {
         .foregroundStyle(color)
         .padding(.horizontal, 6).padding(.vertical, 4)
         .background { Capsule().fill(color.opacity(0.1)) }
-        .GlassCapsule(
+        .appGlassCapsule(
             overlayColor: color.opacity(0.1),
             strokeColor: color.opacity(0.05),
             shadowColor: color.opacity(0.05)

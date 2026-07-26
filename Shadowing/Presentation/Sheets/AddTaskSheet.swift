@@ -142,13 +142,6 @@ struct AddTaskSheet: View {
                 if success { dismiss() }
             }
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .buttonSizing(.fitted)
-                        .buttonStyle(.glassProminent)
-                        .tint(.red)
-                        .disabled(vm.isLoading)
-                }
                 ToolbarItem(placement: .confirmationAction) {
                     if vm.isLoading {
                         ProgressView()

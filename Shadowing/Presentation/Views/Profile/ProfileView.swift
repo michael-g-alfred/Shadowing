@@ -83,14 +83,12 @@ struct ProfileView: View {
             .sheet(isPresented: Bindable(vm).isRatingsPresented) {
                 if let user = vm.user {
                     container.makeRatingsView(userId: user.id, userName: user.displayName)
-                        .presentationDetents([.fraction(0.75)])
-                        .presentationDragIndicator(.visible)
+                        .appSheetStyle()
                 }
             }
             .sheet(isPresented: Bindable(vm).isSettingsPresented) {
                 container.makeSettingsView()
-                    .presentationDetents([.fraction(0.75)])
-                    .presentationDragIndicator(.visible)
+                    .appSheetStyle()
             }
         }
     }

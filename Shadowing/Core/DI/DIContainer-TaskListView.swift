@@ -24,7 +24,7 @@ extension DIContainer {
                                 Label("Delete", systemImage: "trash")
                             }
                             .tint(.red)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         }
                         
                         if task.status == .published || task.status == .pending {
@@ -34,7 +34,7 @@ extension DIContainer {
                                 Label("Cancel", systemImage: "xmark.circle")
                             }
                             .tint(.yellow)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         }
                         
                         if task.status == .cancelled {
@@ -44,7 +44,7 @@ extension DIContainer {
                                 Label("Publish", systemImage: "square.and.arrow.up.badge.checkmark")
                             }
                             .tint(.blue)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         }
                         if task.status == .pendingWithdraw {
                             Button {
@@ -53,7 +53,7 @@ extension DIContainer {
                                 Label("Confirm Withdraw", systemImage: "checkmark.circle")
                             }
                             .tint(.blue)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         }
                     }
                 )
@@ -69,7 +69,7 @@ extension DIContainer {
                                 Label("Applicants", systemImage: "person.3.fill")
                             }
                             .tint(.orange)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         }
                         if task.status == .pendingCompleted {
                             Button {
@@ -78,7 +78,7 @@ extension DIContainer {
                                 Label("Completed", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         }
                         
                         if task.status == .inProgress || task.status == .pendingCompleted || task.status == .pendingWithdraw {
@@ -88,7 +88,7 @@ extension DIContainer {
                                 Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tint(.blue)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         }
                     }
                 )
@@ -130,7 +130,7 @@ extension DIContainer {
                                 Label("Accept", systemImage: "checkmark.circle")
                             }
                             .tint(.green)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                             
                         } else if task.isApplicant {
                             Button {
@@ -139,7 +139,7 @@ extension DIContainer {
                                 Label("Withdraw", systemImage: "arrow.uturn.backward")
                             }
                             .tint(.orange)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         }
                     }
                 )
@@ -168,7 +168,7 @@ extension DIContainer {
                                 Label("Withdraw", systemImage: "arrow.uturn.backward")
                             }
                             .tint(.red)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         }
                     }
                 )
@@ -176,14 +176,14 @@ extension DIContainer {
             trailingSwipe: { [executorViewModel] task in
                 AnyView(
                     Group {
-                        if task.status == .inProgress {
+                        if task.status == .inProgress || task.status == .pendingWithdraw {
                             Button(role: .confirm) {
                                 Task { await executorViewModel.markTaskDone(task) }
                             } label: {
                                 Label("Done", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         }
                         
                         if task.status == .inProgress || task.status == .pendingCompleted || task.status == .pendingWithdraw {
@@ -193,7 +193,7 @@ extension DIContainer {
                                 Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tint(.blue)
-                            .GlassCapsule()
+                            .appGlassCapsule()
                         }
                     }
                 )

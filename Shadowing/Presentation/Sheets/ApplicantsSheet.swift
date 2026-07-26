@@ -3,7 +3,6 @@ import SwiftUI
 struct ApplicantsSheet: View {
     
         // MARK: - Environment
-    @Environment(\.dismiss) private var dismiss
     @Environment(DIContainer.self) private var container
     
         // MARK: - Properties
@@ -18,15 +17,6 @@ struct ApplicantsSheet: View {
             content
                 .navigationTitle("Applicants")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { dismiss() }
-                            .buttonSizing(.fitted)
-                            .buttonStyle(.glassProminent)
-                            .tint(.red)
-                            .disabled(vm.isAssigningExecutor)
-                    }
-                }
                 .alert(item: $applicantPendingDecline) { applicant in
                     Alert(
                         title: Text("Decline Applicant"),

@@ -26,7 +26,7 @@ struct ApplicantBudgetBadge: View {
             .foregroundStyle(info.color)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .GlassCapsule(
+            .appGlassCapsule(
                 overlayColor: info.color.opacity(0.1),
                 strokeColor: info.color.opacity(0.05),
                 shadowColor: info.color.opacity(0.05)

@@ -11,7 +11,7 @@ struct StatusBadge: View {
                 .font(.caption2).fontWeight(.bold).textCase(.uppercase).foregroundStyle(status.color)
         }
         .padding(.horizontal, 6).padding(.vertical, 4)
-        .GlassCapsule(
+        .appGlassCapsule(
             overlayColor: status.color.opacity(0.1),
             strokeColor: status.color.opacity(0.05),
             shadowColor: status.color.opacity(0.05)

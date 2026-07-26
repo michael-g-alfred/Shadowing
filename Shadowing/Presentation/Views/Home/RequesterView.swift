@@ -84,11 +84,11 @@ struct RequesterView: View {
         }
         .sheet(isPresented: $vm.showAddTaskSheet) {
             container.makeAddTaskSheet()
+                .appSheetStyle()
         }
         .sheet(isPresented: $vm.showApplicantsSheet) {
             container.makeApplicantsSheet()
-                .presentationDetents([.fraction(0.75)])
-                .presentationDragIndicator(.visible)
+                .appSheetStyle()
         }
         .sheet(isPresented: Binding(
             get: { vm.selectedChatTaskId != nil },
@@ -96,8 +96,7 @@ struct RequesterView: View {
         )) {
             if let taskId = vm.selectedChatTaskId {
                 container.makeDirectChatDetailView(taskId: taskId)
-                    .presentationDetents([.fraction(0.75)])
-                    .presentationDragIndicator(.visible)
+                    .appSheetStyle()
             }
         }
     }

@@ -49,8 +49,7 @@ struct ExecutorView: View {
         }
         .sheet(isPresented: $vm.showAppliedSheet) {
             AppliedSheet(vm: vm)
-                .presentationDetents([.fraction(0.75)])
-                .presentationDragIndicator(.visible)
+                .appSheetStyle()
         }
         .sheet(isPresented: Binding(
             get: { vm.selectedChatTaskId != nil },
@@ -58,8 +57,7 @@ struct ExecutorView: View {
         )) {
             if let taskId = vm.selectedChatTaskId {
                 container.makeDirectChatDetailView(taskId: taskId)
-                    .presentationDetents([.fraction(0.75)])
-                    .presentationDragIndicator(.visible)
+                    .appSheetStyle()
             }
         }
     }

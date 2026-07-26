@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct GlassCapsuleModifier: ViewModifier {
+struct AppGlassCapsule: ViewModifier {
     var fill: AnyShapeStyle = AnyShapeStyle(.thinMaterial)
     var overlayColor: Color = .accentColor.opacity(0.15)
     var strokeColor: Color = Color(.separator).opacity(0.2)
@@ -23,7 +23,7 @@ struct GlassCapsuleModifier: ViewModifier {
 }
 
 extension View {
-    func GlassCapsule(
+    func appGlassCapsule(
         fill: AnyShapeStyle = AnyShapeStyle(.thinMaterial),
         overlayColor: Color = .accentColor.opacity(0.15),
         strokeColor: Color = Color(.separator).opacity(0.2),
@@ -32,7 +32,7 @@ extension View {
         shadowY: CGFloat = 0
     ) -> some View {
         modifier(
-            GlassCapsuleModifier(
+            AppGlassCapsule(
                 fill: fill,
                 overlayColor: overlayColor,
                 strokeColor: strokeColor,

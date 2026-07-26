@@ -19,7 +19,7 @@ struct PriorityBadge: View {
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 4)
-        .GlassCapsule(
+        .appGlassCapsule(
             overlayColor: priority.color.opacity(0.1),
             strokeColor: priority.color.opacity(0.05),
             shadowColor: priority.color.opacity(0.05)

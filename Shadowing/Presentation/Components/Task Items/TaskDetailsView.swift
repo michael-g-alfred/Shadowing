@@ -30,8 +30,7 @@ struct TaskDetailsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $vm.selectedUserForRatings) { user in
             container.makeRatingsView(userId: user.id, userName: user.displayName)
-                .presentationDetents([.fraction(0.75)])
-                .presentationDragIndicator(.visible)
+                .appSheetStyle()
         }
     }
     
