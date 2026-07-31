@@ -14,6 +14,7 @@ enum EmptyState: CaseIterable {
     case noNotifications
     case noProfile
     case noTaskSelection
+    case noLocationAccess
     
     var title: LocalizedStringResource {
         switch self {
@@ -39,6 +40,8 @@ enum EmptyState: CaseIterable {
                 return "No Profile"
             case .noTaskSelection:
                 return "No Task Selection"
+            case .noLocationAccess:
+                return "Location Access Needed"
         }
     }
     
@@ -68,6 +71,8 @@ enum EmptyState: CaseIterable {
                 return "You have no profile yet."
             case .noTaskSelection:
                 return "Select a task from the list to view its details."
+            case .noLocationAccess:
+                return "Please enable location access from\nSettings to post or browse tasks."
         }
     }
     
@@ -87,6 +92,8 @@ enum EmptyState: CaseIterable {
                 return "bell.slash"
             case .noProfile:
                 return "person.crop.circle"
+            case .noLocationAccess:
+                return "location.slash"
             default:
                 return "tray"
         }
@@ -95,14 +102,21 @@ enum EmptyState: CaseIterable {
     @ViewBuilder
     func view(
         retryAction: (() async -> Void)? = nil,
-        clearFilterAction: (() -> Void)? = nil
+        clearFilterAction: (() -> Void)? = nil,
+        settingsAction: (() -> Void)? = nil
     ) -> some View {
         ContentUnavailableView {
             Label(title, systemImage: systemImage)
         } description: {
             Text(description)
         } actions: {
-            if self == .noFilteredRequesterTasks || self == .noExecutorFavoriteTasks, let clearFilterAction {
+            if self == .noLocationAccess, let settingsAction {
+                Button("Open Settings") {
+                    settingsAction()
+                }
+                .controlSize(.regular)
+                .buttonStyle(.glassProminent)
+            } else if self == .noFilteredRequesterTasks || self == .noExecutorFavoriteTasks, let clearFilterAction {
                 Button(self == .noExecutorFavoriteTasks ? "Remove Favorites Filter" : "Remove Filter") {
                     clearFilterAction()
                 }

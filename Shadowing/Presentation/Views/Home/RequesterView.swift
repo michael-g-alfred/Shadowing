@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 struct RequesterView: View {
     
@@ -42,13 +43,16 @@ struct RequesterView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .requireLocation(container.locationService)
         .task {
             await vm.checkPendingRatings()
         }
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Show Add Task Sheet", systemImage: "plus") {
-                    vm.showAddTaskSheet.toggle()
+            if container.locationService.authorizationStatus == .authorizedAlways || container.locationService.authorizationStatus == .authorizedWhenInUse {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Show Add Task Sheet", systemImage: "plus") {
+                        vm.showAddTaskSheet.toggle()
+                    }
                 }
             }
             ToolbarSpacer(placement: .topBarLeading)

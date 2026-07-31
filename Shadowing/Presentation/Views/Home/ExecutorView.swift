@@ -57,6 +57,7 @@ struct ExecutorView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .requireLocation(container.locationService)
         .task {
             await vm.checkPendingRatings()
         }

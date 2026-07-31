@@ -3,6 +3,9 @@ import MapKit
 
 struct MapView: View {
     
+        // MARK: - Environment
+    @Environment(DIContainer.self) private var container
+    
         // MARK: - Properties
     private let makeTaskDetails: (String) -> AnyView
     
@@ -69,6 +72,7 @@ struct MapView: View {
                 locationManager.requestWhenInUseAuthorization()
             }
         }
+        .requireLocation(container.locationService)
     }
     
     private func navigateToDetails(_ taskId: String) {
