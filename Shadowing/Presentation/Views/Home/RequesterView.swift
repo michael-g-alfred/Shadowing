@@ -58,7 +58,8 @@ struct RequesterView: View {
             ToolbarSpacer(placement: .topBarLeading)
             ToolbarItem(placement: .topBarLeading) {
                 Group {
-                    if vm.selectedTab == .publishedTasks
+                    if  (container.locationService.authorizationStatus == .authorizedAlways || container.locationService.authorizationStatus == .authorizedWhenInUse) &&
+                        vm.selectedTab == .publishedTasks
                         && !vm.requesterPublishedTasks.isEmpty
                         && vm.errorMessage == nil {
                         

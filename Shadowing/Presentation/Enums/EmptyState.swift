@@ -72,7 +72,7 @@ enum EmptyState: CaseIterable {
             case .noTaskSelection:
                 return "Select a task from the list to view its details."
             case .noLocationAccess:
-                return "Please enable location access from\nSettings to post or browse tasks."
+                return "Please enable location access from Settings to post or browse tasks."
         }
     }
     
