@@ -54,11 +54,6 @@ final class DIContainer {
     )
     
     @ObservationIgnored
-    private(set) lazy var lookupRepository: LookupRepository = LookupRepository(
-        network: networkService, authRepository: authRepository
-    )
-    
-    @ObservationIgnored
     private(set) lazy var chatRepository: ChatRepositoryProtocol = ChatRepository(
         userRepo: userRepository,
         taskRepo: taskRepository
@@ -203,7 +198,6 @@ final class DIContainer {
     func makeAddTaskViewModel() -> AddTaskVM {
         AddTaskVM(
             taskRepo: taskRepository,
-            lookupRepo: lookupRepository,
             locationService: locationService,
             onTaskAdded: { [weak requesterViewModel = requesterViewModel] in
                 await requesterViewModel?.loadPublishedTasks()
