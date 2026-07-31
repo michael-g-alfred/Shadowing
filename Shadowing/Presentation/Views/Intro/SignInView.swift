@@ -20,8 +20,8 @@ struct SignInView: View {
         ZStack {
             AppBackground()
             ScrollView {
-                VStack(spacing: 24) {
-                    VStack(spacing: 12) {
+                VStack(spacing: Spacing.xxl) {
+                    VStack(spacing: Spacing.md) {
                         Image(systemName: "person.crop.circle.fill.badge.checkmark")
                             .symbolRenderingMode(.hierarchical).font(.system(size: 80)).foregroundStyle(.blue)
                         Text("Welcome Back").font(.largeTitle.bold())
@@ -30,7 +30,7 @@ struct SignInView: View {
                     }
                     .padding(.top, 40)
                     
-                    VStack(spacing: 16) {
+                    VStack(spacing: Spacing.lg) {
                         AppInputField(
                             icon: "envelope",
                             title: "Email",

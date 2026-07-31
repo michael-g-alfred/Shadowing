@@ -19,7 +19,8 @@ struct TaskListView: View {
     let onLoad: () async -> Void
     let onLoadMoreIfNeeded: () async -> Void
     var onClearFilter: (() -> Void)? = nil
-
+    var onToggleFavorite: ((TaskModel) -> Void)? = nil
+    
     
     var leadingSwipe: ((TaskModel) -> AnyView)? = nil
     var trailingSwipe: ((TaskModel) -> AnyView)? = nil
@@ -99,31 +100,34 @@ struct TaskListView: View {
     private var listContent: some View {
         List {
             ForEach(tasks) { task in
-                TaskCard(task: task)
-                    .background(
-                        NavigationLink(value: task.id) {
-                            EmptyView()
-                        }
-                            .opacity(0)
-                    )
-                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                        if let leadingSwipe {
-                            leadingSwipe(task)
-                        }
+                TaskCard(
+                    task: task,
+                    onToggleFavorite: onToggleFavorite.map { handler in { handler(task) } }
+                )
+                .background(
+                    NavigationLink(value: task.id) {
+                        EmptyView()
                     }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        if let trailingSwipe {
-                            trailingSwipe(task)
-                        }
+                        .opacity(0)
+                )
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                    if let leadingSwipe {
+                        leadingSwipe(task)
                     }
-                    .task {
-                        if tasks.suffix(5).contains(where: { $0.id == task.id }) {
-                            await onLoadMoreIfNeeded()
-                        }
+                }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    if let trailingSwipe {
+                        trailingSwipe(task)
                     }
+                }
+                .task {
+                    if tasks.suffix(5).contains(where: { $0.id == task.id }) {
+                        await onLoadMoreIfNeeded()
+                    }
+                }
             }
             
             if isLoadingMore {
@@ -152,11 +156,14 @@ struct TaskListView: View {
                 LazyVGrid(columns: columns, spacing: 16) {
                     ForEach(tasks) { task in
                         NavigationLink(value: task.id) {
-                            TaskCard(task: task)
+                            TaskCard(
+                                task: task,
+                                onToggleFavorite: onToggleFavorite.map { handler in { handler(task) } }
+                            )
                         }
                         .buttonStyle(.plain)
                         .contextMenu {
-
+                            
                             if let trailingSwipe {
                                 trailingSwipe(task)
                             }

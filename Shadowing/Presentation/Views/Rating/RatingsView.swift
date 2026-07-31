@@ -50,7 +50,7 @@ struct RatingsView: View {
                 if vm.isLoadingMore {
                     ProgressView()
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, Spacing.md)
                         .listRowBackground(Color.clear)
                 }            }
             .listStyle(.insetGrouped)
@@ -59,30 +59,28 @@ struct RatingsView: View {
     
     @ViewBuilder
     private func ratingRow(_ rating: RatingModel) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(rating.raterName)
-                    .font(.headline)
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            
+            HStack(alignment: .top) {
+                AvatarView( profile: rating, nameLayout: .horizontal, subtitle: rating.createdAt.toRelativeString() )
                 
                 Spacer()
                 
-                HStack(spacing: 2) {
+                HStack(spacing: 3) {
                     ForEach(1...5, id: \.self) { star in
                         Image(systemName: star <= rating.rating ? "star.fill" : "star")
-                            .font(.caption)
-                            .foregroundStyle(star <= rating.rating ? .orange : .gray.opacity(0.4))
+                            .font(.footnote)
+                            .foregroundStyle(star <= rating.rating ? .rating : .gray.opacity(0.3))
                     }
                 }
             }
             
-            Text(rating.comment)
-                .font(.subheadline)
-                .foregroundStyle(.primary)
-            
-            Text(rating.createdAt.toRelativeString())
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+            if !rating.comment.isEmpty {
+                Text(rating.comment)
+                    .font(.subheadline)
+                    .foregroundStyle(.primary)
+            }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xs)
     }
 }

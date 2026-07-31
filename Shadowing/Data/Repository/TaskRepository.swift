@@ -153,15 +153,15 @@ final class TaskRepository: TaskRepositoryProtocol {
     
         // MARK: - Executor
     
-    func getExecutorAvailableTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
+    func getExecutorAvailableTasks(cursor: String?, limit: Int?, favoritesOnly: Bool = false) async throws -> PaginatedTasksResult {
         DebugLogger.log("══════════════════════════════════════")
-        DebugLogger.log("📥 Fetching Executor Available Tasks (cursor: \(cursor ?? "nil"))")
+        DebugLogger.log("📥 Fetching Executor Available Tasks (cursor: \(cursor ?? "nil"), favoritesOnly: \(favoritesOnly))")
         
         let token = try await getValidToken()
         
         DebugLogger.log("🌐 Sending request...")
         
-        let config = APIConfig.executorAvailableTasks (cursor: cursor, limit: limit, accessToken: token)
+        let config = APIConfig.executorAvailableTasks(cursor: cursor, limit: limit, favoritesOnly: favoritesOnly, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
         
         DebugLogger.log("✅ Request succeeded")
@@ -383,6 +383,26 @@ final class TaskRepository: TaskRepositoryProtocol {
         
         DebugLogger.log("✅ Task Marked Done")
         DebugLogger.log("══════════════════════════════════════")
+    }
+    
+    func favoriteTask(id: String) async throws {
+        DebugLogger.log("⭐ Favoriting Task \(id)")
+        
+        let token = try await getValidToken()
+        let config = APIConfig.executorFavoriteTask(id: id, accessToken: token)
+        let _: () = try await network.requestWithoutResponse(config)
+        
+        DebugLogger.log("✅ Task Favorited")
+    }
+    
+    func unfavoriteTask(id: String) async throws {
+        DebugLogger.log("☆ Unfavoriting Task \(id)")
+        
+        let token = try await getValidToken()
+        let config = APIConfig.executorUnfavoriteTask(id: id, accessToken: token)
+        let _: () = try await network.requestWithoutResponse(config)
+        
+        DebugLogger.log("✅ Task Unfavorited")
     }
     
         // MARK: - Rating Actions

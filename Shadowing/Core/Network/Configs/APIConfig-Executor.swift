@@ -10,13 +10,15 @@ extension APIConfig {
         limit: Int? = nil,
         lat: Double? = nil,
         lng: Double? = nil,
+        favoritesOnly: Bool = false,
         accessToken: String
     ) -> MGRequestConfig {
         let items: [(name: String, value: String?)] = [
             ("cursor", cursor),
             ("limit", limit.map { "\($0)" }),
             ("lat", lat.map { "\($0)" }),
-            ("lng", lng.map { "\($0)" })
+            ("lng", lng.map { "\($0)" }),
+            ("favoritesOnly", favoritesOnly ? "true" : nil)
         ]
         return MGRequestConfig(
             baseURL: APIEndpoints.baseURL,
@@ -113,6 +115,24 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.executorMarkDonePath(id: id),
             method: .patch,
+            headers: ["Authorization": "Bearer \(accessToken)"]
+        )
+    }
+    
+    static func executorFavoriteTask(id: String, accessToken: String) -> MGRequestConfig {
+        MGRequestConfig(
+            baseURL: APIEndpoints.baseURL,
+            path: APIEndpoints.executorFavoriteTaskPath(id: id),
+            method: .post,
+            headers: ["Authorization": "Bearer \(accessToken)"]
+        )
+    }
+    
+    static func executorUnfavoriteTask(id: String, accessToken: String) -> MGRequestConfig {
+        MGRequestConfig(
+            baseURL: APIEndpoints.baseURL,
+            path: APIEndpoints.executorFavoriteTaskPath(id: id),
+            method: .delete,
             headers: ["Authorization": "Bearer \(accessToken)"]
         )
     }

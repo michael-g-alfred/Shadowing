@@ -7,6 +7,7 @@ struct LocationBadge: View {
         HStack(alignment: .center, spacing: 3) {
             Image(systemName: "map.fill")
             Text(task.address)
+                .lineLimit(1)
         }
         .font(.caption).fontWeight(.medium).foregroundStyle(.secondary)
     }

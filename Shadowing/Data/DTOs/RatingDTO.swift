@@ -4,18 +4,16 @@ struct RatingDTO: Codable {
     let id: String
     let rating: Int
     let comment: String
-    let raterId: String
-    let raterName: String
     let createdAt: String
-
+    let rater: UserSummaryDTO
+    
     func toDomain() -> RatingModel {
         RatingModel(
             id: id,
             rating: rating,
             comment: comment,
-            raterId: raterId,
-            raterName: raterName,
-            createdAt: createdAt.toDate() ?? Date()
+            createdAt: createdAt.toDate() ?? Date(),
+            rater: rater.toDomain()
         )
     }
 }

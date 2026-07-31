@@ -34,4 +34,6 @@ struct TaskModel: Identifiable {
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude ?? 31.2565, longitude: longitude ?? 32.2841)
     }
+    
+    var isFavourite: Bool
 }

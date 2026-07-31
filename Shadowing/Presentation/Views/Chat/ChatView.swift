@@ -37,7 +37,7 @@ struct ConversationRow: View {
         HStack(alignment: .bottom) {
             AvatarView(profile: conversation.otherUser, nameLayout: .horizontal, subtitle: "Task title: \( conversation.taskTitle)")
             
-            Spacer(minLength: 12)
+            Spacer(minLength: Spacing.md)
             
             
             if conversation.unreadCount > 0 {
@@ -45,7 +45,7 @@ struct ConversationRow: View {
                 Text(text)
                     .font(.caption2.bold())
                     .foregroundStyle(.white)
-                    .padding(.horizontal, text.count > 1 ? 6 : 0)
+                    .padding(.horizontal, text.count > 1 ? Spacing.sm : 0)
                     .frame(minWidth: 16, minHeight: 16)
                     .appGlassCapsule(overlayColor: .red.opacity(0.75), shadowColor: .red.opacity(0.25))
             }
@@ -60,7 +60,7 @@ struct ReactionPickerView: View {
     let onSelect: (String) -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.md) {
             ForEach(Self.emojis, id: \.self) { emoji in
                 Text(emoji)
                     .font(.title)
@@ -68,8 +68,8 @@ struct ReactionPickerView: View {
                     .onTapGesture { onSelect(emoji) }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.lg)
+        .padding(.vertical, Spacing.xs)
         .appGlassCapsule()
     }
 }
@@ -86,14 +86,14 @@ struct ReactionBadgeView: View {
     }
     
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Spacing.xs) {
             ForEach(counts, id: \.emoji) { item in
                 Text(item.count > 1 ? "\(item.emoji) \(item.count)" : item.emoji)
                     .font(.caption)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs)
         .appGlassCapsule()
     }
 }
@@ -117,7 +117,7 @@ struct MessageBubble: View {
     }
     
     var body: some View {
-        HStack(alignment: .bottom, spacing: 8) {
+        HStack(alignment: .bottom, spacing: Spacing.sm) {
             
             if !message.isCurrentUser {
                 AvatarView(profile: message.sender, size: 28, nameLayout: .none)
@@ -125,9 +125,9 @@ struct MessageBubble: View {
                 Spacer()
             }
             
-            VStack(alignment: message.isCurrentUser ? .trailing : .leading, spacing: 4) {
+            VStack(alignment: message.isCurrentUser ? .trailing : .leading, spacing: Spacing.xs) {
                 ZStack(alignment: message.isCurrentUser ? .bottomLeading : .bottomTrailing) {
-                    VStack(alignment: message.isCurrentUser ? .trailing : .leading, spacing: 4) {
+                    VStack(alignment: message.isCurrentUser ? .trailing : .leading, spacing: Spacing.xs) {
                         Text(message.text)
                             .foregroundStyle(message.isCurrentUser ? .white : .primary)
                         
@@ -135,7 +135,7 @@ struct MessageBubble: View {
                             .font(.caption2)
                             .foregroundStyle(message.isCurrentUser ? .white.opacity(0.8) : .secondary)
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, Spacing.xxl)
                     .padding(.vertical, 6)
                     .appGlassCapsule(fill: bubbleBackground, overlayColor: bubbleOverlayColor, shadowColor: bubbleShadowColor)
                     
@@ -147,7 +147,7 @@ struct MessageBubble: View {
                             }
                     }
                 }
-                .padding(.bottom, message.reactions.isEmpty ? 0 : 4)
+                .padding(.bottom, message.reactions.isEmpty ? 0 : Spacing.xs)
             }
             
             if message.isCurrentUser {
@@ -157,8 +157,8 @@ struct MessageBubble: View {
             }
             
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 2)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xxs)
         .background(
             GeometryReader { geo in
                 Color.clear.preference(key: MessageFramePreferenceKey.self, value: [message.id: geo.frame(in: .global)])
@@ -245,7 +245,7 @@ struct ConversationDetailView: View {
                         // MARK: Messages Scroll View
                     ScrollViewReader { proxy in
                         ScrollView {
-                            LazyVStack(spacing: 6) {
+                            LazyVStack(spacing: Spacing.sm) {
                                 ForEach(vm.activeMessages) { message in
                                     MessageBubble(message: message) {
                                         withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
@@ -255,8 +255,8 @@ struct ConversationDetailView: View {
                                     .id(message.id)
                                 }
                             }
-                            .padding(.top, 10)
-                            .padding(.bottom, 10)
+                            .padding(.top, Spacing.sm)
+                            .padding(.bottom, Spacing.sm)
                         }
                         .onChange(of: vm.activeMessages.count) { _, _ in
                             scrollToBottom(proxy: proxy)
@@ -268,10 +268,10 @@ struct ConversationDetailView: View {
                     .onPreferenceChange(MessageFramePreferenceKey.self) { frames in self.messageFrames = frames }
                     
                         // MARK: Text Input Bar
-                    HStack(spacing: 8) {
+                    HStack(spacing: Spacing.sm) {
                         TextField("Type a message...", text: $messageText)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.vertical, Spacing.md)
                             .appGlassCapsule()
                         
                         Button {

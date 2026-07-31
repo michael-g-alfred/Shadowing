@@ -117,9 +117,15 @@ extension DIContainer {
             isLoadingMore: executorViewModel.isLoadingMoreAvailableTasks,
             loadingTitle: "Loading",
             loadingSubtitle: "Fetching available tasks.",
-            emptyState: .noAvailableTasks,
+            emptyState: executorViewModel.showFavoritesOnly ? .noExecutorFavoriteTasks : .noAvailableTasks,
             onLoad: { [executorViewModel] in await executorViewModel.loadAvailableTasks() },
             onLoadMoreIfNeeded: { [executorViewModel] in await executorViewModel.loadMoreAvailableTasksIfNeeded() },
+            onClearFilter: executorViewModel.showFavoritesOnly ? { [executorViewModel] in
+                executorViewModel.showFavoritesOnly = false
+            } : nil,
+            onToggleFavorite: { [executorViewModel] task in
+                Task { await executorViewModel.toggleFavorite(task) }
+            },
             trailingSwipe: { [executorViewModel] task in
                 AnyView(
                     Group {

@@ -19,7 +19,7 @@ struct AppliedSheet: View {
             Form {
                 if let task {
                     Section("Task") {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: Spacing.xs) {
                             Text(task.title)
                                 .font(.headline)
                             Text(task.description)

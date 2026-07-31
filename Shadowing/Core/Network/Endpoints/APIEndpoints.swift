@@ -99,6 +99,9 @@ enum APIEndpoints {
     static func executorMarkDonePath(id: String) -> String {
         return taskRoute + "/exe/\(id)/done"
     }
+    static func executorFavoriteTaskPath(id: String) -> String {
+        return taskRoute + "/exe/\(id)/favorite"
+    }
     static func executorRateRequesterPath(id: String) -> String {
         return taskRoute + "/exe/\(id)/rate"
     }

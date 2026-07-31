@@ -19,7 +19,7 @@ struct RatingSheet: View {
         // MARK: - Body
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
+            VStack(spacing: Spacing.xxl) {
                 VStack(spacing: 6) {
                     Text("Rate \(vm.target.personTitle)")
                         .font(.title2.bold())
@@ -30,7 +30,7 @@ struct RatingSheet: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
-                .padding(.top, 16)
+                .padding(.top, Spacing.lg)
                 
                 Text("This step is required to complete the task.")
                     .font(.subheadline)
@@ -67,12 +67,12 @@ struct RatingSheet: View {
     
         // MARK: - Private Views
     private var starPicker: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 12) {
+        VStack(spacing: Spacing.lg) {
+            HStack(spacing: Spacing.md) {
                 ForEach(1...5, id: \.self) { star in
                     Image(systemName: star <= Int(vm.rating) ? "star.fill" : "star")
                         .imageScale(.large)
-                        .foregroundStyle(star <= Int(vm.rating) ? .orange : .gray.opacity(0.5))
+                        .foregroundStyle(star <= Int(vm.rating) ? .rating : .gray.opacity(0.5))
                         .animation(.easeInOut, value: vm.rating)
                         .onTapGesture {
                             withAnimation(.easeInOut) {
@@ -89,7 +89,7 @@ struct RatingSheet: View {
             }, set: { v in
                 vm.selectRating(Int(v))
             }), in: 1...5, step: 1)
-            .tint(.orange)
+            .tint(.rating)
             .frame(width: 250)
             .onChange(of: vm.rating) { _, _ in
                 withAnimation(.easeInOut) {
@@ -100,20 +100,20 @@ struct RatingSheet: View {
     }
     
     private var commentField: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             Text("Comment")
                 .font(.subheadline.weight(.semibold))
             
             TextEditor(text: $vm.comment)
                 .scrollContentBackground(.hidden)
-                .padding(12)
+                .padding(Spacing.md)
                 .frame(height: 100)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
                         .strokeBorder(.gray.opacity(0.5), lineWidth: 1)
                 }
                 .overlay {
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
                         .strokeBorder(.blue, lineWidth: 3)
                         .scaleEffect(commentFocused ? 1 : 0.8)
                         .opacity(commentFocused ? 1 : 0)

@@ -12,5 +12,6 @@ struct BudgetBadge: View {
                 overlayColor: task.priority.color.opacity(0.1),
                 strokeColor: task.priority.color.opacity(0.05),
                 shadowColor: task.priority.color.opacity(0.05)
-            )    }
+            )
+    }
 }

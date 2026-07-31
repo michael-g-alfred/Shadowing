@@ -38,6 +38,7 @@ struct TaskDTO: Codable {
     
     let applicantsCount: Int
     let isApplicant: Bool
+    let isFavourite: Bool
 }
 
 extension TaskDTO {
@@ -66,7 +67,8 @@ extension TaskDTO {
             requester: requester.toDomain(),
             executor: executor?.toDomain(),
             applicantsCount: applicantsCount,
-            isApplicant: isApplicant
+            isApplicant: isApplicant,
+            isFavourite: isFavourite
         )
     }
 }

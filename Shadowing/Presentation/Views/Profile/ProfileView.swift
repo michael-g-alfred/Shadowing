@@ -101,7 +101,7 @@ struct ProfileView: View {
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
                     .listRowInsets(.all, 0)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.sm)
             }
             .listRowBackground(Color.clear)
             

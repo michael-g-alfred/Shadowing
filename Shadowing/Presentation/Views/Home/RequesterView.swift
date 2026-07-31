@@ -15,7 +15,7 @@ struct RequesterView: View {
     
         // MARK: - Body
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Spacing.lg) {
             Picker(
                 "Tasks",
                 selection: Binding(
@@ -30,7 +30,7 @@ struct RequesterView: View {
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
-            .padding(.top, 8)
+            .padding(.top, Spacing.sm)
             
             Group {
                 switch vm.selectedTab {

@@ -21,7 +21,7 @@ protocol TaskRepositoryProtocol {
     
         // MARK: - Executor
     
-    func getExecutorAvailableTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
+    func getExecutorAvailableTasks(cursor: String?, limit: Int?, favoritesOnly: Bool) async throws -> PaginatedTasksResult
     func getExecutorAssignedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
     func getExecutorCompletedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
     func getUnratedExecutorTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
@@ -46,6 +46,8 @@ protocol TaskRepositoryProtocol {
     func applyToTask(id: String, proposedBudget: Double?) async throws
     func withdrawFromTask(id: String) async throws
     func markTaskDone(id: String) async throws
+    func favoriteTask(id: String) async throws
+    func unfavoriteTask(id: String) async throws
     
         // MARK: - Rating Actions
     func rateExecutor(taskId: String, rating: Int, comment: String) async throws

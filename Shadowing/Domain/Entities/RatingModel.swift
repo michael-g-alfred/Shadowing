@@ -1,12 +1,16 @@
 import Foundation
 
-struct RatingModel: Identifiable, Equatable {
+struct RatingModel: Identifiable, Profile {
+    
     let id: String
     let rating: Int
     let comment: String
-    let raterId: String
-    let raterName: String
     let createdAt: Date
+    let rater: UserSummaryModel
+    
+        // MARK: - Profile conformance (forwarded to the embedded rater)
+    var displayName: String { rater.displayName }
+    var avatarUrl: String? { rater.avatarUrl }
 }
 
 struct PaginatedRatingsResult {

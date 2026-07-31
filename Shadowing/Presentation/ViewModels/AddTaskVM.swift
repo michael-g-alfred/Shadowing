@@ -25,17 +25,14 @@ final class AddTaskVM {
     var onTaskAdded: (() async -> Void)?
     
     private let taskRepo: TaskRepositoryProtocol
-    private let lookupRepo: LookupRepositoryProtocol
     private let locationService: LocationService
     
     init(
         taskRepo: TaskRepositoryProtocol,
-        lookupRepo: LookupRepositoryProtocol,
         locationService: LocationService,
         onTaskAdded: (() async -> Void)? = nil
     ) {
         self.taskRepo = taskRepo
-        self.lookupRepo = lookupRepo
         self.locationService = locationService
         self.onTaskAdded = onTaskAdded
     }

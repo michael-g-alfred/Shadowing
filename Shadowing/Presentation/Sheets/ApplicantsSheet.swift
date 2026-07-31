@@ -69,6 +69,7 @@ struct ApplicantsSheet: View {
                     }
                 }
             }
+            .listSectionSeparatorTint(.rating)
             .listStyle(.insetGrouped)
             .disabled(vm.isAssigningExecutor)
         }

@@ -102,8 +102,8 @@ enum EmptyState: CaseIterable {
         } description: {
             Text(description)
         } actions: {
-            if self == .noFilteredRequesterTasks, let clearFilterAction {
-                Button("Remove Filter") {
+            if self == .noFilteredRequesterTasks || self == .noExecutorFavoriteTasks, let clearFilterAction {
+                Button(self == .noExecutorFavoriteTasks ? "Remove Favorites Filter" : "Remove Filter") {
                     clearFilterAction()
                 }
                 .controlSize(.regular)

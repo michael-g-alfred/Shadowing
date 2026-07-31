@@ -27,6 +27,13 @@ final class ExecutorViewModel {
     private var availableTasksHasMore = true
     private var availableTasksGeneration = 0
     
+    var showFavoritesOnly = false {
+        didSet {
+            guard oldValue != showFavoritesOnly else { return }
+            Task { await loadAvailableTasks() }
+        }
+    }
+    
     private var assignedTasksCursor: String?
     private var assignedTasksHasMore = true
     private var assignedTasksGeneration = 0
@@ -104,6 +111,45 @@ final class ExecutorViewModel {
             await loadAssignedTasks()
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+    
+        // MARK: - Favorites
+    
+    func toggleFavorite(_ task: TaskModel) async {
+        let newValue = !task.isFavourite
+        setFavourite(newValue, forTaskId: task.id)
+        
+        do {
+            if newValue {
+                try await taskRepo.favoriteTask(id: task.id)
+            } else {
+                try await taskRepo.unfavoriteTask(id: task.id)
+            }
+            
+                // If we're filtering by favorites and it was just un-favorited, drop it from the list.
+            if showFavoritesOnly && !newValue {
+                executorAvailableTasks.removeAll { $0.id == task.id }
+            }
+        } catch {
+                // Revert the optimistic update on failure.
+            setFavourite(!newValue, forTaskId: task.id)
+            errorMessage = error.localizedDescription
+        }
+    }
+    
+    private func setFavourite(_ isFavourite: Bool, forTaskId taskId: String) {
+        if let idx = executorAvailableTasks.firstIndex(where: { $0.id == taskId }) {
+            executorAvailableTasks[idx].isFavourite = isFavourite
+        }
+        if let idx = executorAllTasks.firstIndex(where: { $0.id == taskId }) {
+            executorAllTasks[idx].isFavourite = isFavourite
+        }
+        if let idx = executorAssignedTasks.firstIndex(where: { $0.id == taskId }) {
+            executorAssignedTasks[idx].isFavourite = isFavourite
+        }
+        if let idx = executorCompletedTasks.firstIndex(where: { $0.id == taskId }) {
+            executorCompletedTasks[idx].isFavourite = isFavourite
         }
     }
     
@@ -192,7 +238,7 @@ final class ExecutorViewModel {
         defer { isLoading = false }
         
         do {
-            let result = try await taskRepo.getExecutorAvailableTasks(cursor: nil, limit: nil)
+            let result = try await taskRepo.getExecutorAvailableTasks(cursor: nil, limit: nil, favoritesOnly: showFavoritesOnly)
             guard myGeneration == availableTasksGeneration else { return }
             executorAvailableTasks = result.tasks
             availableTasksHasMore = result.hasMore
@@ -213,7 +259,7 @@ final class ExecutorViewModel {
         defer { isLoadingMoreAvailableTasks = false }
         
         do {
-            let result = try await taskRepo.getExecutorAvailableTasks(cursor: availableTasksCursor, limit: nil)
+            let result = try await taskRepo.getExecutorAvailableTasks(cursor: availableTasksCursor, limit: nil, favoritesOnly: showFavoritesOnly)
             guard myGeneration == availableTasksGeneration else { return }
             executorAvailableTasks.append(contentsOf: result.tasks)
             availableTasksHasMore = result.hasMore

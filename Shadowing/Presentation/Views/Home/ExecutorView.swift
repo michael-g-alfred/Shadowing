@@ -15,22 +15,35 @@ struct ExecutorView: View {
     
         // MARK: - Body
     var body: some View {
-        VStack(spacing: 16) {
-            Picker(
-                "Tasks",
-                selection: Binding(
-                    get: { vm.selectedTab },
-                    set: { vm.select($0) }
-                )
-            ) {
-                ForEach(ExecutorTab.allCases, id: \.self) { tab in
-                    Text(tab.tabName)
-                        .tag(tab)
+        VStack(spacing: Spacing.lg) {
+            HStack(spacing: Spacing.sm) {
+                Picker(
+                    "Tasks",
+                    selection: Binding(
+                        get: { vm.selectedTab },
+                        set: { vm.select($0) }
+                    )
+                ) {
+                    ForEach(ExecutorTab.allCases, id: \.self) { tab in
+                        Text(tab.tabName)
+                            .tag(tab)
+                    }
+                }
+                .pickerStyle(.segmented)
+                
+                if vm.selectedTab == .availableTasks {
+                    Button {
+                        vm.showFavoritesOnly.toggle()
+                    } label: {
+                        Image(systemName: vm.showFavoritesOnly ? "star.fill" : "star")
+                            .foregroundStyle(vm.showFavoritesOnly ? .rating : .secondary)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityLabel("Show favourites only")
                 }
             }
-            .pickerStyle(.segmented)
             .padding(.horizontal)
-            .padding(.top, 8)
+            .padding(.top, Spacing.sm)
             
             Group {
                 switch vm.selectedTab {

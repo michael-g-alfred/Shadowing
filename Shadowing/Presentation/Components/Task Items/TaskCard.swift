@@ -2,33 +2,29 @@ import SwiftUI
 import CoreLocation
 
 struct TaskCard: View {
-
-        // MARK: - Properties
-    let task: TaskModel
     
-        // MARK: - State
+    let task: TaskModel
+    var onToggleFavorite: (() -> Void)? = nil
+    
     @State private var appeared = false
     
-        // MARK: - Body
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: Spacing.md) {
             
-                // MARK: Header
-            HStack(alignment: .center, spacing: 12) {
-                
-                AvatarView(profile: task.requester, nameLayout: .horizontal, subtitle: task.createdAt.toRelativeString())
-                
-                Spacer()
-                
-                VStack(alignment: .center, spacing: 4) {
-                    BudgetBadge(task: task)
-                    ServiceBadge(task: task)
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                HStack(alignment: .top, spacing: Spacing.sm) {
+                    AvatarView(profile: task.requester, nameLayout: .horizontal, subtitle: task.createdAt.toRelativeString())
+                    
+                    Spacer(minLength: Spacing.sm)
+                    
+                    VStack(alignment: .trailing, spacing: Spacing.xs) {
+                        BudgetBadge(task: task)
+                        ServiceBadge(task: task)
+                    }
                 }
             }
-            .frame(maxHeight: 44)
             
-                // MARK: Content
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text(task.title)
                     .font(.headline).fontWeight(.bold).foregroundStyle(.primary)
                     .lineLimit(1).multilineTextAlignment(.leading)
@@ -41,19 +37,16 @@ struct TaskCard: View {
             
             Divider()
             
-                // MARK: Footer
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .center, spacing: 8) {
-                    if let lat = task.latitude, let long = task.longitude {
-                        DistanceBadge(taskLocation: CLLocation(latitude: lat, longitude: long))
-                        
-                    }
+            HStack(alignment: .center, spacing: Spacing.sm) {
+                if let lat = task.latitude, let long = task.longitude {
+                    DistanceBadge(taskLocation: CLLocation(latitude: lat, longitude: long))
                 }
                 LocationBadge(task: task)
+                Spacer()
             }
             
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 4) {
+                HStack(spacing: Spacing.xs) {
                     PriorityBadge(priority: task.priority)
                     StatusBadge(status: task.status)
                     ApplicantsBadge(applicants: task.applicantsCount, color: .brown)
@@ -61,10 +54,13 @@ struct TaskCard: View {
                     if task.isApplicant == true {
                         AppliedBadge()
                     }
+                    if let onToggleFavorite {
+                        favoriteBadge(action: onToggleFavorite)
+                    }
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    HStack(spacing: Spacing.xs) {
                         PriorityBadge(priority: task.priority)
                         StatusBadge(status: task.status)
                         ApplicantsBadge(applicants: task.applicantsCount, color: .brown)
@@ -75,17 +71,17 @@ struct TaskCard: View {
                 }
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: CornerRadius.xl, style: .continuous)
                 .fill(.thinMaterial)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    RoundedRectangle(cornerRadius: CornerRadius.xl, style: .continuous)
                         .fill(task.priority.color.opacity(0.05))
                 )
         )
         .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: CornerRadius.xl, style: .continuous)
                 .strokeBorder(
                     task.priority.color,
                     lineWidth: 1
@@ -97,5 +93,21 @@ struct TaskCard: View {
         .onAppear {
             appeared = true
         }
+    }
+    
+    private func favoriteBadge(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: task.isFavourite ? "star.fill" : "star")
+                .imageScale(.medium)
+                .foregroundStyle(task.isFavourite ? .rating : .secondary)
+                .frame(width: 32, height: 32)
+                .appGlassCapsule(
+                    overlayColor: .yellow.opacity(0.1),
+                    strokeColor: .yellow.opacity(0.05),
+                    shadowColor: .yellow.opacity(0.05)
+                )
+        }
+        .buttonStyle(.plain)
+        .contentShape(Circle())
     }
 }

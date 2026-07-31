@@ -14,7 +14,7 @@ struct CompletedTaskRatingLabel: View {
                 Image(systemName: "star.fill")
                 Text(String(format: "%.1f", rating))
             }
-            .font(.caption).bold().foregroundStyle(.orange)
+            .font(.caption).bold().foregroundStyle(.rating)
         }
     }
 }

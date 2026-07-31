@@ -78,18 +78,18 @@ struct AddTaskSheet: View {
                     
                     if vm.isPreferredTimeOfDay {
                         let columns = [
-                            GridItem(.flexible(), spacing: 12),
-                            GridItem(.flexible(), spacing: 12)
+                            GridItem(.flexible(), spacing: Spacing.md),
+                            GridItem(.flexible(), spacing: Spacing.md)
                         ]
                         
-                        LazyVGrid(columns: columns, spacing: 12) {
+                        LazyVGrid(columns: columns, spacing: Spacing.md) {
                             ForEach(PreferredTimeOfDay.allCases, id: \.self) { time in
                                 let isSelected = vm.preferredTimeOfDay == time
                                 
                                 Button {
                                     vm.preferredTimeOfDay = time
                                 } label: {
-                                    VStack(alignment: .leading, spacing: 8) {
+                                    VStack(alignment: .leading, spacing: Spacing.sm) {
                                         HStack {
                                             Image(systemName: time.iconName)
                                                 .font(.title3)
@@ -100,7 +100,7 @@ struct AddTaskSheet: View {
                                         }
                                         .foregroundStyle(isSelected ? .white : .accentColor)
                                         
-                                        VStack(alignment: .leading, spacing: 2) {
+                                        VStack(alignment: .leading, spacing: Spacing.xxs) {
                                             Text(time.localizedLabel)
                                                 .font(.headline)
                                                 .foregroundStyle(isSelected ? .white : .primary)
@@ -111,16 +111,16 @@ struct AddTaskSheet: View {
                                         }
                                     }
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(12)
+                                    .padding(Spacing.md)
                                     .background(
                                         isSelected ? Color.accentColor : Color.gray.opacity(0.1)
                                     )
-                                    .cornerRadius(8)
+                                    .cornerRadius(CornerRadius.sm)
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
-                        .padding(.all, 12)
+                        .padding(.all, Spacing.md)
                         .listRowBackground(Color(.secondarySystemGroupedBackground))
                         .listRowInsets(EdgeInsets())
                     }
