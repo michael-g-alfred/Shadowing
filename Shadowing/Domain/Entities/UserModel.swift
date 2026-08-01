@@ -10,9 +10,12 @@ struct UserModel: Codable, Identifiable, Equatable, Profile {
     let rating: Double
     let totalRatings: Int
     let completedTasks: Int
+    let accountStatus: AccountStatus
+    let suspendedUntil: Date?
     let createdAt: Date?
     
     var isAdmin: Bool { role.lowercased() == "admin" }
+    var isSuspended: Bool { accountStatus == .suspended }
 }
 
 extension UserModel {
@@ -27,6 +30,8 @@ extension UserModel {
             rating: rating,
             totalRatings: totalRatings,
             completedTasks: completedTasks,
+            accountStatus: accountStatus,
+            suspendedUntil: suspendedUntil,
             createdAt: createdAt
         )
     }

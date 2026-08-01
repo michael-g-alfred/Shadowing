@@ -21,7 +21,6 @@ struct TaskListView: View {
     var onClearFilter: (() -> Void)? = nil
     var onToggleFavorite: ((TaskModel) -> Void)? = nil
     
-    
     var leadingSwipe: ((TaskModel) -> AnyView)? = nil
     var trailingSwipe: ((TaskModel) -> AnyView)? = nil
     
@@ -36,6 +35,7 @@ struct TaskListView: View {
             }
     }
     
+        // MARK: - Private Views
     @ViewBuilder
     private var content: some View {
         if horizontalSizeClass == .compact {
@@ -45,7 +45,7 @@ struct TaskListView: View {
         }
     }
     
-        // MARK: - Compact Content (iPhone)
+        // MARK: Compact Content (iPhone)
     @ViewBuilder
     private var compactContent: some View {
         if isLoading {
@@ -64,7 +64,7 @@ struct TaskListView: View {
         }
     }
     
-        // MARK: - Regular Content (iPad)
+        // MARK: Regular Content (iPad)
     @ViewBuilder
     private var regularContent: some View {
         if isLoading {
@@ -78,7 +78,7 @@ struct TaskListView: View {
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(0..<15, id: \.self) { _ in
-                            TaskCardSingleton()
+                            TaskCardSkeleton()
                         }
                     }
                     .padding(16)
@@ -96,7 +96,7 @@ struct TaskListView: View {
         }
     }
     
-        // MARK: - Compact (List with swipe actions)
+        // MARK: Compact (List with swipe actions)
     private var listContent: some View {
         List {
             ForEach(tasks) { task in
@@ -131,7 +131,7 @@ struct TaskListView: View {
             }
             
             if isLoadingMore {
-                TaskCardSingleton()
+                TaskCardSkeleton()
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
@@ -143,7 +143,7 @@ struct TaskListView: View {
         }
     }
     
-        // MARK: - Regular (Grid, 2 or 3 columns based on width)
+        // MARK: Regular (Grid, 2 or 3 columns based on width)
     private var gridContent: some View {
         GeometryReader { geometry in
             let columnCount = columnCount(for: geometry.size.width)
@@ -180,7 +180,7 @@ struct TaskListView: View {
                     
                     if isLoadingMore {
                         ForEach(0..<columnCount, id: \.self) { _ in
-                            TaskCardSingleton()
+                            TaskCardSkeleton()
                         }
                     }
                 }
@@ -192,6 +192,7 @@ struct TaskListView: View {
         }
     }
     
+        // MARK: - Private Methods
     private func columnCount(for width: CGFloat) -> Int {
         if width >= 1080 {
             return 3

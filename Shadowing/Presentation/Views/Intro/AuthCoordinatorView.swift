@@ -2,13 +2,13 @@ import SwiftUI
 
 struct AuthCoordinatorView: View {
     
-    // MARK: - Environment
+        // MARK: - Environment
     @Environment(DIContainer.self) private var container
     
-    // MARK: - State
+        // MARK: - State
     @State private var screen: AuthScreen = .signIn
     
-    // MARK: - Body
+        // MARK: - Body
     var body: some View {
         switch screen {
             case .signIn:

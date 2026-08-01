@@ -38,12 +38,12 @@ struct AvatarView: View {
             case .none:
                 avatar
             case .horizontal:
-                HStack(spacing: 8) {
+                HStack(spacing: Spacing.sm) {
                     avatar
                     nameBlock(alignment: .leading)
                 }
             case .vertical:
-                VStack(spacing: 6) {
+                VStack(spacing: Spacing.xs) {
                     avatar
                     nameBlock(alignment: .center)
                 }

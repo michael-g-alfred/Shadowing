@@ -72,3 +72,21 @@ extension TaskDTO {
         )
     }
 }
+
+    // MARK: - Withdraw
+
+struct WithdrawResponseDTO: Codable {
+    let suspended: Bool
+    let warning: LocalizedStringResource?
+}
+
+struct WithdrawResult {
+    let suspended: Bool
+    let warning: LocalizedStringResource?
+}
+
+extension WithdrawResponseDTO {
+    func toDomain() -> WithdrawResult {
+        WithdrawResult(suspended: suspended, warning: warning)
+    }
+}

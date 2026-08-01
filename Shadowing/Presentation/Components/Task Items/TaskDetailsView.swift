@@ -13,13 +13,16 @@ struct TaskDetailsView: View {
         : nil
     }
     
+        // MARK: - State
     @State private var vm: TaskDetailsViewModel
     @State private var isIdExpanded = false
     
+        // MARK: - Init
     init(taskId: String, vm: TaskDetailsViewModel) {
         _vm = State(initialValue: vm)
     }
     
+        // MARK: - Body
     var body: some View {
         ZStack {
             AppBackground()
@@ -34,6 +37,7 @@ struct TaskDetailsView: View {
         }
     }
     
+        // MARK: - Private Views
     @ViewBuilder
     private var content: some View {
         if vm.isLoading {
@@ -60,8 +64,7 @@ struct TaskDetailsView: View {
         }
     }
     
-        // MARK: - Title
-    
+        // MARK: Title
     private func titleSection(_ task: TaskModel) -> some View {
         Section("Title") {
             Text(task.title)
@@ -79,8 +82,7 @@ struct TaskDetailsView: View {
         .listRowBackground(listRowColor)
     }
     
-        // MARK: - Overview
-    
+        // MARK: Overview
     private func overviewSection(_ task: TaskModel) -> some View {
         Section("Overview") {
             InfoRow(
@@ -114,8 +116,7 @@ struct TaskDetailsView: View {
         .listRowBackground(listRowColor)
     }
     
-        // MARK: - Scheduling
-    
+        // MARK: Scheduling
     @ViewBuilder
     private func schedulingSection(_ task: TaskModel) -> some View {
         if task.scheduledAt != nil || task.preferredTimeOfDay != nil {
@@ -140,8 +141,7 @@ struct TaskDetailsView: View {
         }
     }
     
-        // MARK: - Location
-    
+        // MARK: Location
     private func locationSection(_ task: TaskModel) -> some View {
         Section("Location") {
             InfoRow(
@@ -153,8 +153,7 @@ struct TaskDetailsView: View {
         .listRowBackground(listRowColor)
     }
     
-        // MARK: - Task Info
-    
+        // MARK: Task Info
     private func taskInfoSection(_ task: TaskModel) -> some View {
         Section("Task Info") {
             InfoRow(
@@ -172,8 +171,7 @@ struct TaskDetailsView: View {
         .listRowBackground(listRowColor)
     }
     
-        // MARK: - Requester / Executor
-    
+        // MARK: Requester / Executor
     private func requesterSection(_ user: UserSummaryModel) -> some View {
         Section("Requester") {
             userRows(for: user)
@@ -221,8 +219,7 @@ struct TaskDetailsView: View {
         )
     }
     
-        // MARK: - History
-    
+        // MARK: History
     private func historySection(_ task: TaskModel) -> some View {
         Section("History") {
             InfoRow(
@@ -240,8 +237,7 @@ struct TaskDetailsView: View {
         .listRowBackground(listRowColor)
     }
     
-        // MARK: - Id
-    
+        // MARK: Id
     private func idSection(for task: TaskModel) -> some View {
         Section("ID") {
             InfoRow(title: "Id", systemImage: "number.circle") {
@@ -268,6 +264,7 @@ struct TaskDetailsView: View {
         }
     }
     
+        // MARK: - Private Methods
     private func displayedId(for id: String) -> String {
         guard !isIdExpanded else { return id }
         return "\(id.prefix(9))...."

@@ -74,28 +74,24 @@ struct ApplicantsSheet: View {
             .disabled(vm.isAssigningExecutor)
         }
     }
+    
     @ViewBuilder
     private func applicantRow(_ applicant: ApplicantModel) -> some View {
-        HStack(alignment: .center, spacing: 14) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            HStack(alignment: .top, spacing: Spacing.xs) {
                 
                 AvatarView(profile: applicant, nameLayout: .horizontal, subtitle: applicant.appliedAt.toRelativeString())
                 
-                HStack(alignment: .center, spacing: 0) {
-                    
-                    CompletedTaskRatingLabel(rating: applicant.rating ?? 0.0, completedTasks: applicant.completedTasks)
-                    
-                    Spacer()
-                    Divider()
-                    Spacer()
-                    
-                    if let taskBudget = vm.selectedTaskForApplicants?.budget {
-                        ApplicantBudgetBadge(
-                            taskBudget: taskBudget,
-                            proposedBudget: applicant.proposedBudget
-                        )
-                    }
-                }
+                Spacer(minLength: Spacing.md)
+                
+                CompletedTaskRatingLabel(rating: applicant.rating ?? 0.0, completedTasks: applicant.completedTasks)
+            }
+            
+            if let taskBudget = vm.selectedTaskForApplicants?.budget {
+                ApplicantBudgetBadge(
+                    taskBudget: taskBudget,
+                    proposedBudget: applicant.proposedBudget
+                )
             }
         }
         .contentShape(Rectangle())

@@ -74,5 +74,16 @@ struct ExecutorView: View {
                     .appSheetStyle()
             }
         }
+        .alert(
+            "Notice",
+            isPresented: Binding(
+                get: { vm.warningMessage != nil },
+                set: { if !$0 { vm.warningMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(vm.warningMessage ?? "")
+        }
     }
 }

@@ -3,11 +3,14 @@ import CoreLocation
 
 struct TaskCard: View {
     
+        // MARK: - Properties
     let task: TaskModel
     var onToggleFavorite: (() -> Void)? = nil
     
+        // MARK: - State
     @State private var appeared = false
     
+        // MARK: - Body
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             
@@ -42,7 +45,6 @@ struct TaskCard: View {
                     DistanceBadge(taskLocation: CLLocation(latitude: lat, longitude: long))
                 }
                 LocationBadge(task: task)
-                Spacer()
             }
             
             ViewThatFits(in: .horizontal) {
@@ -95,6 +97,7 @@ struct TaskCard: View {
         }
     }
     
+        // MARK: - Private Views
     private func favoriteBadge(action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: task.isFavourite ? "star.fill" : "star")

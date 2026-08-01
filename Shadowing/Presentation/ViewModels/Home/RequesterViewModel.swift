@@ -78,17 +78,6 @@ final class RequesterViewModel {
         }
     }
     
-    func confirmWithdraw(_ task: TaskModel) async {
-        do {
-            try await taskRepo.confirmWithdraw(taskId: task.id)
-            try await chatRepo.deleteChat(taskId: task.id)
-            requesterPublishedTasks.removeAll { $0.id == task.id }
-            await loadPublishedTasks()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-    
     func confirmTaskCompletion(_ task: TaskModel) async {
         do {
             try await taskRepo.confirmTask(id: task.id)

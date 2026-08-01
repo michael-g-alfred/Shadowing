@@ -8,20 +8,15 @@ final class ExecutorViewModel {
     
     var isLoading = false
     var errorMessage: String?
+    var warningMessage: LocalizedStringResource?
     
-    var executorAllTasks: [TaskModel] = []
     var executorAvailableTasks: [TaskModel] = []
     var executorAssignedTasks: [TaskModel] = []
     var executorCompletedTasks: [TaskModel] = []
     
-    var isLoadingMoreAllTasks = false
     var isLoadingMoreAvailableTasks = false
     var isLoadingMoreAssignedTasks = false
     var isLoadingMoreCompletedTasks = false
-    
-    private var allTasksCursor: String?
-    private var allTasksHasMore = true
-    private var allTasksGeneration = 0
     
     private var availableTasksCursor: String?
     private var availableTasksHasMore = true
@@ -43,6 +38,7 @@ final class ExecutorViewModel {
     private var completedTasksGeneration = 0
     
     private let taskRepo: TaskRepositoryProtocol
+    private let chatRepo: ChatRepositoryProtocol
     
         // Applied sheet state
     var showAppliedSheet: Bool = false
@@ -50,11 +46,9 @@ final class ExecutorViewModel {
     var isApplying = false
     
         // MARK: - Rating Queue
-        /// Completed tasks that this executor still needs to rate the requester for.
-        /// Driven by `status == .completed && !isRatedByExecutor`, NOT by markTaskDone.
+    
     private(set) var pendingRatingTasks: [TaskModel] = []
     
-        /// The task currently presented in the rating sheet. Drives `.sheet(item:)`.
     var currentRatingTask: TaskModel? {
         pendingRatingTasks.first
     }
@@ -63,8 +57,9 @@ final class ExecutorViewModel {
     
     var selectedChatTaskId: String?
     
-    init(taskRepo: TaskRepositoryProtocol) {
+    init(taskRepo: TaskRepositoryProtocol, chatRepo: ChatRepositoryProtocol) {
         self.taskRepo = taskRepo
+        self.chatRepo = chatRepo
     }
     
     func beginApply(to task: TaskModel) {
@@ -94,8 +89,16 @@ final class ExecutorViewModel {
     
     func withdrawFromTask(_ task: TaskModel) async {
         do {
-            try await taskRepo.withdrawFromTask(id: task.id)
+            let result = try await taskRepo.withdrawFromTask(id: task.id)
+            
+            if result.suspended {
+                warningMessage = "Your account has been suspended for 7 days due to repeated withdrawals. You can still finish tasks already assigned to you, but you can't apply to new ones until the suspension ends."
+            } else if let warning = result.warning {
+                warningMessage = warning
+            }
+            
             if task.status == .inProgress {
+                try? await chatRepo.deleteChat(taskId: task.id)
                 await loadAssignedTasks()
             } else {
                 await loadAvailableTasks()
@@ -127,12 +130,11 @@ final class ExecutorViewModel {
                 try await taskRepo.unfavoriteTask(id: task.id)
             }
             
-                // If we're filtering by favorites and it was just un-favorited, drop it from the list.
             if showFavoritesOnly && !newValue {
                 executorAvailableTasks.removeAll { $0.id == task.id }
             }
+            
         } catch {
-                // Revert the optimistic update on failure.
             setFavourite(!newValue, forTaskId: task.id)
             errorMessage = error.localizedDescription
         }
@@ -141,15 +143,6 @@ final class ExecutorViewModel {
     private func setFavourite(_ isFavourite: Bool, forTaskId taskId: String) {
         if let idx = executorAvailableTasks.firstIndex(where: { $0.id == taskId }) {
             executorAvailableTasks[idx].isFavourite = isFavourite
-        }
-        if let idx = executorAllTasks.firstIndex(where: { $0.id == taskId }) {
-            executorAllTasks[idx].isFavourite = isFavourite
-        }
-        if let idx = executorAssignedTasks.firstIndex(where: { $0.id == taskId }) {
-            executorAssignedTasks[idx].isFavourite = isFavourite
-        }
-        if let idx = executorCompletedTasks.firstIndex(where: { $0.id == taskId }) {
-            executorCompletedTasks[idx].isFavourite = isFavourite
         }
     }
     
@@ -181,49 +174,6 @@ final class ExecutorViewModel {
         }
             // If not submitted, leave it in the queue so it re-shows next time
             // (e.g. .sheet(item:) will re-present it since it's still first in queue).
-    }
-    
-        // MARK: - All Tasks
-    
-    func loadAllTasks() async {
-        isLoading = true
-        errorMessage = nil
-        allTasksCursor = nil
-        allTasksHasMore = true
-        allTasksGeneration += 1
-        let myGeneration = allTasksGeneration
-        defer { isLoading = false }
-        
-        do {
-            let result = try await taskRepo.getAllTasks(cursor: nil, limit: nil)
-            guard myGeneration == allTasksGeneration else { return }
-            executorAllTasks = result.tasks
-            allTasksHasMore = result.hasMore
-            allTasksCursor = result.cursor
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-    
-    func loadMoreAllTasksIfNeeded() async {
-        guard shouldLoadMore(
-            hasMore: allTasksHasMore,
-            isLoadingMore: isLoadingMoreAllTasks
-        ), !isLoading else { return }
-        
-        isLoadingMoreAllTasks = true
-        let myGeneration = allTasksGeneration
-        defer { isLoadingMoreAllTasks = false }
-        
-        do {
-            let result = try await taskRepo.getAllTasks(cursor: allTasksCursor, limit: nil)
-            guard myGeneration == allTasksGeneration else { return }
-            executorAllTasks.append(contentsOf: result.tasks)
-            allTasksHasMore = result.hasMore
-            allTasksCursor = result.cursor
-        } catch {
-            errorMessage = error.localizedDescription
-        }
     }
     
         // MARK: - Available Tasks

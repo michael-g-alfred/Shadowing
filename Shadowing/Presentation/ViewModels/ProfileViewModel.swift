@@ -25,6 +25,10 @@ final class ProfileViewModel {
     var isRatingsPresented = false
     var isSettingsPresented = false
     
+        // MARK: - Suspension Countdown
+    var suspensionCountdownText: String?
+    private nonisolated(unsafe) var countdownTimer: Timer?
+    
     private let authRepo: AuthRepositoryProtocol
     private let userRepo: UserRepositoryProtocol
     
@@ -47,6 +51,7 @@ final class ProfileViewModel {
         
         do {
             user = try await userRepo.fetchUser(id: id)
+            updateSuspensionCountdown()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -105,5 +110,56 @@ final class ProfileViewModel {
     func displayedId(for id: String) -> String {
         guard !isIdExpanded else { return id }
         return "\(id.prefix(9))...."
+    }
+    
+        // MARK: - Suspension Countdown
+    
+        /// Starts (or restarts) a 1-minute repeating timer that refreshes
+        /// `suspensionCountdownText` while the account is suspended. Stops
+        /// itself automatically once the suspension has expired.
+    private func updateSuspensionCountdown() {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+        
+        guard let user, user.isSuspended, let until = user.suspendedUntil else {
+            suspensionCountdownText = nil
+            return
+        }
+        
+        refreshCountdownText(until: until)
+        
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.refreshCountdownText(until: until)
+            }
+        }
+    }
+    
+    private func refreshCountdownText(until: Date) {
+        let remaining = until.timeIntervalSinceNow
+        
+        guard remaining > 0 else {
+            suspensionCountdownText = nil
+            countdownTimer?.invalidate()
+            countdownTimer = nil
+                // Suspension expired locally — reload so the server-confirmed
+                // "active" status (lazily reactivated on the next fetch) shows up.
+            Task { await loadProfile() }
+            return
+        }
+        
+        let days = Int(remaining) / 86400
+        let hours = (Int(remaining) % 86400) / 3600
+        
+        if days > 0 {
+            suspensionCountdownText = "\(days)d \(hours)h remaining"
+        } else {
+            let minutes = (Int(remaining) % 3600) / 60
+            suspensionCountdownText = "\(hours)h \(minutes)m remaining"
+        }
+    }
+    
+    deinit {
+        countdownTimer?.invalidate()
     }
 }

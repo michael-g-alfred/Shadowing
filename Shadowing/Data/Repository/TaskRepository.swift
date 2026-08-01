@@ -307,13 +307,6 @@ final class TaskRepository: TaskRepositoryProtocol {
         DebugLogger.log("✅ Executor Assigned")
     }
     
-    func confirmWithdraw(taskId: String) async throws {
-        let token = try await getValidToken()
-        let config = APIConfig.requesterConfirmWithdraw(id: taskId, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
-        DebugLogger.log("✅ Task Withdraw Confirmed")
-    }
-    
         // Retry payment for a task that's already assigned but whose escrow
         // is still "not_paid" (e.g. a previous payment attempt failed).
     func retryPayment(taskId: String) async throws -> URL {
@@ -361,16 +354,18 @@ final class TaskRepository: TaskRepositoryProtocol {
         DebugLogger.log("══════════════════════════════════════")
     }
     
-    func withdrawFromTask(id: String) async throws {
+    func withdrawFromTask(id: String) async throws -> WithdrawResult {
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("↩️ Withdrawing from Task \(id)")
         
         let token = try await getValidToken()
         let config = APIConfig.executorWithdrawTask(id: id, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<WithdrawResponseDTO> = try await network.request(config)
         
-        DebugLogger.log("✅ Withdrawn Successfully")
+        DebugLogger.log("✅ Withdrawn Successfully (suspended: \(response.data.suspended))")
         DebugLogger.log("══════════════════════════════════════")
+        
+        return response.data.toDomain()
     }
     
     func markTaskDone(id: String) async throws {

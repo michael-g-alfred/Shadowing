@@ -34,7 +34,6 @@ protocol TaskRepositoryProtocol {
     func confirmTask(id: String) async throws
     func getApplicants(taskId: String) async throws -> [ApplicantModel]
     func assignExecutor(taskId: String, executorId: String) async throws
-    func confirmWithdraw(taskId: String) async throws
     func declineApplicant(taskId: String, applicantId: String) async throws
     
         // MARK: - Payments
@@ -44,7 +43,7 @@ protocol TaskRepositoryProtocol {
         // MARK: - Executor Actions
     
     func applyToTask(id: String, proposedBudget: Double?) async throws
-    func withdrawFromTask(id: String) async throws
+    func withdrawFromTask(id: String) async throws -> WithdrawResult
     func markTaskDone(id: String) async throws
     func favoriteTask(id: String) async throws
     func unfavoriteTask(id: String) async throws

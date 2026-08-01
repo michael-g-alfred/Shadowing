@@ -154,15 +154,6 @@ extension APIConfig {
         )
     }
     
-    static func requesterConfirmWithdraw(id: String, accessToken: String) -> MGRequestConfig {
-        MGRequestConfig(
-            baseURL: APIEndpoints.baseURL,
-            path: APIEndpoints.requesterConfirmWithdrawPath(id: id),
-            method: .patch,
-            headers: ["Authorization": "Bearer \(accessToken)"]
-        )
-    }
-    
     static func requesterDeclineApplicant(
         taskId: String,
         applicantId: String,

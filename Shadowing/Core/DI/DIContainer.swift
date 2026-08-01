@@ -72,7 +72,7 @@ final class DIContainer {
     )
     
     @ObservationIgnored
-    lazy var executorViewModel = ExecutorViewModel(taskRepo: taskRepository)
+    lazy var executorViewModel = ExecutorViewModel(taskRepo: taskRepository, chatRepo: chatRepository)
     
     @ObservationIgnored
     lazy var chatViewModel = ChatViewModel(

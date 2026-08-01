@@ -8,10 +8,10 @@ struct AppliedSheet: View {
         // MARK: - Properties
     var vm: ExecutorViewModel
     
+    private var task: TaskModel? { vm.selectedTaskForApply }
+    
         // MARK: - State
     @State private var proposedBudget: Double = 0
-    
-    private var task: TaskModel? { vm.selectedTaskForApply }
     
         // MARK: - Body
     var body: some View {

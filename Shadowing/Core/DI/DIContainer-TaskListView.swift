@@ -46,15 +46,6 @@ extension DIContainer {
                             .tint(.blue)
                             .appGlassCapsule()
                         }
-                        if task.status == .pendingWithdraw {
-                            Button {
-                                Task { await requesterViewModel.confirmWithdraw(task) }
-                            } label: {
-                                Label("Confirm Withdraw", systemImage: "checkmark.circle")
-                            }
-                            .tint(.blue)
-                            .appGlassCapsule()
-                        }
                     }
                 )
             },
@@ -81,7 +72,7 @@ extension DIContainer {
                             .appGlassCapsule()
                         }
                         
-                        if task.status == .inProgress || task.status == .pendingCompleted || task.status == .pendingWithdraw {
+                        if task.status == .inProgress || task.status == .pendingCompleted {
                             Button {
                                 requesterViewModel.openChat(for: task.id)
                             } label: {
@@ -182,7 +173,7 @@ extension DIContainer {
             trailingSwipe: { [executorViewModel] task in
                 AnyView(
                     Group {
-                        if task.status == .inProgress || task.status == .pendingWithdraw {
+                        if task.status == .inProgress {
                             Button(role: .confirm) {
                                 Task { await executorViewModel.markTaskDone(task) }
                             } label: {
@@ -192,7 +183,7 @@ extension DIContainer {
                             .appGlassCapsule()
                         }
                         
-                        if task.status == .inProgress || task.status == .pendingCompleted || task.status == .pendingWithdraw {
+                        if task.status == .inProgress || task.status == .pendingCompleted {
                             Button {
                                 executorViewModel.openChat(for: task.id)
                             } label: {

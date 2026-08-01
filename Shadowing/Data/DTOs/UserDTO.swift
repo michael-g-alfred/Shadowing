@@ -14,6 +14,8 @@ struct UserDTO: Codable {
     let rating: Double?
     let totalRatings: Int?
     let completedTasks: Int?
+    let accountStatus: String?
+    let suspendedUntil: Date?
     let createdAt: Date?
 }
 
@@ -29,6 +31,8 @@ extension UserDTO {
             rating: rating ?? 0,
             totalRatings: totalRatings ?? 0,
             completedTasks: completedTasks ?? 0,
+            accountStatus: accountStatus.flatMap(AccountStatus.init(rawValue:)) ?? .active,
+            suspendedUntil: suspendedUntil,
             createdAt: createdAt
         )
     }

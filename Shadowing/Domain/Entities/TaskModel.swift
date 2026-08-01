@@ -30,10 +30,10 @@ struct TaskModel: Identifiable {
     let executor: UserSummaryModel?
     let applicantsCount: Int
     let isApplicant: Bool
+    var isFavourite: Bool
     
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude ?? 31.2565, longitude: longitude ?? 32.2841)
     }
     
-    var isFavourite: Bool
 }

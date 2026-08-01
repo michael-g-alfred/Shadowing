@@ -75,6 +75,7 @@ struct MapView: View {
         .requireLocation(container.locationService)
     }
     
+        // MARK: - Private Methods
     private func navigateToDetails(_ taskId: String) {
         vm.clearSelection()
         navigationPath.append(taskId)
@@ -91,11 +92,15 @@ struct MapView: View {
 }
 
 struct CustomMapPin: View {
+    
+        // MARK: - Properties
     let iconName: String
     let priorityColor: Color
     
+        // MARK: - State
     @State private var isAnimating = false
     
+        // MARK: - Body
     var body: some View {
         ZStack {
             Circle()
@@ -129,11 +134,14 @@ struct CustomMapPin: View {
 }
 
 private struct TaskMapCard: View {
+    
+        // MARK: - Properties
     let task: TaskModel
     let onDirections: () -> Void
     let onDetails: () -> Void
     let onDismiss: () -> Void
     
+        // MARK: - Body
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {

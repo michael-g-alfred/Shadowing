@@ -7,7 +7,7 @@ struct ProfileView: View {
     @Environment(DIContainer.self) private var container
     @Environment(\.colorScheme) private var colorScheme
     
-        // MARK: - Property
+        // MARK: - Properties
     private var listRowColor: Color? {
         colorScheme == .dark
         ? Color.accentColor.opacity(0.15)
@@ -105,6 +105,22 @@ struct ProfileView: View {
             }
             .listRowBackground(Color.clear)
             
+            if user.isSuspended {
+                Section {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label(user.accountStatus.localizedLabel, systemImage: "exclamationmark.triangle.fill")
+                            .font(.subheadline).bold()
+                        Text("You can't apply to new tasks or post new ones right now.")
+                            .font(.footnote)
+                        if let countdown = vm.suspensionCountdownText {
+                            Text(countdown)
+                                .font(.footnote).bold()
+                        }
+                    }
+                    .foregroundStyle(user.accountStatus.color)
+                }
+            }
+            
             if let errorMessage = vm.errorMessage {
                 Section {
                     Text(errorMessage)
@@ -116,6 +132,12 @@ struct ProfileView: View {
             }
             
             Section("Account") {
+                InfoRow(title: "Account Status", systemImage: "checkmark.shield") {
+                    Text(user.accountStatus.localizedLabel)
+                        .bold()
+                        .foregroundStyle(user.accountStatus.color)
+                }
+                
                 InfoRow(
                     title: "Email",
                     systemImage: "envelope",
