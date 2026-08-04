@@ -10,14 +10,14 @@ struct UserModel: Codable, Identifiable, Equatable, Profile {
     let rating: Double
     let totalRatings: Int
     let completedTasks: Int
-    let accountStatus: AccountStatus
+    let accountStatus: String
     let suspendedUntil: Date?
-    let country: Country?
-    let governorate: Governorate?
+    let countryId: Int?
+    let governorateId: Int?
     let createdAt: Date?
-    
+
     var isAdmin: Bool { role.lowercased() == "admin" }
-    var isSuspended: Bool { accountStatus == .suspended }
+    var isSuspended: Bool { accountStatus == "suspended" }
 }
 
 extension UserModel {
@@ -34,8 +34,8 @@ extension UserModel {
             completedTasks: completedTasks,
             accountStatus: accountStatus,
             suspendedUntil: suspendedUntil,
-            country: country,
-            governorate: governorate,
+            countryId: countryId,
+            governorateId: governorateId,
             createdAt: createdAt
         )
     }

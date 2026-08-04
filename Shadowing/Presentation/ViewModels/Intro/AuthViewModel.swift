@@ -13,24 +13,33 @@ final class AuthViewModel {
     var displayName = ""
     var confirmPassword = ""
     var nationalID: String = ""
-    var selectedCountry: Country? {
+    var selectedCountry: CountryLookup? {
         didSet {
-            guard oldValue != selectedCountry else { return }
+            guard oldValue?.id != selectedCountry?.id else { return }
             selectedGovernorate = nil
         }
     }
-    var selectedGovernorate: Governorate?
+    var selectedGovernorate: GovernorateLookup?
     
         // MARK: - State
     var isLoading = false
     
     private let authRepo: AuthRepositoryProtocol
+    let lookupStore: LookupStore
     
-    init(authRepo: AuthRepositoryProtocol) {
+    init(authRepo: AuthRepositoryProtocol, lookupStore: LookupStore) {
         self.authRepo = authRepo
+        self.lookupStore = lookupStore
     }
     
     var isAdmin: Bool { authRepo.isAdmin }
+    
+        // MARK: - Lookup-derived data for the sign-up form
+    var availableCountries: [CountryLookup] { lookupStore.countries }
+    var availableGovernorates: [GovernorateLookup] {
+        guard let selectedCountry else { return [] }
+        return lookupStore.governorates(for: selectedCountry.id)
+    }
     
         // MARK: - Validation
     var isSignUpFormValid: Bool {
@@ -38,6 +47,10 @@ final class AuthViewModel {
     }
     
         // MARK: - Actions
+    func loadLookupsIfNeeded() async {
+        await lookupStore.loadIfNeeded()
+    }
+    
     func signIn() async -> Bool {
         await performSubmit {
             try await self.authRepo.signIn(email: self.email, password: self.password)
@@ -52,8 +65,8 @@ final class AuthViewModel {
                 password: self.password,
                 displayName: self.displayName.trimmingCharacters(in: .whitespacesAndNewlines),
                 nationalId: self.nationalID,
-                country: selectedCountry,
-                governorate: selectedGovernorate
+                countryId: selectedCountry.id,
+                governorateId: selectedGovernorate.id
             )
         }
     }

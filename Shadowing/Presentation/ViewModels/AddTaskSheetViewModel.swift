@@ -9,14 +9,14 @@ final class AddTaskSheetViewModel {
     var title: String = ""
     var description: String = ""
     var budget: Double = 0
-    var selectedPriority: TaskPriority = .normal
-    var selectedService: TaskService = .delivery
+    var selectedPriority: PriorityLookup?
+    var selectedService: TaskServiceLookup?
     var serviceOther: String = ""
     var address: String = ""
     var timing: TaskTiming = .now
     var scheduledDate: Date = Date()
     var isPreferredTimeOfDay: Bool = false
-    var preferredTimeOfDay: PreferredTimeOfDay? = nil
+    var preferredTimeOfDay: TimeOfDayLookup? = nil
     
     var isLoading: Bool = false
     var errorMessage: String?
@@ -26,15 +26,33 @@ final class AddTaskSheetViewModel {
     
     private let taskRepo: TaskRepositoryProtocol
     private let locationService: LocationService
+    let lookupStore: LookupStore
     
     init(
         taskRepo: TaskRepositoryProtocol,
         locationService: LocationService,
+        lookupStore: LookupStore,
         onTaskAdded: (() async -> Void)? = nil
     ) {
         self.taskRepo = taskRepo
         self.locationService = locationService
+        self.lookupStore = lookupStore
         self.onTaskAdded = onTaskAdded
+    }
+    
+        // MARK: - Lookup-derived data for the form
+    var availablePriorities: [PriorityLookup] { lookupStore.priorities }
+    var availableServices: [TaskServiceLookup] { lookupStore.services }
+    var availableTimesOfDay: [TimeOfDayLookup] { lookupStore.timesOfDay }
+    
+    func loadLookupsIfNeeded() async {
+        await lookupStore.loadIfNeeded()
+        if selectedPriority == nil {
+            selectedPriority = lookupStore.priority(named: "normal")
+        }
+        if selectedService == nil {
+            selectedService = lookupStore.service(named: "delivery")
+        }
     }
     
     func submitTask() async {
@@ -42,6 +60,11 @@ final class AddTaskSheetViewModel {
         
         guard validation.isValid else {
             errorMessage = validation.errors.first
+            return
+        }
+        
+        guard let selectedPriority, let selectedService else {
+            errorMessage = "Lookups not loaded yet"
             return
         }
         
@@ -65,13 +88,13 @@ final class AddTaskSheetViewModel {
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                 description: description.trimmingCharacters(in: .whitespacesAndNewlines),
                 budget: budget,
-                priority: selectedPriority,
-                serviceType: selectedService.rawValue,
+                priorityId: selectedPriority.id,
+                serviceType: selectedService.name,
                 address: address.trimmingCharacters(in: .whitespacesAndNewlines),
                 latitude: latitudeToSend,
                 longitude: longitudeToSend,
                 scheduledAt: scheduledAtToSend,
-                preferredTimeOfDay: preferredTimeOfDay
+                preferredTimeOfDayId: preferredTimeOfDay?.id
             )
             
             didPostSuccessfully = true
@@ -94,8 +117,8 @@ final class AddTaskSheetViewModel {
         budget = 0
         address = ""
         
-        selectedPriority = .normal
-        selectedService = .delivery
+        selectedPriority = lookupStore.priority(named: "normal")
+        selectedService = lookupStore.service(named: "delivery")
         serviceOther = ""
         
         timing = .now

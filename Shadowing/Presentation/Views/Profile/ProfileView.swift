@@ -2,26 +2,27 @@ import SwiftUI
 import PhotosUI
 
 struct ProfileView: View {
-    
+
         // MARK: - Environment
     @Environment(DIContainer.self) private var container
     @Environment(\.colorScheme) private var colorScheme
-    
+    @Environment(\.locale) private var locale
+
         // MARK: - Properties
     private var listRowColor: Color? {
         colorScheme == .dark
         ? Color.accentColor.opacity(0.15)
         : nil
     }
-    
+
         // MARK: - State
     @State private var vm: ProfileViewModel
-    
+
         // MARK: - Init
     init(vm: ProfileViewModel) {
         _vm = State(initialValue: vm)
     }
-    
+
         // MARK: - Body
     var body: some View {
         NavigationStack {
@@ -49,7 +50,7 @@ struct ProfileView: View {
                         Label("Settings", systemImage: "gearshape.fill")
                     }
                 }
-                
+
                 ToolbarItem(placement: .topBarTrailing) {
                     PhotosPicker(selection: Bindable(vm).selectedPhotoItem, matching: .images) {
                         if vm.isUploadingAvatar {
@@ -60,9 +61,9 @@ struct ProfileView: View {
                     }
                     .disabled(vm.isUploadingAvatar || vm.user == nil)
                 }
-                
+
                 ToolbarSpacer(placement: .topBarTrailing)
-                
+
                 ToolbarItem(placement: .destructiveAction) {
                     Button(role: .destructive) {
                         Task {
@@ -92,10 +93,14 @@ struct ProfileView: View {
             }
         }
     }
-    
+
         // MARK: - Private Views
     private func profileContent(for user: UserModel) -> some View {
-        List {
+        let accountStatus = container.lookupStore.accountStatus(named: user.accountStatus)
+        let statusLabel = accountStatus?.label ?? user.accountStatus
+        let statusColor = accountStatus?.color ?? .gray
+
+        return List {
             Section {
                 AvatarView(profile: user, size: 100, nameLayout: .vertical, nameFont: .title2)
                     .frame(maxWidth: .infinity)
@@ -104,11 +109,11 @@ struct ProfileView: View {
                     .padding(.vertical, Spacing.sm)
             }
             .listRowBackground(Color.clear)
-            
+
             if user.isSuspended {
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
-                        Label(user.accountStatus.localizedLabel, systemImage: "exclamationmark.triangle.fill")
+                        Label(statusLabel, systemImage: "exclamationmark.triangle.fill")
                             .font(.subheadline).bold()
                         Text("You can't apply to new tasks or post new ones right now.")
                             .font(.footnote)
@@ -117,10 +122,10 @@ struct ProfileView: View {
                                 .font(.footnote).bold()
                         }
                     }
-                    .foregroundStyle(user.accountStatus.color)
+                    .foregroundStyle(statusColor)
                 }
             }
-            
+
             if let errorMessage = vm.errorMessage {
                 Section {
                     Text(errorMessage)
@@ -130,30 +135,30 @@ struct ProfileView: View {
                     Label("Error Message", systemImage: "exclamationmark.triangle")
                 }
             }
-            
+
             Section("Account") {
                 InfoRow(title: "Account Status", systemImage: "checkmark.shield") {
-                    Text(user.accountStatus.localizedLabel)
+                    Text(statusLabel)
                         .bold()
-                        .foregroundStyle(user.accountStatus.color)
+                        .foregroundStyle(statusColor)
                 }
-                
+
                 InfoRow(
                     title: "Email",
                     systemImage: "envelope",
                     value: user.email.isEmpty ? "—" : user.email
                 )
-                
+
                 if let nationalId = user.nationalId, !nationalId.isEmpty {
                     nationalIdRow(nationalId: nationalId)
                 }
-                
+
                 InfoRow(
                     title: "Completed Tasks",
                     systemImage: "checklist",
                     localizedValue: "\(user.completedTasks)"
                 )
-                
+
                 InfoRow(
                     title: "Total Ratings",
                     systemImage: "person.2",
@@ -165,7 +170,7 @@ struct ProfileView: View {
                 .onTapGesture {
                     vm.isRatingsPresented = true
                 }
-                
+
                 InfoRow(
                     title: "Rating",
                     systemImage: "star",
@@ -173,7 +178,7 @@ struct ProfileView: View {
                     ? "\(user.rating, specifier: "%.1f")"
                     : "No ratings yet"
                 )
-                
+
                 if let createdAt = user.createdAt {
                     InfoRow(
                         title: "Member Since",
@@ -181,14 +186,14 @@ struct ProfileView: View {
                         value: createdAt.formatted(date: .abbreviated, time: .omitted)
                     )
                 }
-                
+
                 idRow(for: user)
             }
             .listRowBackground(listRowColor)
         }
         .scrollContentBackground(.hidden)
     }
-    
+
     private func nationalIdRow(nationalId: String) -> some View {
         InfoRow(title: "National ID", systemImage: "person.text.rectangle") {
             Text(vm.isNationalIDAppearance ? nationalId : String(repeating: "*", count: 14))
@@ -202,7 +207,7 @@ struct ProfileView: View {
             }
         }
     }
-    
+
     private func idRow(for user: UserModel) -> some View {
         InfoRow(title: "Id", systemImage: "person.badge.key") {
             Text(user.id.isEmpty ? "—" : vm.displayedId(for: user.id))
@@ -225,7 +230,7 @@ struct ProfileView: View {
             }
         }
     }
-    
+
         // MARK: - Private Methods
     private func submit() async {
         guard await vm.signout() else { return }

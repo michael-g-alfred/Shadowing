@@ -5,6 +5,7 @@ struct TaskDetailsView: View {
         // MARK: - Environment
     @Environment(\.colorScheme) private var colorScheme
     @Environment(DIContainer.self) private var container
+    @Environment(\.locale) private var locale
     
         // MARK: - Properties
     private var listRowColor: Color? {
@@ -84,11 +85,15 @@ struct TaskDetailsView: View {
     
         // MARK: Overview
     private func overviewSection(_ task: TaskModel) -> some View {
-        Section("Overview") {
+        let service = container.lookupStore.service(named: task.serviceType)
+        let status = container.lookupStore.status(named: task.status)
+        let priority = container.lookupStore.priority(named: task.priority)
+        
+        return Section("Overview") {
             InfoRow(
                 title: "Service",
-                systemImage: task.serviceType.icon,
-                value: task.serviceType.localizedLabel
+                systemImage: service?.icon ?? "questionmark.circle",
+                value: service?.label ?? task.serviceType
             )
             
             InfoRow(
@@ -100,17 +105,17 @@ struct TaskDetailsView: View {
             InfoRow(
                 title: "Status",
                 systemImage: "flag.fill",
-                value: task.status.localizedLabel,
-                iconColor: task.status.color,
-                valueColor: task.status.color
+                value: status?.label ?? task.status,
+                iconColor: Color(lookupName: status?.color ?? "gray"),
+                valueColor: Color(lookupName: status?.color ?? "gray")
             )
             
             InfoRow(
                 title: "Priority",
-                systemImage: task.priority.icon,
-                value: task.priority.localizedLabel,
-                iconColor: task.priority.color,
-                valueColor: task.priority.color
+                systemImage: priority?.icon ?? "questionmark.circle",
+                value: priority?.label ?? task.priority,
+                iconColor: Color(lookupName: priority?.color ?? "gray"),
+                valueColor: Color(lookupName: priority?.color ?? "gray")
             )
         }
         .listRowBackground(listRowColor)
@@ -129,11 +134,12 @@ struct TaskDetailsView: View {
                     )
                 }
                 
-                if let preferredTime = task.preferredTimeOfDay {
+                if let preferredTimeName = task.preferredTimeOfDay {
+                    let timeOfDay = container.lookupStore.timeOfDay(named: preferredTimeName)
                     InfoRow(
                         title: "Preferred Time",
-                        systemImage: "sun.max",
-                        value: preferredTime.localizedLabel
+                        systemImage: timeOfDay?.icon ?? "sun.max",
+                        value: timeOfDay?.label ?? preferredTimeName
                     )
                 }
             }
@@ -155,11 +161,13 @@ struct TaskDetailsView: View {
     
         // MARK: Task Info
     private func taskInfoSection(_ task: TaskModel) -> some View {
-        Section("Task Info") {
+        let escrow = container.lookupStore.escrowStatus(named: task.escrowStatus)
+        
+        return Section("Task Info") {
             InfoRow(
                 title: "Escrow",
                 systemImage: "lock.shield",
-                value: task.escrowStatus.localizedLabel
+                value: escrow?.label ?? task.escrowStatus
             )
             
             InfoRow(
@@ -188,9 +196,8 @@ struct TaskDetailsView: View {
     
     @ViewBuilder
     private func userRows(for user: UserSummaryModel) -> some View {
+        
         AvatarView(profile: user, size: 36, nameLayout: .horizontal)
-            .listRowBackground(Color(.tertiaryLabel))
-            .listRowSeparator(.hidden)
         
         InfoRow(
             title: "Completed Tasks",

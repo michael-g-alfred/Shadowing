@@ -97,7 +97,7 @@ final class ExecutorViewModel {
                 AlertCenter.shared.show(responseType: result.type, message: result.message)
             }
             
-            if task.status == .inProgress {
+            if task.status == TaskStatus.inProgress.rawValue {
                 try? await chatRepo.deleteChat(taskId: task.id)
                 await loadAssignedTasks()
             } else {

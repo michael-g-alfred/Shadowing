@@ -12,7 +12,7 @@ final class SettingsViewModel {
     init(
         locationService: LocationService,
         languageManager: LanguageManager,
-        appearanceManager: AppearanceManager = .shared
+        appearanceManager: AppearanceManager
     ) {
         self.locationService = locationService
         self.languageManager = languageManager

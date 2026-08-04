@@ -66,11 +66,11 @@ extension APIConfig {
         let address: String
         
         var currency: String? = "EGP"
-        var priority: String? = "normal"
+        var priorityId: Int? = nil
         var latitude: Double?
         var longitude: Double?
         var scheduledAt: Date?
-        var preferredTimeOfDay: String?
+        var preferredTimeOfDayId: Int?
     }
     
     static func requesterCreateTask(
@@ -175,6 +175,4 @@ extension APIConfig {
             body: body
         )
     }
-    
-    
 }

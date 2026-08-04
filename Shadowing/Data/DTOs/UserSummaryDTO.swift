@@ -7,6 +7,7 @@ struct UserSummaryResponseDTO: Codable {
 struct UserSummaryDTO: Codable {
     let id: String
     let displayName: String
+    let email: String?
     let avatarUrl: String?
     let rating: Double
     let totalRatings: Int
@@ -18,6 +19,7 @@ extension UserSummaryDTO {
         UserSummaryModel(
             id: id,
             displayName: displayName,
+            email: email,
             avatarUrl: avatarUrl,
             rating: rating,
             totalRatings: totalRatings,

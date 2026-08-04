@@ -33,7 +33,6 @@ struct DoneSetupView: View {
         }
         .environment(\.layoutDirection, vm.currentLanguage.layoutDirection)
         .environment(\.locale, vm.currentLanguage.locale)
-        .background(Color(.systemBackground).ignoresSafeArea())
         .preferredColorScheme(vm.currentMode.colorScheme)
     }
 }
@@ -41,14 +40,14 @@ struct DoneSetupView: View {
     // MARK: - Previews
 #Preview("Done Setup - Light") {
     DoneSetupView(
-        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared),
+        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared, appearanceManager: .shared),
         onFinished: {}
     )
 }
 
 #Preview("Done Setup - Dark") {
     DoneSetupView(
-        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared),
+        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared, appearanceManager: .shared),
         onFinished: {}
     )
     .preferredColorScheme(.dark)

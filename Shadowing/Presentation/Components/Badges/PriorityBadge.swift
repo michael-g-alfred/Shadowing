@@ -1,28 +1,30 @@
 import SwiftUI
-import CoreLocation
 
 struct PriorityBadge: View {
-    let priority: TaskPriority
-    
+    let priority: PriorityLookup
+    @Environment(\.locale) private var locale
+
+    private var color: Color { Color(lookupName: priority.color) }
+
     var body: some View {
         HStack(spacing: 5) {
             Image(systemName: priority.icon)
                 .font(.caption2)
                 .fontWeight(.bold)
-                .foregroundStyle(priority.color)
-            
-            Text(priority.localizedLabel)
+                .foregroundStyle(color)
+
+            Text(priority.label)
                 .font(.caption2)
                 .fontWeight(.bold)
                 .textCase(.uppercase)
-                .foregroundStyle(priority.color)
+                .foregroundStyle(color)
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 4)
         .appGlassCapsule(
-            overlayColor: priority.color.opacity(0.1),
-            strokeColor: priority.color.opacity(0.05),
-            shadowColor: priority.color.opacity(0.05)
+            overlayColor: color.opacity(0.1),
+            strokeColor: color.opacity(0.05),
+            shadowColor: color.opacity(0.05)
         )
     }
 }

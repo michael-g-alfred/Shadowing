@@ -7,44 +7,45 @@ struct TaskListResponseDTO: Codable {
 }
 
 struct TaskDTO: Codable {
-    
+
     let id: String
     let title: String
     let description: String
     let budget: Double
     let currency: String
-    
-    let priority: TaskPriority
-    let serviceType: TaskService
-    
+
+    // These arrive as plain name strings from the backend (JOIN ... AS name),
+    // e.g. priority = "urgent", status = "in_progress", serviceType = "plumbing".
+    // Resolve to label/color/icon via LookupStore, never decode into an enum here.
+    let priority: String
+    let serviceType: String
+    let status: String
+    let escrowStatus: String
+    let preferredTimeOfDay: String?
+
     let address: String
     let latitude: Double?
     let longitude: Double?
-    
-    let status: TaskStatus
-    let escrowStatus: EscrowStatus
-    
+
     let scheduledAt: Date?
-    let preferredTimeOfDay: PreferredTimeOfDay?
-    
+
     let isRatedByRequester: Bool
     let isRatedByExecutor: Bool
-    
+
     let createdAt: Date
     let updatedAt: Date
-    
+
     let requester: UserSummaryDTO
     let executor: UserSummaryDTO?
-    
+
     let applicantsCount: Int
     let isApplicant: Bool
     let isFavourite: Bool
 }
 
 extension TaskDTO {
-    
+
     func toDomain() -> TaskModel {
-        
         TaskModel(
             id: id,
             title: title,

@@ -10,7 +10,7 @@ struct AppSheetStyle: ViewModifier {
     
         // iPad (regular width) reads better as a popover; iPhone (compact) stays a sheet
     private var compactAdaptation: PresentationAdaptation {
-        horizontalSizeClass == .regular ? .popover : .sheet
+        horizontalSizeClass == .regular ? .fullScreenCover : .sheet
     }
     
     func body(content: Content) -> some View {

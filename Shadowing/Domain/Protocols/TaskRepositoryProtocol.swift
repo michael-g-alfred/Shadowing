@@ -13,7 +13,7 @@ protocol TaskRepositoryProtocol {
     
         // MARK: - Requester
     
-    func postTask( title: String, description: String, budget: Double, priority: TaskPriority, serviceType: String, address: String, latitude: Double?, longitude: Double?, scheduledAt: Date?, preferredTimeOfDay: PreferredTimeOfDay? ) async throws -> (task: TaskModel, message: String, type: String)
+    func postTask(title: String, description: String, budget: Double, priorityId: Int, serviceType: String, address: String, latitude: Double?, longitude: Double?, scheduledAt: Date?, preferredTimeOfDayId: Int?) async throws -> (task: TaskModel, message: String, type: String)
     
     func getRequesterPublishedTasks(cursor: String?, limit: Int?, status: String?) async throws -> PaginatedTasksResult
     func getRequesterCompletedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult

@@ -18,7 +18,7 @@ enum AppColorScheme: String, CaseIterable, Identifiable {
             switch self {
                 case .light: return "Light"
                 case .dark: return "Dark"
-                case .system: return "Auto"
+                case .system: return "System"
             }
         }
     }

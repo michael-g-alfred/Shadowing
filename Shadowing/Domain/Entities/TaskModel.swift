@@ -13,15 +13,15 @@ struct TaskModel: Identifiable {
     let description: String
     let budget: Double
     let currency: String
-    let priority: TaskPriority
-    let serviceType: TaskService
+    let priority: String
+    let serviceType: String
     let address: String
     let latitude: Double?
     let longitude: Double?
-    let status: TaskStatus
-    let escrowStatus: EscrowStatus
+    let status: String
+    let escrowStatus: String
     let scheduledAt: Date?
-    let preferredTimeOfDay: PreferredTimeOfDay?
+    let preferredTimeOfDay: String?
     let isRatedByRequester: Bool
     let isRatedByExecutor: Bool
     let createdAt: Date
@@ -31,9 +31,8 @@ struct TaskModel: Identifiable {
     let applicantsCount: Int
     let isApplicant: Bool
     var isFavourite: Bool
-    
+
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude ?? 31.2565, longitude: longitude ?? 32.2841)
     }
-    
 }

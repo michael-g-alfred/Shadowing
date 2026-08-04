@@ -33,10 +33,10 @@ extension UserDTO {
             rating: rating ?? 0,
             totalRatings: totalRatings ?? 0,
             completedTasks: completedTasks ?? 0,
-            accountStatus: accountStatus.flatMap(AccountStatus.init(rawValue:)) ?? .active,
+            accountStatus: accountStatus ?? "active",
             suspendedUntil: suspendedUntil,
-            country: countryId.flatMap(Country.init(rawValue:)),
-            governorate: governorateId.flatMap(Governorate.init(rawValue:)),
+            countryId: countryId,
+            governorateId: governorateId,
             createdAt: createdAt
         )
     }

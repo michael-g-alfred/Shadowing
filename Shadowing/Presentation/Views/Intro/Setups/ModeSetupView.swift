@@ -38,7 +38,6 @@ struct ModeSetupView: View {
         }
         .environment(\.layoutDirection, vm.currentLanguage.layoutDirection)
         .environment(\.locale, vm.currentLanguage.locale)
-        .background(Color(.systemBackground).ignoresSafeArea())
         .preferredColorScheme(vm.currentMode.colorScheme)
     }
 }
@@ -46,13 +45,13 @@ struct ModeSetupView: View {
     // MARK: - Previews
 #Preview("Mode Setup - Light") {
     ModeSetupView(
-        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared)
+        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared, appearanceManager: .shared)
     )
 }
 
 #Preview("Mode Setup - Dark") {
     ModeSetupView(
-        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared)
+        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared, appearanceManager: .shared)
     )
     .preferredColorScheme(.dark)
 }

@@ -3,12 +3,31 @@ import CoreLocation
 
 struct TaskCard: View {
     
+        // MARK: - Environment
+    @Environment(DIContainer.self) private var container
+    @Environment(\.locale) private var locale
+    
         // MARK: - Properties
     let task: TaskModel
     var onToggleFavorite: (() -> Void)? = nil
     
         // MARK: - State
     @State private var appeared = false
+    @State private var selectedUserId: String?
+    
+        // MARK: - Lookup-resolved values
+    private var priorityLookup: PriorityLookup? {
+        container.lookupStore.priority(named: task.priority)
+    }
+    private var statusLookup: StatusLookup? {
+        container.lookupStore.status(named: task.status)
+    }
+    private var serviceLookup: TaskServiceLookup? {
+        container.lookupStore.service(named: task.serviceType)
+    }
+    private var priorityColor: Color {
+        Color(lookupName: priorityLookup?.color ?? "gray")
+    }
     
         // MARK: - Body
     var body: some View {
@@ -16,13 +35,20 @@ struct TaskCard: View {
             
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 HStack(alignment: .top, spacing: Spacing.sm) {
-                    AvatarView(profile: task.requester, nameLayout: .horizontal, subtitle: task.createdAt.toRelativeString())
+                    Button {
+                        selectedUserId = task.requester.id
+                    } label: {
+                        AvatarView(profile: task.requester, nameLayout: .horizontal, subtitle: task.createdAt.toRelativeString())
+                    }
+                    .buttonStyle(.plain)
                     
                     Spacer(minLength: Spacing.sm)
                     
                     VStack(alignment: .trailing, spacing: Spacing.xs) {
                         BudgetBadge(task: task)
-                        ServiceBadge(task: task)
+                        if let serviceLookup {
+                            ServiceBadge(service: serviceLookup)
+                        }
                     }
                 }
             }
@@ -49,9 +75,7 @@ struct TaskCard: View {
             
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: Spacing.xs) {
-                    PriorityBadge(priority: task.priority)
-                    StatusBadge(status: task.status)
-                    ApplicantsBadge(applicants: task.applicantsCount, color: .brown)
+                    badgesRow
                     Spacer()
                     if task.isApplicant == true {
                         AppliedBadge()
@@ -63,9 +87,7 @@ struct TaskCard: View {
                 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     HStack(spacing: Spacing.xs) {
-                        PriorityBadge(priority: task.priority)
-                        StatusBadge(status: task.status)
-                        ApplicantsBadge(applicants: task.applicantsCount, color: .brown)
+                        badgesRow
                     }
                     if task.isApplicant == true {
                         AppliedBadge()
@@ -79,15 +101,12 @@ struct TaskCard: View {
                 .fill(.thinMaterial)
                 .overlay(
                     RoundedRectangle(cornerRadius: CornerRadius.xl, style: .continuous)
-                        .fill(task.priority.color.opacity(0.05))
+                        .fill(priorityColor.opacity(0.05))
                 )
         )
         .overlay {
             RoundedRectangle(cornerRadius: CornerRadius.xl, style: .continuous)
-                .strokeBorder(
-                    task.priority.color,
-                    lineWidth: 1
-                )
+                .strokeBorder(priorityColor, lineWidth: 1)
         }
         .scaleEffect(appeared ? 1 : 0.5)
         .opacity(appeared ? 1 : 0)
@@ -95,9 +114,27 @@ struct TaskCard: View {
         .onAppear {
             appeared = true
         }
+        .sheet(item: Binding(
+            get: { selectedUserId },
+            set: { selectedUserId = $0 }
+        )) { userId in
+            container.makeUserView(userId: userId)
+                .appSheetStyle()
+        }
     }
     
         // MARK: - Private Views
+    @ViewBuilder
+    private var badgesRow: some View {
+        if let priorityLookup {
+            PriorityBadge(priority: priorityLookup)
+        }
+        if let statusLookup {
+            StatusBadge(status: statusLookup)
+        }
+        ApplicantsBadge(applicants: task.applicantsCount, color: .brown)
+    }
+    
     private func favoriteBadge(action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: task.isFavourite ? "star.fill" : "star")

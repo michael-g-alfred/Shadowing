@@ -17,7 +17,9 @@ extension DIContainer {
             leadingSwipe: { [requesterViewModel] task in
                 AnyView(
                     Group {
-                        if task.status == .published || task.status == .pending || task.status == .cancelled {
+                        if task.status == TaskStatus.published.rawValue
+                            || task.status == TaskStatus.pending.rawValue
+                            || task.status == TaskStatus.cancelled.rawValue {
                             Button(role: .destructive) {
                                 Task { await requesterViewModel.deleteTask(task) }
                             } label: {
@@ -27,7 +29,8 @@ extension DIContainer {
                             .appGlassCapsule()
                         }
                         
-                        if task.status == .published || task.status == .pending {
+                        if task.status == TaskStatus.published.rawValue
+                            || task.status == TaskStatus.pending.rawValue {
                             Button {
                                 Task { await requesterViewModel.cancelTask(task) }
                             } label: {
@@ -37,7 +40,7 @@ extension DIContainer {
                             .appGlassCapsule()
                         }
                         
-                        if task.status == .cancelled {
+                        if task.status == TaskStatus.cancelled.rawValue {
                             Button {
                                 Task { await requesterViewModel.publishTask(task) }
                             } label: {
@@ -53,7 +56,8 @@ extension DIContainer {
                 AnyView(
                     Group {
                         
-                        if task.status == .published || task.status == .pending {
+                        if task.status == TaskStatus.published.rawValue
+                            || task.status == TaskStatus.pending.rawValue {
                             Button {
                                 Task { await requesterViewModel.showApplicants(for: task) }
                             } label: {
@@ -62,7 +66,7 @@ extension DIContainer {
                             .tint(.orange)
                             .appGlassCapsule()
                         }
-                        if task.status == .pendingCompleted {
+                        if task.status == TaskStatus.pendingCompleted.rawValue {
                             Button {
                                 Task { await requesterViewModel.confirmTaskCompletion(task) }
                             } label: {
@@ -72,7 +76,8 @@ extension DIContainer {
                             .appGlassCapsule()
                         }
                         
-                        if task.status == .inProgress || task.status == .pendingCompleted {
+                        if task.status == TaskStatus.inProgress.rawValue
+                            || task.status == TaskStatus.pendingCompleted.rawValue {
                             Button {
                                 requesterViewModel.openChat(for: task.id)
                             } label: {
@@ -120,7 +125,8 @@ extension DIContainer {
             trailingSwipe: { [executorViewModel] task in
                 AnyView(
                     Group {
-                        if (task.status == .published || task.status == .pending) && !task.isApplicant {
+                        if (task.status == TaskStatus.published.rawValue
+                            || task.status == TaskStatus.pending.rawValue) && !task.isApplicant {
                             Button {
                                 executorViewModel.beginApply(to: task)
                             } label: {
@@ -158,7 +164,7 @@ extension DIContainer {
             leadingSwipe: { [executorViewModel] task in
                 AnyView(
                     Group {
-                        if task.status == .inProgress {
+                        if task.status == TaskStatus.inProgress.rawValue {
                             Button(role: .destructive) {
                                 Task { await executorViewModel.withdrawFromTask(task) }
                             } label: {
@@ -173,7 +179,7 @@ extension DIContainer {
             trailingSwipe: { [executorViewModel] task in
                 AnyView(
                     Group {
-                        if task.status == .inProgress {
+                        if task.status == TaskStatus.inProgress.rawValue {
                             Button(role: .confirm) {
                                 Task { await executorViewModel.markTaskDone(task) }
                             } label: {
@@ -183,7 +189,8 @@ extension DIContainer {
                             .appGlassCapsule()
                         }
                         
-                        if task.status == .inProgress || task.status == .pendingCompleted {
+                        if task.status == TaskStatus.inProgress.rawValue
+                            || task.status == TaskStatus.pendingCompleted.rawValue {
                             Button {
                                 executorViewModel.openChat(for: task.id)
                             } label: {

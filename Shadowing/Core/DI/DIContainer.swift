@@ -62,10 +62,18 @@ final class DIContainer {
         taskRepo: taskRepository
     )
     
+    @ObservationIgnored
+    private(set) lazy var lookupRepository: LookupRepositoryProtocol = LookupRepository(
+        network: networkService
+    )
+    
         // MARK: - Shared ViewModels
     
     @ObservationIgnored
-    lazy var authViewModel = AuthViewModel(authRepo: authRepository)
+    lazy var lookupStore = LookupStore(lookupRepo: lookupRepository)
+    
+    @ObservationIgnored
+    lazy var authViewModel = AuthViewModel(authRepo: authRepository, lookupStore: lookupStore)
     
     @ObservationIgnored
     lazy var requesterViewModel = RequesterViewModel(
@@ -107,16 +115,6 @@ final class DIContainer {
         OnboardingViewModel()
     }
     
-        // MARK: - Auth
-    
-    func makeSigninView(screen: Binding<AuthScreen>) -> SignInView {
-        SignInView(screen: screen, vm: authViewModel)
-    }
-    
-    func makeSignupView(screen: Binding<AuthScreen>) -> SignUpView {
-        SignUpView(screen: screen, vm: authViewModel)
-    }
-    
         // MARK: - Setup Flow (Language + Mode)
     
     func makeSetupFlowView() -> SetupFlowView {
@@ -136,6 +134,16 @@ final class DIContainer {
     
     func makeDoneSetupView(onFinished: @escaping () -> Void) -> DoneSetupView {
         DoneSetupView(vm: settingsViewModel, onFinished: onFinished)
+    }
+    
+        // MARK: - Auth
+    
+    func makeSigninView(screen: Binding<AuthScreen>) -> SignInView {
+        SignInView(screen: screen, vm: authViewModel)
+    }
+    
+    func makeSignupView(screen: Binding<AuthScreen>) -> SignUpView {
+        SignUpView(screen: screen, vm: authViewModel)
     }
     
         // MARK: - Main
@@ -217,6 +225,24 @@ final class DIContainer {
         MapViewModel(taskRepo: taskRepository)
     }
     
+        // MARK: - Chat
+    
+    func makeChatView() -> ChatView {
+        ChatView(vm: chatViewModel)
+    }
+    
+    func makeChatViewModel() -> ChatViewModel {
+        chatViewModel
+    }
+    
+    func makeConversationDetailView(conversation: Conversation) -> ConversationDetailView {
+        ConversationDetailView(conversation: conversation, vm: chatViewModel)
+    }
+    
+    func makeDirectChatDetailView(taskId: String) -> some View {
+        DirectChatLoaderView(taskId: taskId, vm: chatViewModel)
+    }
+    
         // MARK: - Add Task Sheet
     
     func makeAddTaskSheet() -> AddTaskSheet {
@@ -227,6 +253,7 @@ final class DIContainer {
         AddTaskSheetViewModel(
             taskRepo: taskRepository,
             locationService: locationService,
+            lookupStore: lookupStore,
             onTaskAdded: { [weak requesterViewModel = requesterViewModel] in
                 await requesterViewModel?.loadPublishedTasks()
             }
@@ -275,21 +302,13 @@ final class DIContainer {
         TaskDetailsViewModel(taskId: taskId, taskRepo: taskRepository)
     }
     
-        // MARK: - Chat
+        // MARK: - User
     
-    func makeChatView() -> ChatView {
-        ChatView(vm: chatViewModel)
+    func makeUserView(userId: String) -> UserView {
+        UserView(userId: userId, vm: makeUserViewModel(userId: userId))
     }
     
-    func makeChatViewModel() -> ChatViewModel {
-        chatViewModel
-    }
-    
-    func makeConversationDetailView(conversation: Conversation) -> ConversationDetailView {
-        ConversationDetailView(conversation: conversation, vm: chatViewModel)
-    }
-    
-    func makeDirectChatDetailView(taskId: String) -> some View {
-        DirectChatLoaderView(taskId: taskId, vm: chatViewModel)
+    func makeUserViewModel(userId: String) -> UserViewModel {
+        UserViewModel(userId: userId, userRepo: userRepository)
     }
 }

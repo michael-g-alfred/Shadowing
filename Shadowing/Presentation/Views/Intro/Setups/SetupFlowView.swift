@@ -25,7 +25,7 @@ struct SetupFlowView: View {
                 .tag(Step.done)
             
         }
-        .tabViewStyle(.page(indexDisplayMode: .always))
+        .tabViewStyle(.page)
         .ignoresSafeArea()
         .animation(.easeInOut, value: step)
     }

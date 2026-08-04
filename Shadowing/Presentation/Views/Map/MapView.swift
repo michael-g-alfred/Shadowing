@@ -2,39 +2,39 @@ import SwiftUI
 import MapKit
 
 struct MapView: View {
-    
+
         // MARK: - Environment
     @Environment(DIContainer.self) private var container
-    
+
         // MARK: - Properties
     private let makeTaskDetails: (String) -> AnyView
-    
+
         // MARK: - State
     @State private var vm: MapViewModel
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var navigationPath = NavigationPath()
     @State private var locationManager = CLLocationManager()
-    
+
         // MARK: - Init
     init(vm: MapViewModel, makeTaskDetails: @escaping (String) -> AnyView) {
         _vm = State(initialValue: vm)
         self.makeTaskDetails = makeTaskDetails
     }
-    
+
         // MARK: - Body
     var body: some View {
         NavigationStack(path: $navigationPath) {
             Map(position: $cameraPosition) {
                 UserAnnotation()
-                
+
                 ForEach(vm.tasks) { task in
                     Annotation(task.title, coordinate: task.coordinate) {
                         Button {
                             withAnimation(.easeInOut) { vm.selectTask(task) }
                         } label: {
                             CustomMapPin(
-                                iconName: task.serviceType.icon,
-                                priorityColor: task.priority.color
+                                iconName: container.lookupStore.service(named: task.serviceType)?.icon ?? "mappin",
+                                priorityColor: priorityColor(for: task)
                             )
                         }
                     }
@@ -44,6 +44,7 @@ struct MapView: View {
                 if let task = vm.selectedTask {
                     TaskMapCard(
                         task: task,
+                        priorityColor: priorityColor(for: task),
                         onDirections: { openDirections(to: task) },
                         onDetails: { navigateToDetails(task.id) },
                         onDismiss: { withAnimation(.easeInOut) { vm.clearSelection() } }
@@ -74,13 +75,18 @@ struct MapView: View {
         }
         .requireLocation(container.locationService)
     }
-    
+
         // MARK: - Private Methods
+    private func priorityColor(for task: TaskModel) -> Color {
+        let name = container.lookupStore.priority(named: task.priority)?.color ?? "gray"
+        return Color(lookupName: name)
+    }
+
     private func navigateToDetails(_ taskId: String) {
         vm.clearSelection()
         navigationPath.append(taskId)
     }
-    
+
     private func openDirections(to task: TaskModel) {
         let location = CLLocation(latitude: task.coordinate.latitude, longitude: task.coordinate.longitude)
         let mapItem = MKMapItem(location: location, address: .none)
@@ -92,14 +98,14 @@ struct MapView: View {
 }
 
 struct CustomMapPin: View {
-    
+
         // MARK: - Properties
     let iconName: String
     let priorityColor: Color
-    
+
         // MARK: - State
     @State private var isAnimating = false
-    
+
         // MARK: - Body
     var body: some View {
         ZStack {
@@ -113,12 +119,12 @@ struct CustomMapPin: View {
                     .repeatForever(autoreverses: false),
                     value: isAnimating
                 )
-            
+
             Circle()
                 .fill(priorityColor)
                 .frame(width: 36, height: 36)
                 .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
-            
+
             Circle()
                 .fill(.white)
                 .frame(width: 32, height: 32)
@@ -134,13 +140,14 @@ struct CustomMapPin: View {
 }
 
 private struct TaskMapCard: View {
-    
+
         // MARK: - Properties
     let task: TaskModel
+    let priorityColor: Color
     let onDirections: () -> Void
     let onDetails: () -> Void
     let onDismiss: () -> Void
-    
+
         // MARK: - Body
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -151,14 +158,14 @@ private struct TaskMapCard: View {
                         .bold()
                         .lineLimit(1)
                         .foregroundColor(.primary)
-                    
+
                     Text(task.budget, format: .currency(code: "EGP"))
                         .font(.headline)
                         .foregroundStyle(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Button(role:.destructive, action: onDismiss) {
                     Image(systemName: "xmark")
                         .padding(8)
@@ -167,9 +174,9 @@ private struct TaskMapCard: View {
                         .clipShape(Circle())
                 }
             }
-            
+
             Divider()
-            
+
             HStack(spacing: 12) {
                 Button(action: onDirections) {
                     Label("Directions", systemImage: "point.bottomleft.forward.to.arrow.triangle.uturn.scurvepath.fill")
@@ -181,7 +188,7 @@ private struct TaskMapCard: View {
                         .foregroundColor(.blue)
                         .cornerRadius(12)
                 }
-                
+
                 Button(action: onDetails) {
                     Label("Details", systemImage: "text.page.badge.magnifyingglass")
                         .font(.subheadline)
@@ -201,7 +208,7 @@ private struct TaskMapCard: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .strokeBorder(
                     LinearGradient(
-                        colors: [task.priority.color, task.priority.color.opacity(0.5), task.priority.color.opacity(0.25)],
+                        colors: [priorityColor, priorityColor.opacity(0.5), priorityColor.opacity(0.25)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),

@@ -60,7 +60,18 @@ final class TaskRepository: TaskRepositoryProtocol {
     
         // MARK: - Requester
     
-    func postTask( title: String, description: String, budget: Double, priority: TaskPriority, serviceType: String, address: String, latitude: Double?, longitude: Double?, scheduledAt: Date?, preferredTimeOfDay: PreferredTimeOfDay? ) async throws -> (task: TaskModel, message: String, type: String) {
+    func postTask(
+        title: String,
+        description: String,
+        budget: Double,
+        priorityId: Int,
+        serviceType: String,
+        address: String,
+        latitude: Double?,
+        longitude: Double?,
+        scheduledAt: Date?,
+        preferredTimeOfDayId: Int?
+    ) async throws -> (task: TaskModel, message: String, type: String) {
         
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("📝 Posting New Task")
@@ -75,11 +86,11 @@ final class TaskRepository: TaskRepositoryProtocol {
                 serviceType: serviceType,
                 address: address,
                 currency: "EGP",
-                priority: priority.rawValue,
+                priorityId: priorityId,
                 latitude: latitude,
                 longitude: longitude,
                 scheduledAt: scheduledAt,
-                preferredTimeOfDay: preferredTimeOfDay?.rawValue
+                preferredTimeOfDayId: preferredTimeOfDayId
             )
             
             DebugLogger.log("🌐 Sending POST request...")

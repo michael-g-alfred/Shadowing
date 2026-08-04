@@ -41,7 +41,6 @@ struct LanguageSetupView: View {
         }
         .environment(\.layoutDirection, vm.currentLanguage.layoutDirection)
         .environment(\.locale, vm.currentLanguage.locale)
-        .background(Color(.systemBackground).ignoresSafeArea())
         .task {
             vm.startGreetingLoop()
         }
@@ -54,13 +53,13 @@ struct LanguageSetupView: View {
     // MARK: - Previews
 #Preview("Language Setup - Light") {
     LanguageSetupView(
-        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared)
+        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared, appearanceManager: .shared)
     )
 }
 
 #Preview("Language Setup - Dark") {
     LanguageSetupView(
-        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared)
+        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared, appearanceManager: .shared)
     )
     .preferredColorScheme(.dark)
 }

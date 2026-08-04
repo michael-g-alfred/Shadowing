@@ -71,7 +71,7 @@ final class ChatRepository: ChatRepositoryProtocol {
                             DebugLogger.log("🔄 currentUserId: \(currentUserId) | requesterId: \(requesterId) | executorId: \(executorId) | otherUserId: \(otherUserId)")
                             
                             let otherUser = (try? await self.userRepo.fetchUserSummary(id: otherUserId))
-                            ?? UserSummaryModel(id: otherUserId, displayName: "User", avatarUrl: nil, rating: 0, totalRatings: 0, completedTasks: 0)
+                            ?? UserSummaryModel(id: otherUserId, displayName: "User", email: "", avatarUrl: nil, rating: 0, totalRatings: 0, completedTasks: 0)
                             
                             DebugLogger.log("🔄 otherUser: \(otherUser)")
                             
@@ -133,7 +133,7 @@ final class ChatRepository: ChatRepositoryProtocol {
                             let reactions = data["reactions"] as? [String: String] ?? [:]
                             
                             let senderUser = (try? await self.userRepo.fetchUserSummary(id: senderId))
-                            ?? UserSummaryModel(id: senderId, displayName: "User", avatarUrl: nil, rating: 0, totalRatings: 0, completedTasks: 0)
+                            ?? UserSummaryModel(id: senderId, displayName: "User", email: "", avatarUrl: nil, rating: 0, totalRatings: 0, completedTasks: 0)
                             
                             messages.append(
                                 ChatMessage(

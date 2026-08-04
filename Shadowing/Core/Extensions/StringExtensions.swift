@@ -15,3 +15,7 @@ extension String {
         return withoutFractional.date(from: self)
     }
 }
+
+extension String: @retroactive Identifiable {
+    public var id: String { self }
+}

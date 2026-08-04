@@ -67,7 +67,10 @@ struct SettingsSheet: View {
     
     private var appearanceSection: some View {
         Section("Appearance") {
-            Picker("App Appearance", selection: $appColorScheme) {
+            Picker("App Appearance", selection: Binding(
+                get: { vm.currentMode },
+                set: { vm.setMode($0) }
+            )) {
                 ForEach(AppColorScheme.allCases) { option in
                     Label(option.title, systemImage: option.icon)
                         .tag(option)
@@ -76,6 +79,7 @@ struct SettingsSheet: View {
             .pickerStyle(.menu)
         }
     }
+
     
     private var languageSection: some View {
         Section("Language") {

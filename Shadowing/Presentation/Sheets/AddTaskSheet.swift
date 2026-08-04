@@ -1,18 +1,18 @@
 import SwiftUI
 
 struct AddTaskSheet: View {
-    
+
         // MARK: - Environment
     @Environment(\.dismiss) private var dismiss
-    
+
         // MARK: - State
     @State private var vm: AddTaskSheetViewModel
-    
+
         // MARK: - Init
     init(vm: AddTaskSheetViewModel) {
         _vm = State(initialValue: vm)
     }
-    
+
         // MARK: - Body
     var body: some View {
         NavigationStack {
@@ -22,36 +22,47 @@ struct AddTaskSheet: View {
                     TextField("Description", text: $vm.description, axis: .vertical)
                         .lineLimit(3...6)
                 }
-                
+
                 Section("Budget") {
                     TextField("Amount", value: $vm.budget, format: .currency(code: "EGP"))
                         .keyboardType(.numberPad)
                 }
-                
+
                 Section("Service Type") {
-                    Picker("Service Type", selection: $vm.selectedService) {
-                        ForEach(TaskService.allCases, id: \.self) { service in
-                            Label(service.localizedLabel, systemImage: service.icon).tag(service)
+                    if vm.availableServices.isEmpty {
+                        ProgressView()
+                    } else {
+                        Picker("Service Type", selection: $vm.selectedService) {
+                            ForEach(vm.availableServices) { service in
+                                Label(service.label, systemImage: service.icon)
+                                    .tag(service as TaskServiceLookup?)
+                            }
                         }
+                        .pickerStyle(.navigationLink)
                     }
-                    .pickerStyle(.navigationLink)
                 }
-                
+
                 Section("Priority") {
-                    Picker("Priority", selection: $vm.selectedPriority) {
-                        ForEach(TaskPriority.allCases, id: \.self) { p in
-                            Label(p.localizedLabel, systemImage: p.icon)
-                                .foregroundStyle(p.color).tint(p.color).tag(p)
+                    if vm.availablePriorities.isEmpty {
+                        ProgressView()
+                    } else {
+                        Picker("Priority", selection: $vm.selectedPriority) {
+                            ForEach(vm.availablePriorities) { p in
+                                Label(p.label, systemImage: p.icon)
+                                    .foregroundStyle(Color(lookupName: p.color))
+                                    .tint(Color(lookupName: p.color))
+                                    .tag(p as PriorityLookup?)
+                            }
                         }
+                        .tint(vm.selectedPriority.map { Color(lookupName: $0.color) } ?? .gray)
+                        .pickerStyle(.segmented)
                     }
-                    .tint(vm.selectedPriority.color)
-                    .pickerStyle(.segmented)
                 }
-                
+
                 Section("Location") {
                     TextField("Address", text: $vm.address)
                 }
-                
+
                 Section {
                     Picker("Timing", selection: $vm.timing) {
                         ForEach(TaskTiming.allCases) { t in
@@ -59,7 +70,7 @@ struct AddTaskSheet: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                    
+
                     if vm.timing == .scheduled {
                         DatePicker("Schedule", selection: $vm.scheduledDate, in: Date()...)
                             .listRowBackground(Color(.secondarySystemGroupedBackground))
@@ -67,7 +78,7 @@ struct AddTaskSheet: View {
                 } header: {
                     Text("Task Timing")
                 }
-                
+
                 Section {
                     Toggle(isOn: Binding(
                         get: { vm.isPreferredTimeOfDay },
@@ -75,23 +86,23 @@ struct AddTaskSheet: View {
                     )) {
                         Label("I need a certain time of day", systemImage: "clock.badge.checkmark")
                     }
-                    
+
                     if vm.isPreferredTimeOfDay {
                         let columns = [
                             GridItem(.flexible(), spacing: Spacing.md),
                             GridItem(.flexible(), spacing: Spacing.md)
                         ]
-                        
+
                         LazyVGrid(columns: columns, spacing: Spacing.md) {
-                            ForEach(PreferredTimeOfDay.allCases, id: \.self) { time in
+                            ForEach(vm.availableTimesOfDay) { time in
                                 let isSelected = vm.preferredTimeOfDay == time
-                                
+
                                 Button {
                                     vm.preferredTimeOfDay = time
                                 } label: {
                                     VStack(alignment: .leading, spacing: Spacing.sm) {
                                         HStack {
-                                            Image(systemName: time.iconName)
+                                            Image(systemName: time.icon)
                                                 .font(.title3)
                                             Spacer()
                                             if isSelected {
@@ -99,13 +110,13 @@ struct AddTaskSheet: View {
                                             }
                                         }
                                         .foregroundStyle(isSelected ? .white : .accentColor)
-                                        
+
                                         VStack(alignment: .leading, spacing: Spacing.xxs) {
-                                            Text(time.localizedLabel)
+                                            Text(time.label)
                                                 .font(.headline)
                                                 .foregroundStyle(isSelected ? .white : .primary)
-                                            
-                                            Text(time.localizedSubtitle)
+
+                                            Text(time.label)
                                                 .font(.caption)
                                                 .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
                                         }
@@ -129,7 +140,7 @@ struct AddTaskSheet: View {
                         Text("Preferred Time")
                     }
                 }
-                
+
                 if let error = vm.errorMessage {
                     Section {
                         Text(error).foregroundStyle(.red).font(.caption)
@@ -138,6 +149,9 @@ struct AddTaskSheet: View {
             }
             .navigationTitle("New Task")
             .disabled(vm.isLoading)
+            .task {
+                await vm.loadLookupsIfNeeded()
+            }
             .onChange(of: vm.didPostSuccessfully) { _, success in
                 if success { dismiss() }
             }
