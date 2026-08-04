@@ -5,5 +5,5 @@ protocol UserRepositoryProtocol {
     func fetchUserSummary(id: String) async throws -> UserSummaryModel
     func fetchUserCount() async throws -> Int
     func fetchUserRatings(userId: String, cursor: String?, limit: Int?) async throws -> PaginatedRatingsResult
-    func uploadAvatar(userId: String, imageData: Data, fileName: String, mimeType: String) async throws -> String
+    func uploadAvatar(userId: String, imageData: Data, fileName: String, mimeType: String) async throws -> (avatarUrl: String, message: String, type: String)
 }

@@ -116,7 +116,7 @@ final class UserRepository: UserRepositoryProtocol {
         )
     }
     
-    func uploadAvatar(userId: String, imageData: Data, fileName: String, mimeType: String) async throws -> String {
+    func uploadAvatar(userId: String, imageData: Data, fileName: String, mimeType: String) async throws -> (avatarUrl: String, message: String, type: String) {
         let accessToken = try await getValidToken()
         let config = APIConfig.uploadAvatar(
             userId: userId,
@@ -133,6 +133,11 @@ final class UserRepository: UserRepositoryProtocol {
             self.currentUser = updatedUser
         }
         invalidateSummaryCache(id: userId)
-        return newAvatarUrl
+        
+        return (
+            avatarUrl: newAvatarUrl,
+            message: response.message,
+            type: response.type
+        )
     }
 }

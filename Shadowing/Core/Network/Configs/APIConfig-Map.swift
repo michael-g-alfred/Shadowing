@@ -19,7 +19,7 @@ extension APIConfig {
                 ("minLng", String(bounds.minLng)),
                 ("maxLng", String(bounds.maxLng))
             ]),
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
 }

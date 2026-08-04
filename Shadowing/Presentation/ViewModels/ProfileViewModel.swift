@@ -83,17 +83,18 @@ final class ProfileViewModel {
         defer { isUploadingAvatar = false }
         
         do {
-            let avatarUrl = try await userRepo.uploadAvatar(
+            let result = try await userRepo.uploadAvatar(
                 userId: userId,
                 imageData: imageData,
                 fileName: "avatar.jpg",
                 mimeType: "image/jpeg"
             )
             if let currentUser = user {
-                user = currentUser.withAvatarUrl(avatarUrl)
+                user = currentUser.withAvatarUrl(result.avatarUrl)
             }
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
         } catch {
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
     }
     

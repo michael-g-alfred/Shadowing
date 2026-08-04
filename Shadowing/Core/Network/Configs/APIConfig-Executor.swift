@@ -25,7 +25,7 @@ extension APIConfig {
             path: APIEndpoints.executorAvailableTasksPath,
             method: .get,
             queryItems: Self.queryItems(items),
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -42,7 +42,7 @@ extension APIConfig {
                 ("cursor", cursor),
                 ("limit", limit.map(String.init))
             ]),
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -59,7 +59,7 @@ extension APIConfig {
                 ("cursor", cursor),
                 ("limit", limit.map(String.init))
             ]),
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -76,7 +76,7 @@ extension APIConfig {
                 ("cursor", cursor),
                 ("limit", limit.map(String.init))
             ]),
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -93,10 +93,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.executorApplyTaskPath(id: id),
             method: .post,
-            headers: [
-                "Authorization": "Bearer \(accessToken)",
-                "Content-Type": "application/json"
-            ],
+            headers: Self.requestHeaders(accessToken: accessToken, contentType: "application/json"),
             body: body
         )
     }
@@ -106,7 +103,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.executorWithdrawTaskPath(id: id),
             method: .delete,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -115,7 +112,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.executorMarkDonePath(id: id),
             method: .patch,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -124,7 +121,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.executorFavoriteTaskPath(id: id),
             method: .post,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -133,7 +130,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.executorFavoriteTaskPath(id: id),
             method: .delete,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -146,10 +143,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.executorRateRequesterPath(id: id),
             method: .post,
-            headers: [
-                "Authorization": "Bearer \(accessToken)",
-                "Content-Type": "application/json"
-            ],
+            headers: Self.requestHeaders(accessToken: accessToken, contentType: "application/json"),
             body: body
         )
     }

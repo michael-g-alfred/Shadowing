@@ -36,6 +36,9 @@ final class DIContainer {
     @ObservationIgnored
     lazy var languageManager: LanguageManager = .shared
     
+    @ObservationIgnored
+    lazy var appearanceManager: AppearanceManager = .shared
+    
         // MARK: - Repositories
     
     @ObservationIgnored
@@ -81,6 +84,13 @@ final class DIContainer {
         chatRepo: chatRepository
     )
     
+    @ObservationIgnored
+    lazy var settingsViewModel = SettingsViewModel(
+        locationService: locationService,
+        languageManager: languageManager,
+        appearanceManager: appearanceManager
+    )
+    
         // MARK: - Root
     
     func makeRootView() -> RootView {
@@ -105,6 +115,27 @@ final class DIContainer {
     
     func makeSignupView(screen: Binding<AuthScreen>) -> SignUpView {
         SignUpView(screen: screen, vm: authViewModel)
+    }
+    
+        // MARK: - Setup Flow (Language + Mode)
+    
+    func makeSetupFlowView() -> SetupFlowView {
+        SetupFlowView(vm: settingsViewModel) { [weak self] in
+            self?.setAppState(.auth)
+            self?.relaunchRoot()
+        }
+    }
+    
+    func makeLanguageSetupView() -> LanguageSetupView {
+        LanguageSetupView(vm: settingsViewModel)
+    }
+    
+    func makeModeSetupView() -> ModeSetupView {
+        ModeSetupView(vm: settingsViewModel)
+    }
+    
+    func makeDoneSetupView(onFinished: @escaping () -> Void) -> DoneSetupView {
+        DoneSetupView(vm: settingsViewModel, onFinished: onFinished)
     }
     
         // MARK: - Main
@@ -167,10 +198,7 @@ final class DIContainer {
     }
     
     func makeSettingsViewModel() -> SettingsViewModel {
-        SettingsViewModel(
-            locationService: locationService,
-            languageManager: languageManager
-        )
+        settingsViewModel
     }
     
         // MARK: - Map
@@ -195,8 +223,8 @@ final class DIContainer {
         AddTaskSheet(vm: makeAddTaskViewModel())
     }
     
-    func makeAddTaskViewModel() -> AddTaskVM {
-        AddTaskVM(
+    func makeAddTaskViewModel() -> AddTaskSheetViewModel {
+        AddTaskSheetViewModel(
             taskRepo: taskRepository,
             locationService: locationService,
             onTaskAdded: { [weak requesterViewModel = requesterViewModel] in

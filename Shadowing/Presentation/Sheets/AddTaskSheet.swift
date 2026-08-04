@@ -6,10 +6,10 @@ struct AddTaskSheet: View {
     @Environment(\.dismiss) private var dismiss
     
         // MARK: - State
-    @State private var vm: AddTaskVM
+    @State private var vm: AddTaskSheetViewModel
     
         // MARK: - Init
-    init(vm: AddTaskVM) {
+    init(vm: AddTaskSheetViewModel) {
         _vm = State(initialValue: vm)
     }
     

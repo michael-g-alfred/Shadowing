@@ -7,10 +7,16 @@ final class SettingsViewModel {
     
     private let locationService: LocationService
     private let languageManager: LanguageManager
+    private let appearanceManager: AppearanceManager
     
-    init(locationService: LocationService, languageManager: LanguageManager) {
+    init(
+        locationService: LocationService,
+        languageManager: LanguageManager,
+        appearanceManager: AppearanceManager = .shared
+    ) {
         self.locationService = locationService
         self.languageManager = languageManager
+        self.appearanceManager = appearanceManager
     }
     
         // MARK: - Location
@@ -68,5 +74,43 @@ final class SettingsViewModel {
     
     func setLanguage(_ language: AppLanguage) {
         languageManager.setLanguage(language)
+    }
+    
+        // Greeting loop used by LanguageSetupView (moved over from LanguageViewModel)
+    private(set) var greetings: [String] = [
+        "Welcome",
+        "أهلاً بيك",
+    ]
+    
+    private(set) var currentGreetingIndex: Int = 0
+    private var greetingTask: Task<Void, Never>?
+    
+    func startGreetingLoop() {
+        stopGreetingLoop()
+        greetingTask = Task { [weak self] in
+            guard let self else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1.6))
+                guard !Task.isCancelled else { break }
+                withAnimation(.easeInOut) {
+                    self.currentGreetingIndex = (self.currentGreetingIndex + 1) % self.greetings.count
+                }
+            }
+        }
+    }
+    
+    func stopGreetingLoop() {
+        greetingTask?.cancel()
+        greetingTask = nil
+    }
+    
+        // MARK: - Appearance / Mode
+    
+    var currentMode: AppColorScheme {
+        appearanceManager.currentMode
+    }
+    
+    func setMode(_ mode: AppColorScheme) {
+        appearanceManager.setMode(mode)
     }
 }

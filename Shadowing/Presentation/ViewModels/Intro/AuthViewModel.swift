@@ -13,10 +13,16 @@ final class AuthViewModel {
     var displayName = ""
     var confirmPassword = ""
     var nationalID: String = ""
+    var selectedCountry: Country? {
+        didSet {
+            guard oldValue != selectedCountry else { return }
+            selectedGovernorate = nil
+        }
+    }
+    var selectedGovernorate: Governorate?
     
         // MARK: - State
     var isLoading = false
-    var errorMessage: String?
     
     private let authRepo: AuthRepositoryProtocol
     
@@ -27,24 +33,8 @@ final class AuthViewModel {
     var isAdmin: Bool { authRepo.isAdmin }
     
         // MARK: - Validation
-    private var isEmailValid: Bool {
-        email.contains("@") && email.contains(".")
-    }
-    
-    private var isPasswordValid: Bool {
-        password.count >= 6
-    }
-    
-    var isSignInFormValid: Bool {
-        isEmailValid && isPasswordValid
-    }
-    
     var isSignUpFormValid: Bool {
-        isEmailValid
-        && isPasswordValid
-        && !displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        && nationalID.count == 14
-        && password == confirmPassword
+        password == confirmPassword && selectedCountry != nil && selectedGovernorate != nil
     }
     
         // MARK: - Actions
@@ -55,25 +45,27 @@ final class AuthViewModel {
     }
     
     func signUp() async -> Bool {
-        await performSubmit {
+        guard let selectedCountry, let selectedGovernorate else { return false }
+        return await performSubmit {
             try await self.authRepo.signUp(
                 email: self.email,
                 password: self.password,
                 displayName: self.displayName.trimmingCharacters(in: .whitespacesAndNewlines),
-                nationalId: self.nationalID
+                nationalId: self.nationalID,
+                country: selectedCountry,
+                governorate: selectedGovernorate
             )
         }
     }
     
     private func performSubmit(_ operation: () async throws -> Void) async -> Bool {
         isLoading = true
-        errorMessage = nil
         defer { isLoading = false }
         do {
             try await operation()
             return true
         } catch {
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
             return false
         }
     }

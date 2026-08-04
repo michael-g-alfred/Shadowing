@@ -10,7 +10,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.payInitiatePath(id: taskId),
             method: .post,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
 }

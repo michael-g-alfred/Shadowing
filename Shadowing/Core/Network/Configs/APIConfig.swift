@@ -15,6 +15,17 @@ enum APIConfig {
         return resolved
     }
     
+    static func requestHeaders(accessToken: String, contentType: String? = nil) -> [String: String] {
+        var headers = [
+            "Authorization": "Bearer \(accessToken)",
+            "Accept-Language": LanguageManager.shared.currentLanguage == .arabic ? "ar" : "en",
+        ]
+        if let contentType {
+            headers["Content-Type"] = contentType
+        }
+        return headers
+    }
+    
     struct RatingBody: Encodable {
         let rating: Int
         let comment: String

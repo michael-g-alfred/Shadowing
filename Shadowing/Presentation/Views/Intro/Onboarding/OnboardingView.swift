@@ -21,7 +21,7 @@ struct OnboardingView: View {
             nextButtonTitle: "Next",
             lastButtonTitle: "Start Now"
         ) {
-            container.setAppState(.auth)
+            container.setAppState(.setup)
             container.relaunchRoot()
         }
     }

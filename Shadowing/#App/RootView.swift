@@ -41,6 +41,9 @@ struct RootView: View {
                 case .onboarding:
                     container.makeOnboardingView()
                     
+                case .setup:
+                    container.makeSetupFlowView()
+                    
                 case .auth:
                     AuthCoordinatorView()
                     
@@ -83,5 +86,10 @@ struct RootView: View {
         .id(container.rootID)
         .id(container.languageManager.currentLanguage)
         .animation(.easeInOut, value: container.appState)
+        .responseAlert(
+            isPresented: Bindable(AlertCenter.shared).isPresented,
+            type: AlertCenter.shared.type,
+            message: AlertCenter.shared.message
+        )
     }
 }

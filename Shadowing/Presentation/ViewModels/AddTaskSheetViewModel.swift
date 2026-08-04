@@ -4,7 +4,7 @@ import CoreLocation
 
 @MainActor
 @Observable
-final class AddTaskVM {
+final class AddTaskSheetViewModel {
     
     var title: String = ""
     var description: String = ""
@@ -61,7 +61,7 @@ final class AddTaskVM {
             let latitudeToSend = locationService.currentLocation?.coordinate.latitude
             let longitudeToSend = locationService.currentLocation?.coordinate.longitude
             
-            let _ = try await taskRepo.postTask(
+            let result = try await taskRepo.postTask(
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                 description: description.trimmingCharacters(in: .whitespacesAndNewlines),
                 budget: budget,
@@ -75,6 +75,7 @@ final class AddTaskVM {
             )
             
             didPostSuccessfully = true
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
             reset()
             
             if let onTaskAdded {
@@ -83,6 +84,7 @@ final class AddTaskVM {
             
         } catch {
             errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
     }
     

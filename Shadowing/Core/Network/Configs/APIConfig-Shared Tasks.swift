@@ -18,7 +18,7 @@ extension APIConfig {
                 ("cursor", cursor),
                 ("limit", limit.map(String.init))
             ]),
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -27,7 +27,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.taskDetailsPath(id: id),
             method: .get,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
 }

@@ -52,16 +52,10 @@ struct SignInView: View {
                     }
                     .padding(.horizontal)
                     
-                    if let errorMessage = vm.errorMessage {
-                        Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
-                            .font(.footnote).foregroundStyle(.red)
-                            .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-                    
                     ActionButton(title: "Sign In", systemImage: "arrow.right", tint: .blue, isLoading: vm.isLoading, action: {
                         Task { await submit() }
                     })
-                    .disabled(!vm.isSignInFormValid)
+                    .disabled(vm.isLoading)
                     
                     Button {
                         withAnimation(.spring()) { screen = .signUp }

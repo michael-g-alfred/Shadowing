@@ -8,7 +8,6 @@ final class ExecutorViewModel {
     
     var isLoading = false
     var errorMessage: String?
-    var warningMessage: LocalizedStringResource?
     
     var executorAvailableTasks: [TaskModel] = []
     var executorAssignedTasks: [TaskModel] = []
@@ -78,12 +77,13 @@ final class ExecutorViewModel {
         defer { isApplying = false }
         
         do {
-            try await taskRepo.applyToTask(id: task.id, proposedBudget: proposedBudget)
+            let result = try await taskRepo.applyToTask(id: task.id, proposedBudget: proposedBudget)
             showAppliedSheet = false
             selectedTaskForApply = nil
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
             await loadAvailableTasks()
         } catch {
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
     }
     
@@ -91,10 +91,10 @@ final class ExecutorViewModel {
         do {
             let result = try await taskRepo.withdrawFromTask(id: task.id)
             
-            if result.suspended {
-                warningMessage = "Your account has been suspended for 7 days due to repeated withdrawals. You can still finish tasks already assigned to you, but you can't apply to new ones until the suspension ends."
-            } else if let warning = result.warning {
-                warningMessage = warning
+            if let warning = result.warning {
+                AlertCenter.shared.show(responseType: result.type, message: warning)
+            } else {
+                AlertCenter.shared.show(responseType: result.type, message: result.message)
             }
             
             if task.status == .inProgress {
@@ -104,16 +104,17 @@ final class ExecutorViewModel {
                 await loadAvailableTasks()
             }
         } catch {
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
     }
     
     func markTaskDone(_ task: TaskModel) async {
         do {
-            try await taskRepo.markTaskDone(id: task.id)
+            let result = try await taskRepo.markTaskDone(id: task.id)
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
             await loadAssignedTasks()
         } catch {
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
     }
     
@@ -124,19 +125,22 @@ final class ExecutorViewModel {
         setFavourite(newValue, forTaskId: task.id)
         
         do {
+            let result: (message: String, type: String)
             if newValue {
-                try await taskRepo.favoriteTask(id: task.id)
+                result = try await taskRepo.favoriteTask(id: task.id)
             } else {
-                try await taskRepo.unfavoriteTask(id: task.id)
+                result = try await taskRepo.unfavoriteTask(id: task.id)
             }
             
             if showFavoritesOnly && !newValue {
                 executorAvailableTasks.removeAll { $0.id == task.id }
             }
             
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
+            
         } catch {
             setFavourite(!newValue, forTaskId: task.id)
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
     }
     

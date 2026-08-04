@@ -10,6 +10,8 @@ extension APIConfig {
         let password: String
         let displayName: String
         let nationalId: String
+        let countryId: Int
+        let governorateId: Int
     }
     
     static func signup(_ body: SignupBody) -> MGRequestConfig {

@@ -10,7 +10,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.userCountPath,
             method: .get,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -19,7 +19,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.userPath(id: id),
             method: .get,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -28,7 +28,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.userSummaryPath(id: id),
             method: .get,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -45,15 +45,11 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.userAvatarPath(id: userId),
             method: .post,
-            headers: [
-                "Authorization": "Bearer \(accessToken)",
-                "Content-Type": "multipart/form-data; boundary=\(boundary)"
-            ],
+            headers: Self.requestHeaders(accessToken: accessToken, contentType: "multipart/form-data; boundary=\(boundary)"),
             body: body
         )
     }
     
-        // endpoint جديد لجلب تقييمات مستخدم معين
     static func userRatings(userId: String, cursor: String?, limit: Int?, accessToken: String) -> MGRequestConfig {
         var queryItems: [URLQueryItem] = []
         if let cursor { queryItems.append(URLQueryItem(name: "cursor", value: cursor)) }
@@ -64,7 +60,7 @@ extension APIConfig {
             path: APIEndpoints.userRatingsPath(id: userId),
             method: .get,
             queryItems: queryItems,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
 }

@@ -12,6 +12,8 @@ struct UserModel: Codable, Identifiable, Equatable, Profile {
     let completedTasks: Int
     let accountStatus: AccountStatus
     let suspendedUntil: Date?
+    let country: Country?
+    let governorate: Governorate?
     let createdAt: Date?
     
     var isAdmin: Bool { role.lowercased() == "admin" }
@@ -32,6 +34,8 @@ extension UserModel {
             completedTasks: completedTasks,
             accountStatus: accountStatus,
             suspendedUntil: suspendedUntil,
+            country: country,
+            governorate: governorate,
             createdAt: createdAt
         )
     }

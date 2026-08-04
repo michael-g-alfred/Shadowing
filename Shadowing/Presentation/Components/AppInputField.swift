@@ -46,13 +46,13 @@ struct AppInputField: View {
         }
         .padding()
         .background(backgroundColor)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .strokeBorder(.separator, lineWidth: 1)
         }
         .overlay {
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .strokeBorder(.blue, lineWidth: 3)
                 .scaleEffect(isFocused ? 1 : 0.8)
                 .opacity(isFocused ? 1 : 0)

@@ -7,11 +7,19 @@ enum AppColorScheme: String, CaseIterable, Identifiable {
     
     var id: String { rawValue }
     
-    var title: LocalizedStringResource {
-        switch self {
-            case .light: return "Light"
-            case .dark: return "Dark"
-            case .system: return "System"
+    var title: String {
+        if LanguageManager.shared.currentLanguage == .arabic {
+            switch self {
+                case .light: return "فاتح"
+                case .dark: return "داكن"
+                case .system: return "تلقائي"
+            }
+        } else {
+            switch self {
+                case .light: return "Light"
+                case .dark: return "Dark"
+                case .system: return "Auto"
+            }
         }
     }
     

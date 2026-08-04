@@ -27,6 +27,19 @@ struct ApplicantsSheet: View {
                         secondaryButton: .cancel()
                     )
                 }
+                .alert(
+                    vm.assignResult.map { AlertType(responseType: $0.type).label } ?? "",
+                    isPresented: Binding(
+                        get: { vm.assignResult != nil },
+                        set: { if !$0 { vm.assignResult = nil } }
+                    )
+                ) {
+                    Button("OK") {
+                        vm.dismissAssignSuccessAlert()
+                    }
+                } message: {
+                    Text(vm.assignResult?.message ?? "")
+                }
         }
     }
     

@@ -20,7 +20,7 @@ extension APIConfig {
                 ("limit", limit.map(String.init)),
                 ("status", status)
             ]),
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -37,7 +37,7 @@ extension APIConfig {
                 ("cursor", cursor),
                 ("limit", limit.map(String.init))
             ]),
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -54,7 +54,7 @@ extension APIConfig {
                 ("cursor", cursor),
                 ("limit", limit.map(String.init))
             ]),
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -81,9 +81,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.requesterCreateTaskPath,
             method: .post,
-            headers: [
-                "Authorization": "Bearer \(accessToken)",
-            ],
+            headers: Self.requestHeaders(accessToken: accessToken, contentType: "application/json"),
             body: body
         )
     }
@@ -93,7 +91,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.requesterDeleteTaskPath(id: id),
             method: .delete,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -102,7 +100,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.requesterCancelTaskPath(id: id),
             method: .patch,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -111,7 +109,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.requesterPublishTaskPath(id: id),
             method: .patch,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -120,7 +118,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.requesterConfirmTaskPath(id: id),
             method: .patch,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -129,7 +127,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.requesterApplicantsPath(id: id),
             method: .get,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -146,10 +144,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.requesterAssignTaskPath(id: id),
             method: .patch,
-            headers: [
-                "Authorization": "Bearer \(accessToken)",
-                "Content-Type": "application/json"
-            ],
+            headers: Self.requestHeaders(accessToken: accessToken, contentType: "application/json"),
             body: body
         )
     }
@@ -163,7 +158,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.requesterDeclineApplicantPath(taskId: taskId, applicantId: applicantId),
             method: .delete,
-            headers: ["Authorization": "Bearer \(accessToken)"]
+            headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
     
@@ -176,10 +171,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.requesterRateExecutorPath(id: id),
             method: .post,
-            headers: [
-                "Authorization": "Bearer \(accessToken)",
-                "Content-Type": "application/json"
-            ],
+            headers: Self.requestHeaders(accessToken: accessToken, contentType: "application/json"),
             body: body
         )
     }

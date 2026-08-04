@@ -5,7 +5,6 @@ import FirebaseCore
 struct Shadowing: App {
     
     @State private var container = DIContainer()
-    @AppStorage("appColorScheme") private var appColorScheme: AppColorScheme = .dark
     
     init() {
         FirebaseApp.configure()
@@ -31,7 +30,7 @@ struct Shadowing: App {
                     }
                 }
                 .environment(container)
-                .preferredColorScheme(appColorScheme.colorScheme)
+                .preferredColorScheme(container.appearanceManager.currentMode.colorScheme)
         }
     }
 }

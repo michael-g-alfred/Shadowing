@@ -4,6 +4,7 @@ struct SignUpView: View {
     
         // MARK: - Environment
     @Environment(DIContainer.self) private var container
+    @Environment(\.colorScheme) private var colorScheme
     
         // MARK: - Bindings
     @Binding var screen: AuthScreen
@@ -55,6 +56,8 @@ struct SignUpView: View {
                         
                         NationalIDView(nationalID: $vm.nationalID, focusedField: $focusedField)
                         
+                        countryAndGovernoratePickers
+                        
                         AppInputField(
                             icon: "lock",
                             title: "Password",
@@ -78,15 +81,10 @@ struct SignUpView: View {
                     }
                     .padding(.horizontal)
                     
-                    if let errorMessage = vm.errorMessage {
-                        Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
-                            .font(.footnote).foregroundStyle(.red).padding(.horizontal)
-                    }
-                    
                     ActionButton(title: "Create Account", systemImage: "plus", tint: .blue, isLoading: vm.isLoading) {
                         Task { await submit() }
                     }
-                    .disabled(!vm.isSignUpFormValid)
+                    .disabled(!vm.isSignUpFormValid || vm.isLoading)
                     
                     Button {
                         withAnimation(.spring()) { screen = .signIn }
@@ -109,5 +107,35 @@ struct SignUpView: View {
         guard await vm.signUp() else { return }
         container.setAppState(.main)
         container.relaunchRoot()
+    }
+    
+        // MARK: - Country / Governorate Pickers
+    @ViewBuilder
+    private var countryAndGovernoratePickers: some View {
+        VStack(spacing: Spacing.lg) {
+            
+                // Country Picker
+            AppPickerField(
+                icon: "globe",
+                placeholder: "Select Country",
+                selection: $vm.selectedCountry,
+                options: Country.allCases,
+                labelProvider: { $0.localizedLabel }
+            )
+            
+                // Governorate Picker
+            AppPickerField(
+                icon: "mappin.and.ellipse",
+                placeholder: "Select Governorate",
+                selection: $vm.selectedGovernorate,
+                options: Governorate.governorates(for: vm.selectedCountry ?? .egypt),
+                labelProvider: { $0.localizedLabel }
+            )
+            .disabled(vm.selectedCountry == nil)
+            .opacity(vm.selectedCountry == nil ? 0.5 : 1)
+        }
+        .onChange(of: vm.selectedCountry) { _, _ in
+            vm.selectedGovernorate = nil
+        }
     }
 }

@@ -7,7 +7,7 @@ protocol AuthRepositoryProtocol: AnyObject {
     var accessToken: String? { get }
     
     func signIn(email: String, password: String) async throws
-    func signUp(email: String, password: String, displayName: String, nationalId: String) async throws
+    func signUp(email: String, password: String, displayName: String, nationalId: String, country: Country, governorate: Governorate) async throws
     func signOut() async throws
     
     func loadCurrentUser() async throws

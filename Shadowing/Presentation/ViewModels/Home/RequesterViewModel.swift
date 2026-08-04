@@ -27,6 +27,10 @@ final class RequesterViewModel {
     var isLoadingApplicants = false
     var selectedTaskForApplicants: TaskModel?
     var isAssigningExecutor = false
+    /// Set on a successful assign; ApplicantsSheet shows this as a local
+    /// alert (so it can appear above the sheet) and dismisses the sheet
+    /// itself only when the user taps OK.
+    var assignResult: (message: String, type: String)?
     
     var selectedTaskId: String?
     
@@ -64,55 +68,67 @@ final class RequesterViewModel {
         defer { isAssigningExecutor = false }
         
         do {
-            try await taskRepo.assignExecutor(taskId: task.id, executorId: applicant.id)
+            let result = try await taskRepo.assignExecutor(taskId: task.id, executorId: applicant.id)
             
             let requesterId = task.requester.id
             try await chatRepo.createChat(taskId: task.id, requesterId: requesterId, executorId: applicant.id)
             
-            showApplicantsSheet = false
-            selectedTaskApplicants = []
-            selectedTaskForApplicants = nil
-            await loadPublishedTasks()
+            assignResult = result
         } catch {
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
+    }
+    
+        /// Called when the user taps OK on the assign-success alert inside
+        /// ApplicantsSheet — closes the sheet only now, so the alert and the
+        /// sheet dismissal never race each other.
+    func dismissAssignSuccessAlert() {
+        assignResult = nil
+        showApplicantsSheet = false
+        selectedTaskApplicants = []
+        selectedTaskForApplicants = nil
+        Task { await loadPublishedTasks() }
     }
     
     func confirmTaskCompletion(_ task: TaskModel) async {
         do {
-            try await taskRepo.confirmTask(id: task.id)
+            let result = try await taskRepo.confirmTask(id: task.id)
             try await chatRepo.deleteChat(taskId: task.id)
             requesterPublishedTasks.removeAll { $0.id == task.id }
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
             await checkPendingRatings()
         } catch {
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
     }
     
     func deleteTask(_ task: TaskModel) async {
         do {
-            try await taskRepo.deleteTask(id: task.id)
+            let result = try await taskRepo.deleteTask(id: task.id)
             requesterPublishedTasks.removeAll { $0.id == task.id }
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
         } catch {
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
     }
     
     func cancelTask(_ task: TaskModel) async {
         do {
-            try await taskRepo.cancelTask(id: task.id)
+            let result = try await taskRepo.cancelTask(id: task.id)
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
             await loadPublishedTasks()
         } catch {
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
     }
     
     func publishTask(_ task: TaskModel) async {
         do {
-            try await taskRepo.publishTask(id: task.id)
+            let result = try await taskRepo.publishTask(id: task.id)
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
             await loadPublishedTasks()
         } catch {
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
     }
     
@@ -132,10 +148,11 @@ final class RequesterViewModel {
     func declineApplicant(_ applicant: ApplicantModel) async {
         guard let task = selectedTaskForApplicants else { return }
         do {
-            try await taskRepo.declineApplicant(taskId: task.id, applicantId: applicant.id)
+            let result = try await taskRepo.declineApplicant(taskId: task.id, applicantId: applicant.id)
             selectedTaskApplicants.removeAll { $0.id == applicant.id }
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
         } catch {
-            errorMessage = error.localizedDescription
+            AlertCenter.shared.showError(error)
         }
     }
     

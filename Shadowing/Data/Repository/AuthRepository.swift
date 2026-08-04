@@ -58,19 +58,24 @@ final class AuthRepository: AuthRepositoryProtocol {
         email: String,
         password: String,
         displayName: String,
-        nationalId: String
+        nationalId: String,
+        country: Country,
+        governorate: Governorate
     ) async throws {
         
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("📝 Starting Sign Up")
         DebugLogger.log("📧 Email: \(email)")
         DebugLogger.log("👤 Name: \(displayName)")
+        DebugLogger.log("🌍 Country: \(country.localizedLabel) | Governorate: \(governorate.localizedLabel)")
         
         let body = APIConfig.SignupBody(
             email: email,
             password: password,
             displayName: displayName,
-            nationalId: nationalId
+            nationalId: nationalId,
+            countryId: country.rawValue,
+            governorateId: governorate.rawValue
         )
         
         let config = APIConfig.signup(body)

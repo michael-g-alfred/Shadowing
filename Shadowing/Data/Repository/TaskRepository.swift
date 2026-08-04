@@ -60,7 +60,7 @@ final class TaskRepository: TaskRepositoryProtocol {
     
         // MARK: - Requester
     
-    func postTask( title: String, description: String, budget: Double, priority: TaskPriority, serviceType: String, address: String, latitude: Double?, longitude: Double?, scheduledAt: Date?, preferredTimeOfDay: PreferredTimeOfDay? ) async throws -> TaskModel {
+    func postTask( title: String, description: String, budget: Double, priority: TaskPriority, serviceType: String, address: String, latitude: Double?, longitude: Double?, scheduledAt: Date?, preferredTimeOfDay: PreferredTimeOfDay? ) async throws -> (task: TaskModel, message: String, type: String) {
         
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("📝 Posting New Task")
@@ -95,7 +95,11 @@ final class TaskRepository: TaskRepositoryProtocol {
             DebugLogger.log("🆔 Task ID: \(response.data.task.id)")
             DebugLogger.log("══════════════════════════════════════")
             
-            return response.data.task.toDomain()
+            return (
+                task: response.data.task.toDomain(),
+                message: response.message,
+                type: response.type
+            )
             
         } catch {
             DebugLogger.log("❌ Failed to create task")
@@ -233,53 +237,60 @@ final class TaskRepository: TaskRepositoryProtocol {
     
         // MARK: - Requester Actions
     
-    func deleteTask(id: String) async throws {
+    func deleteTask(id: String) async throws -> (message: String, type: String) {
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("🗑️ Deleting Task \(id)")
         
         let token = try await getValidToken()
         let config = APIConfig.requesterDeleteTask(id: id, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
-        
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
         
         DebugLogger.log("✅ Task Deleted")
         DebugLogger.log("══════════════════════════════════════")
+        
+        return (message: response.message, type: response.type)
     }
     
-    func cancelTask(id: String) async throws {
+    func cancelTask(id: String) async throws -> (message: String, type: String) {
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("🚫 Cancelling Task \(id)")
         
         let token = try await getValidToken()
         let config = APIConfig.requesterCancelTask(id: id, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
         
         DebugLogger.log("✅ Task Cancelled")
         DebugLogger.log("══════════════════════════════════════")
+        
+        return (message: response.message, type: response.type)
     }
     
-    func publishTask(id: String) async throws {
+    func publishTask(id: String) async throws -> (message: String, type: String) {
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("📢 Publishing Task \(id)")
         
         let token = try await getValidToken()
         let config = APIConfig.requesterPublishTask(id: id, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
         
         DebugLogger.log("✅ Task Published")
         DebugLogger.log("══════════════════════════════════════")
+        
+        return (message: response.message, type: response.type)
     }
     
-    func confirmTask(id: String) async throws {
+    func confirmTask(id: String) async throws -> (message: String, type: String) {
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("✅ Confirming Task Completion \(id)")
         
         let token = try await getValidToken()
         let config = APIConfig.requesterConfirmTask(id: id, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
         
         DebugLogger.log("✅ Task Confirmed")
         DebugLogger.log("══════════════════════════════════════")
+        
+        return (message: response.message, type: response.type)
     }
     
     func getApplicants(taskId: String) async throws -> [ApplicantModel] {
@@ -296,15 +307,17 @@ final class TaskRepository: TaskRepositoryProtocol {
         return response.data.applicants.map { $0.toDomain() }
     }
     
-    func assignExecutor(taskId: String, executorId: String) async throws {
+    func assignExecutor(taskId: String, executorId: String) async throws -> (message: String, type: String) {
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("🧑‍🔧 Assigning Executor \(executorId) to Task \(taskId)")
         
         let token = try await getValidToken()
         let body = APIConfig.RequesterAssignTaskBody(executorId: executorId)
         let config = APIConfig.requesterAssignTask(id: taskId, body: body, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
         DebugLogger.log("✅ Executor Assigned")
+        
+        return (message: response.message, type: response.type)
     }
     
         // Retry payment for a task that's already assigned but whose escrow
@@ -327,31 +340,35 @@ final class TaskRepository: TaskRepositoryProtocol {
         return url
     }
     
-    func declineApplicant(taskId: String, applicantId: String) async throws {
+    func declineApplicant(taskId: String, applicantId: String) async throws -> (message: String, type: String) {
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("🚫 Declining Applicant \(applicantId) for Task \(taskId)")
         
         let token = try await getValidToken()
         let config = APIConfig.requesterDeclineApplicant(taskId: taskId, applicantId: applicantId, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
         
         DebugLogger.log("✅ Applicant Declined")
         DebugLogger.log("══════════════════════════════════════")
+        
+        return (message: response.message, type: response.type)
     }
     
         // MARK: - Executor Actions
     
-    func applyToTask(id: String, proposedBudget: Double?) async throws {
+    func applyToTask(id: String, proposedBudget: Double?) async throws -> (message: String, type: String) {
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("🙋 Applying to Task \(id)")
         
         let token = try await getValidToken()
         let body = APIConfig.ExecutorApplyTaskBody(proposedBudget: proposedBudget)
         let config = APIConfig.executorApplyTask(id: id, body: body, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
         
         DebugLogger.log("✅ Applied Successfully")
         DebugLogger.log("══════════════════════════════════════")
+        
+        return (message: response.message, type: response.type)
     }
     
     func withdrawFromTask(id: String) async throws -> WithdrawResult {
@@ -365,53 +382,66 @@ final class TaskRepository: TaskRepositoryProtocol {
         DebugLogger.log("✅ Withdrawn Successfully (suspended: \(response.data.suspended))")
         DebugLogger.log("══════════════════════════════════════")
         
-        return response.data.toDomain()
+        return WithdrawResult(
+            message: response.message,
+            type: response.type,
+            suspended: response.data.suspended,
+            warning: response.data.warning
+        )
     }
     
-    func markTaskDone(id: String) async throws {
+    func markTaskDone(id: String) async throws -> (message: String, type: String) {
         DebugLogger.log("══════════════════════════════════════")
         DebugLogger.log("🏁 Marking Task Done \(id)")
         
         let token = try await getValidToken()
         let config = APIConfig.executorMarkDone(id: id, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
         
         DebugLogger.log("✅ Task Marked Done")
         DebugLogger.log("══════════════════════════════════════")
+        
+        return (message: response.message, type: response.type)
     }
     
-    func favoriteTask(id: String) async throws {
+    func favoriteTask(id: String) async throws -> (message: String, type: String) {
         DebugLogger.log("⭐ Favoriting Task \(id)")
         
         let token = try await getValidToken()
         let config = APIConfig.executorFavoriteTask(id: id, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
         
         DebugLogger.log("✅ Task Favorited")
+        
+        return (message: response.message, type: response.type)
     }
     
-    func unfavoriteTask(id: String) async throws {
+    func unfavoriteTask(id: String) async throws -> (message: String, type: String) {
         DebugLogger.log("☆ Unfavoriting Task \(id)")
         
         let token = try await getValidToken()
         let config = APIConfig.executorUnfavoriteTask(id: id, accessToken: token)
-        let _: () = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
         
         DebugLogger.log("✅ Task Unfavorited")
+        
+        return (message: response.message, type: response.type)
     }
     
         // MARK: - Rating Actions
-    func rateExecutor(taskId: String, rating: Int, comment: String) async throws {
+    func rateExecutor(taskId: String, rating: Int, comment: String) async throws -> (message: String, type: String) {
         let token = try await getValidToken()
         let body = APIConfig.RatingBody(rating: rating, comment: comment)
         let config = APIConfig.requesterRateExecutor(id: taskId, body: body, accessToken: token)
-        _ = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
+        return (message: response.message, type: response.type)
     }
     
-    func rateRequester(taskId: String, rating: Int, comment: String) async throws {
+    func rateRequester(taskId: String, rating: Int, comment: String) async throws -> (message: String, type: String) {
         let token = try await getValidToken()
         let body = APIConfig.RatingBody(rating: rating, comment: comment)
         let config = APIConfig.executorRateRequester(id: taskId, body: body, accessToken: token)
-        _ = try await network.requestWithoutResponse(config)
+        let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
+        return (message: response.message, type: response.type)
     }
 }

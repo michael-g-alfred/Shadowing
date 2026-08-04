@@ -13,7 +13,7 @@ protocol TaskRepositoryProtocol {
     
         // MARK: - Requester
     
-    func postTask( title: String, description: String, budget: Double, priority: TaskPriority, serviceType: String, address: String, latitude: Double?, longitude: Double?, scheduledAt: Date?, preferredTimeOfDay: PreferredTimeOfDay? ) async throws -> TaskModel
+    func postTask( title: String, description: String, budget: Double, priority: TaskPriority, serviceType: String, address: String, latitude: Double?, longitude: Double?, scheduledAt: Date?, preferredTimeOfDay: PreferredTimeOfDay? ) async throws -> (task: TaskModel, message: String, type: String)
     
     func getRequesterPublishedTasks(cursor: String?, limit: Int?, status: String?) async throws -> PaginatedTasksResult
     func getRequesterCompletedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
@@ -28,13 +28,13 @@ protocol TaskRepositoryProtocol {
     
         // MARK: - Requester Actions
     
-    func deleteTask(id: String) async throws
-    func cancelTask(id: String) async throws
-    func publishTask(id: String) async throws
-    func confirmTask(id: String) async throws
+    func deleteTask(id: String) async throws -> (message: String, type: String)
+    func cancelTask(id: String) async throws -> (message: String, type: String)
+    func publishTask(id: String) async throws -> (message: String, type: String)
+    func confirmTask(id: String) async throws -> (message: String, type: String)
     func getApplicants(taskId: String) async throws -> [ApplicantModel]
-    func assignExecutor(taskId: String, executorId: String) async throws
-    func declineApplicant(taskId: String, applicantId: String) async throws
+    func assignExecutor(taskId: String, executorId: String) async throws -> (message: String, type: String)
+    func declineApplicant(taskId: String, applicantId: String) async throws -> (message: String, type: String)
     
         // MARK: - Payments
     
@@ -42,14 +42,14 @@ protocol TaskRepositoryProtocol {
     
         // MARK: - Executor Actions
     
-    func applyToTask(id: String, proposedBudget: Double?) async throws
+    func applyToTask(id: String, proposedBudget: Double?) async throws -> (message: String, type: String)
     func withdrawFromTask(id: String) async throws -> WithdrawResult
-    func markTaskDone(id: String) async throws
-    func favoriteTask(id: String) async throws
-    func unfavoriteTask(id: String) async throws
+    func markTaskDone(id: String) async throws -> (message: String, type: String)
+    func favoriteTask(id: String) async throws -> (message: String, type: String)
+    func unfavoriteTask(id: String) async throws -> (message: String, type: String)
     
         // MARK: - Rating Actions
-    func rateExecutor(taskId: String, rating: Int, comment: String) async throws
-    func rateRequester(taskId: String, rating: Int, comment: String) async throws
+    func rateExecutor(taskId: String, rating: Int, comment: String) async throws -> (message: String, type: String)
+    func rateRequester(taskId: String, rating: Int, comment: String) async throws -> (message: String, type: String)
     
 }

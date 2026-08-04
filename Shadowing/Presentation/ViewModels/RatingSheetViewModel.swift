@@ -69,13 +69,15 @@ final class RatingSheetViewModel {
         defer { isSubmitting = false }
         
         do {
+            let result: (message: String, type: String)
             switch target {
                 case .executor:
-                    try await taskRepo.rateExecutor(taskId: taskId, rating: rating, comment: trimmedComment)
+                    result = try await taskRepo.rateExecutor(taskId: taskId, rating: rating, comment: trimmedComment)
                 case .requester:
-                    try await taskRepo.rateRequester(taskId: taskId, rating: rating, comment: trimmedComment)
+                    result = try await taskRepo.rateRequester(taskId: taskId, rating: rating, comment: trimmedComment)
             }
             didSubmit = true
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
         } catch {
             print("⚠️ Rating submit failed — taskId: \(taskId), target: \(target), error: \(error)")
             
@@ -84,7 +86,7 @@ final class RatingSheetViewModel {
                 print("⚠️ Server said (status \(statusCode)): \(bodyString)")
             }
             
-            errorMessage = "Couldn't submit your rating. Please try again."
+            AlertCenter.shared.showError(error)
         }
     }
 }
