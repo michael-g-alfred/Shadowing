@@ -9,6 +9,7 @@ final class AddTaskSheetViewModel {
     var title: String = ""
     var description: String = ""
     var budget: Double = 0
+    var selectedCurrency: CurrencyLookup?
     var selectedPriority: PriorityLookup?
     var selectedService: TaskServiceLookup?
     var serviceOther: String = ""
@@ -44,6 +45,7 @@ final class AddTaskSheetViewModel {
     var availablePriorities: [PriorityLookup] { lookupStore.priorities }
     var availableServices: [TaskServiceLookup] { lookupStore.services }
     var availableTimesOfDay: [TimeOfDayLookup] { lookupStore.timesOfDay }
+    var availableCurrencies: [CurrencyLookup] { lookupStore.currencies }
     
     func loadLookupsIfNeeded() async {
         await lookupStore.loadIfNeeded()
@@ -52,6 +54,9 @@ final class AddTaskSheetViewModel {
         }
         if selectedService == nil {
             selectedService = lookupStore.service(named: "delivery")
+        }
+        if selectedCurrency == nil {
+            selectedCurrency = lookupStore.currency(named: "EGP")
         }
     }
     
@@ -63,7 +68,7 @@ final class AddTaskSheetViewModel {
             return
         }
         
-        guard let selectedPriority, let selectedService else {
+        guard let selectedPriority, let selectedService, let selectedCurrency else {
             errorMessage = "Lookups not loaded yet"
             return
         }
@@ -88,8 +93,9 @@ final class AddTaskSheetViewModel {
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                 description: description.trimmingCharacters(in: .whitespacesAndNewlines),
                 budget: budget,
+                currencyId: selectedCurrency.id,
                 priorityId: selectedPriority.id,
-                serviceType: selectedService.name,
+                serviceTypeId: selectedService.id,
                 address: address.trimmingCharacters(in: .whitespacesAndNewlines),
                 latitude: latitudeToSend,
                 longitude: longitudeToSend,
@@ -119,6 +125,7 @@ final class AddTaskSheetViewModel {
         
         selectedPriority = lookupStore.priority(named: "normal")
         selectedService = lookupStore.service(named: "delivery")
+        selectedCurrency = lookupStore.currency(named: "EGP")
         serviceOther = ""
         
         timing = .now
@@ -148,7 +155,7 @@ final class AddTaskSheetViewModel {
         }
         
         if budget <= 0 {
-            errors.append("Budget must be greater than 0 EGP")
+            errors.append("Budget must be greater than 0")
         } else if budget > 100000 {
             errors.append("Budget seems too high")
         }

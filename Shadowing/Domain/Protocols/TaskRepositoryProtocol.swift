@@ -13,7 +13,17 @@ protocol TaskRepositoryProtocol {
     
         // MARK: - Requester
     
-    func postTask(title: String, description: String, budget: Double, priorityId: Int, serviceType: String, address: String, latitude: Double?, longitude: Double?, scheduledAt: Date?, preferredTimeOfDayId: Int?) async throws -> (task: TaskModel, message: String, type: String)
+    // NOTE: signature changed —
+    //   - added `currencyId: Int` (was missing entirely; the amount/currency
+    //     picker were never separable before)
+    //   - `serviceType: String` -> `serviceTypeId: Int` (backend now stores
+    //     tasks.service_type_id, an FK to task_services.id, instead of a
+    //     name string)
+    //   - `priorityId: Int` stays an Int as before, but now matches the
+    //     backend's task.schema.js "priorityId" field name exactly (it
+    //     previously sent this shape but the backend expected a "priority"
+    //     name string, so create-task requests were failing Joi validation)
+    func postTask(title: String, description: String, budget: Double, currencyId: Int, priorityId: Int, serviceTypeId: Int, address: String, latitude: Double?, longitude: Double?, scheduledAt: Date?, preferredTimeOfDayId: Int?) async throws -> (task: TaskModel, message: String, type: String)
     
     func getRequesterPublishedTasks(cursor: String?, limit: Int?, status: String?) async throws -> PaginatedTasksResult
     func getRequesterCompletedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult

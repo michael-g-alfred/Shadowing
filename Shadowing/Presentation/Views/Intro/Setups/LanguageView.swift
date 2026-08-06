@@ -17,7 +17,8 @@ struct LanguageSetupView: View {
                         ? "اختر لغتك المفضلـة للمتابعة"
                         : "Choose your preferred language to continue"
                 )
-                .contentTransition(.numericText())
+                .id(vm.currentGreetingIndex)
+                .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 .padding(.top, Spacing.xl)
                 
                     // MARK: - Language Options

@@ -315,7 +315,6 @@ final class ExecutorViewModel {
         // MARK: - Chat
     
     func openChat(for taskId: String) {
-        DebugLogger.log("Opening chat for task: \(taskId)")
         self.selectedChatTaskId = taskId
     }
     

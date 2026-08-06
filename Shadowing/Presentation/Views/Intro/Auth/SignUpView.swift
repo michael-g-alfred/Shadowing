@@ -27,9 +27,11 @@ struct SignUpView: View {
             ScrollView {
                 VStack(spacing: Spacing.xxl) {
                     VStack(spacing: Spacing.md) {
-                        Image(systemName: "person.crop.circle.fill.badge.plus")
-                            .symbolRenderingMode(.hierarchical).font(.system(size: 80)).foregroundStyle(.blue)
+                        
+                        AppIcon(icon: "person.crop.circle.fill.badge.plus")
+                        
                         Text("Create Account").font(.largeTitle.bold())
+                        
                         Text("Join us today and start your experience")
                             .font(.subheadline).foregroundStyle(.secondary)
                     }

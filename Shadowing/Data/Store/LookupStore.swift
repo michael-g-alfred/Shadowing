@@ -6,14 +6,19 @@ import Observation
 final class LookupStore {
     
     private(set) var roles: [RoleLookup] = []
+    private(set) var accountStatuses: [AccountStatusLookup] = []
+    private(set) var countries: [CountryLookup] = []
+    private(set) var governorates: [GovernorateLookup] = []
+    // Fixed: was `[CurrenciesLookup]` — that type doesn't exist anywhere in
+    // LookupModels.swift (the domain type there is `CurrencyLookup`,
+    // singular). This wouldn't compile before.
+    private(set) var currencies: [CurrencyLookup] = []
     private(set) var priorities: [PriorityLookup] = []
     private(set) var statuses: [StatusLookup] = []
-    private(set) var accountStatuses: [AccountStatusLookup] = []
     private(set) var escrowStatuses: [EscrowStatusLookup] = []
     private(set) var timesOfDay: [TimeOfDayLookup] = []
     private(set) var services: [TaskServiceLookup] = []
-    private(set) var countries: [CountryLookup] = []
-    private(set) var governorates: [GovernorateLookup] = []
+
     
     private(set) var isLoaded = false
     private(set) var isLoading = false
@@ -42,6 +47,9 @@ final class LookupStore {
             services = all.services
             countries = all.countries
             governorates = all.governorates
+            // Fixed: this assignment was missing entirely, so `currencies`
+            // stayed empty forever even after a successful load.
+            currencies = all.currencies
             isLoaded = true
         } catch {
             AlertCenter.shared.showError(error)
@@ -87,6 +95,13 @@ final class LookupStore {
         roles.first { $0.name == name }
     }
     
+    // New: matches the `named:`/`id:` convenience pattern every other
+    // lookup already has — needed by AddTaskSheetViewModel to default-select
+    // EGP and to resolve the picker's tag back to a currency.
+    func currency(named code: String) -> CurrencyLookup? {
+        currencies.first { $0.code == code }
+    }
+    
     func country(id: Int) -> CountryLookup? {
         countries.first { $0.id == id }
     }
@@ -121,5 +136,9 @@ final class LookupStore {
     
     func service(id: Int) -> TaskServiceLookup? {
         services.first { $0.id == id }
+    }
+    
+    func currency(id: Int) -> CurrencyLookup? {
+        currencies.first { $0.id == id }
     }
 }

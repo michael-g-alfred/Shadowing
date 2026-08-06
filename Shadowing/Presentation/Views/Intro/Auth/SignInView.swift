@@ -22,9 +22,11 @@ struct SignInView: View {
             ScrollView {
                 VStack(spacing: Spacing.xxl) {
                     VStack(spacing: Spacing.md) {
-                        Image(systemName: "person.crop.circle.fill.badge.checkmark")
-                            .symbolRenderingMode(.hierarchical).font(.system(size: 80)).foregroundStyle(.blue)
+                        
+                        AppIcon(icon: "person.crop.circle.fill.badge.checkmark")
+                        
                         Text("Welcome Back").font(.largeTitle.bold())
+                        
                         Text("Sign in to continue your journey with Shadowing")
                             .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     }

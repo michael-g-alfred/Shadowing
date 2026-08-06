@@ -7,20 +7,8 @@ struct SetupHeaderView: View {
     
     var body: some View {
         VStack(spacing: Spacing.lg) {
-            ZStack {
-                Circle()
-                    .fill(Color.accentColor.opacity(0.15))
-                    .frame(width: 100, height: 100)
-                
-                Circle()
-                    .strokeBorder(Color.accentColor.opacity(0.25), lineWidth: 1)
-                    .frame(width: 100, height: 100)
-                
-                Image(systemName: icon)
-                    .font(.system(size: 32))
-                    .foregroundStyle(.accent)
-                    .symbolEffect(.bounce, options: .repeat(1), value: icon)
-            }
+            
+            AppIcon(icon: icon)
             
             VStack(spacing: Spacing.xs) {
                 Text(title)

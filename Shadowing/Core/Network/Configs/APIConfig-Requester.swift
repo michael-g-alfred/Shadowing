@@ -62,10 +62,16 @@ extension APIConfig {
         let title: String
         let description: String
         let budget: Double
-        let serviceType: String
+        // Was `serviceType: String` (a task_services.name string) — the
+        // backend column is now tasks.service_type_id, an FK to
+        // task_services.id, so this sends the numeric id from the picker.
+        let serviceTypeId: Int
         let address: String
         
-        var currency: String? = "EGP"
+        // Was `currency: String? = "EGP"` — hardcoded string the backend no
+        // longer accepts (tasks.currency_id is a numeric FK now). Defaults
+        // to 1 (EGP) to match the DB column default / task.schema.js default.
+        var currencyId: Int? = 1
         var priorityId: Int? = nil
         var latitude: Double?
         var longitude: Double?

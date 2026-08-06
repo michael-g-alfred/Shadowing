@@ -27,9 +27,9 @@ final class RequesterViewModel {
     var isLoadingApplicants = false
     var selectedTaskForApplicants: TaskModel?
     var isAssigningExecutor = false
-    /// Set on a successful assign; ApplicantsSheet shows this as a local
-    /// alert (so it can appear above the sheet) and dismisses the sheet
-    /// itself only when the user taps OK.
+        /// Set on a successful assign; ApplicantsSheet shows this as a local
+        /// alert (so it can appear above the sheet) and dismisses the sheet
+        /// itself only when the user taps OK.
     var assignResult: (message: String, type: String)?
     
     var selectedTaskId: String?
@@ -277,7 +277,6 @@ final class RequesterViewModel {
         // MARK: - Chat
     
     func openChat(for taskId: String) {
-        DebugLogger.log("Opening chat for task: \(taskId)")
         self.selectedChatTaskId = taskId
     }
     

@@ -21,7 +21,7 @@ struct SetupOptionCard: View {
                 Spacer()
                 
                 
-                Image(systemName: isSelected ? "checkmark.circle" : "circle")
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .imageScale(.large)
                     .foregroundStyle(isSelected ? Color(.accent): .secondary)
             }

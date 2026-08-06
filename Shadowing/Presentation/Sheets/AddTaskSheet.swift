@@ -24,8 +24,23 @@ struct AddTaskSheet: View {
                 }
 
                 Section("Budget") {
-                    TextField("Amount", value: $vm.budget, format: .currency(code: "EGP"))
-                        .keyboardType(.numberPad)
+                    HStack(alignment: .center) {
+                        TextField("Amount", value: $vm.budget, format: .number)
+                            .keyboardType(.decimalPad)
+
+                        if vm.availableCurrencies.isEmpty {
+                            ProgressView()
+                        } else {
+                            Picker("Currency", selection: $vm.selectedCurrency) {
+                                ForEach(vm.availableCurrencies) { currency in
+                                    Text(currency.code).tag(currency as CurrencyLookup?)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                            .fixedSize()
+                        }
+                    }
                 }
 
                 Section("Service Type") {
