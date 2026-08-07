@@ -9,7 +9,8 @@ extension APIConfig {
         MGRequestConfig(
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.lookupPath,
-            method: .get
+            method: .get,
+            headers: self.requestHeaders(accessToken: nil)
         )
     }
     
@@ -17,7 +18,8 @@ extension APIConfig {
         MGRequestConfig(
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.lookupTypePath(type: type),
-            method: .get
+            method: .get,
+            headers: self.requestHeaders(accessToken: nil)
         )
     }
 }

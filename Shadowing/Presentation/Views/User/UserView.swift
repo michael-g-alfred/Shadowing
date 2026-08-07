@@ -13,6 +13,12 @@ struct UserView: View {
         : nil
     }
     
+    private var listErrorRowColor: Color? {
+        colorScheme == .dark
+        ? Color.orange.opacity(0.15)
+        : nil
+    }
+    
         // MARK: - State
     @State private var vm: UserViewModel
     
@@ -69,6 +75,22 @@ struct UserView: View {
                 } header: {
                     Label("Error Message", systemImage: "exclamationmark.triangle")
                 }
+                .listRowBackground(listErrorRowColor)
+            }
+
+            if let bio = user.bio, !bio.isEmpty {
+                Section("About") {
+                    Text(bio).bold()
+                        .font(.subheadline)
+                }
+                .listRowBackground(listRowColor)
+            }
+
+            if !user.specialties.isEmpty {
+                Section("Specialties") {
+                    specialtiesFlow(user.specialties)
+                }
+                .listRowBackground(listRowColor)
             }
             
             Section("Stats") {
@@ -101,5 +123,23 @@ struct UserView: View {
             .listRowBackground(listRowColor)
         }
         .scrollContentBackground(.hidden)
+    }
+
+    private func specialtiesFlow(_ specialties: [SpecialtyModel]) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.sm) {
+                ForEach(specialties) { specialty in
+                    Label(specialty.label, systemImage: specialty.icon)
+                        .font(.footnote).bold()
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .appGlassCapsule(
+                            overlayColor: .green.opacity(0.1),
+                            strokeColor: .green.opacity(0.05),
+                            shadowColor: .green.opacity(0.05)
+                        )
+                }
+            }
+        }
     }
 }

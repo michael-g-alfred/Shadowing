@@ -45,18 +45,7 @@ struct AppInputField: View {
             .textInputAutocapitalization(.never)
         }
         .padding()
-        .background(backgroundColor)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .strokeBorder(.separator, lineWidth: 1)
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .strokeBorder(.blue, lineWidth: 3)
-                .scaleEffect(isFocused ? 1 : 0.8)
-                .opacity(isFocused ? 1 : 0)
-        }
+        .appGlassCapsule()
         .animation(isFocused ? .spring(duration: 0.3, bounce: 0.45) : .none, value: isFocused)
         .onChange(of: text) { _, newValue in
             guard let textFilter else { return }
@@ -65,5 +54,7 @@ struct AppInputField: View {
                 text = filtered
             }
         }
+        .environment(\.layoutDirection, container.languageManager.currentLanguage.layoutDirection)
+        .environment(\.locale, container.languageManager.currentLanguage.locale)
     }
 }

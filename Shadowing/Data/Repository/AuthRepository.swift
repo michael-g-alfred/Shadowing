@@ -43,7 +43,9 @@ final class AuthRepository: AuthRepositoryProtocol {
         displayName: String,
         nationalId: String,
         countryId: Int,
-        governorateId: Int
+        governorateId: Int,
+        bio: String,
+        specialtyIds: [Int]
     ) async throws {
         let body = APIConfig.SignupBody(
             email: email,
@@ -51,7 +53,9 @@ final class AuthRepository: AuthRepositoryProtocol {
             displayName: displayName,
             nationalId: nationalId,
             countryId: countryId,
-            governorateId: governorateId
+            governorateId: governorateId,
+            bio: bio,
+            specialtyIds: specialtyIds
         )
         
         let config = APIConfig.signup(body)

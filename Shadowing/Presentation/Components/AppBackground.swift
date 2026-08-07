@@ -10,7 +10,7 @@ struct AppBackground: View {
                     Color.accentColor.opacity(0.25)
                 ]),
                 center: .topLeading,
-                startRadius: 5,
+                startRadius: 0,
                 endRadius: max(geometry.size.width, geometry.size.height) * 1.25
             )
             .ignoresSafeArea(edges: .all)

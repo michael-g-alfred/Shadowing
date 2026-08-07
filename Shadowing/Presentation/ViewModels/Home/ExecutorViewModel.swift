@@ -83,7 +83,7 @@ final class ExecutorViewModel {
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await loadAvailableTasks()
         } catch {
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
@@ -104,7 +104,7 @@ final class ExecutorViewModel {
                 await loadAvailableTasks()
             }
         } catch {
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
@@ -114,7 +114,7 @@ final class ExecutorViewModel {
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await loadAssignedTasks()
         } catch {
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
@@ -140,7 +140,7 @@ final class ExecutorViewModel {
             
         } catch {
             setFavourite(!newValue, forTaskId: task.id)
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     

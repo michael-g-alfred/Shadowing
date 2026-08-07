@@ -20,7 +20,7 @@ struct MainView: View {
                 Tab(tab.title, systemImage: tab.image, value: tab) {
                     view(for: tab)
                 }
-                .badge(tab == .chat ? container.chatViewModel.totalUnreadCount : 0)
+                .badge(tab == .chats ? container.chatViewModel.totalUnreadCount : 0)
             }
         }
     }
@@ -31,7 +31,7 @@ struct MainView: View {
         switch tab {
             case .home: container.makeHomeView()
             case .map: container.makeMapView()
-            case .chat: container.makeChatView()
+            case .chats: container.makeChatView()
             case .profile: container.makeProfileView()
         }
     }

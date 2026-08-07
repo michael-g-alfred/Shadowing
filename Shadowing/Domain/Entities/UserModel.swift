@@ -6,6 +6,7 @@ struct UserModel: Codable, Identifiable, Equatable, Profile {
     let displayName: String
     let nationalId: String?
     var avatarUrl: String?
+    let bio: String?
     let role: String
     let rating: Double
     let totalRatings: Int
@@ -14,6 +15,7 @@ struct UserModel: Codable, Identifiable, Equatable, Profile {
     let suspendedUntil: Date?
     let countryId: Int?
     let governorateId: Int?
+    let specialties: [SpecialtyModel]
     let createdAt: Date?
 
     var isAdmin: Bool { role.lowercased() == "admin" }
@@ -28,6 +30,7 @@ extension UserModel {
             displayName: displayName,
             nationalId: nationalId,
             avatarUrl: url,
+            bio: bio,
             role: role,
             rating: rating,
             totalRatings: totalRatings,
@@ -36,6 +39,7 @@ extension UserModel {
             suspendedUntil: suspendedUntil,
             countryId: countryId,
             governorateId: governorateId,
+            specialties: specialties,
             createdAt: createdAt
         )
     }

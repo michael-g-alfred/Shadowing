@@ -10,6 +10,7 @@ struct UserDTO: Codable {
     let displayName: String
     let nationalId: String?
     let avatarUrl: String?
+    let bio: String?
     let role: String?
     let rating: Double?
     let totalRatings: Int?
@@ -18,6 +19,7 @@ struct UserDTO: Codable {
     let suspendedUntil: Date?
     let countryId: Int?
     let governorateId: Int?
+    let specialties: [SpecialtyModel]?
     let createdAt: Date?
 }
 
@@ -29,6 +31,7 @@ extension UserDTO {
             displayName: displayName,
             nationalId: nationalId,
             avatarUrl: avatarUrl,
+            bio: bio,
             role: role ?? "user",
             rating: rating ?? 0,
             totalRatings: totalRatings ?? 0,
@@ -37,6 +40,7 @@ extension UserDTO {
             suspendedUntil: suspendedUntil,
             countryId: countryId,
             governorateId: governorateId,
+            specialties: specialties ?? [],
             createdAt: createdAt
         )
     }

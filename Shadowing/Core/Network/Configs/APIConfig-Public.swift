@@ -9,7 +9,8 @@ extension APIConfig {
         MGRequestConfig(
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.healthCheckPath,
-            method: .get
+            method: .get,
+            headers: self.requestHeaders(accessToken: nil),
         )
     }
 }

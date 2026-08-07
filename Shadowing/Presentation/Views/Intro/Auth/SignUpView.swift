@@ -1,25 +1,27 @@
 import SwiftUI
 
 struct SignUpView: View {
-
+    
         // MARK: - Environment
     @Environment(DIContainer.self) private var container
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.locale) private var locale
-
+    
         // MARK: - Bindings
     @Binding var screen: AuthScreen
-
+    
         // MARK: - State
     @Bindable var vm: AuthViewModel
-
+    @State private var showSpecialtiesSheet = false
+    
         // MARK: - Focus
     @FocusState private var focusedField: Field?
     enum Field: Hashable {
         case name, email, password, confirm
         case nationalID
+        case country, governorate
     }
-
+    
         // MARK: - Body
     var body: some View {
         ZStack {
@@ -36,7 +38,7 @@ struct SignUpView: View {
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
                     .padding(.top, 40)
-
+                    
                     VStack(spacing: Spacing.lg) {
                         AppInputField(
                             icon: "person",
@@ -46,7 +48,7 @@ struct SignUpView: View {
                             isFocused: focusedField == .name
                         )
                         .focused($focusedField, equals: .name)
-
+                        
                         AppInputField(
                             icon: "envelope",
                             title: "Email Address",
@@ -56,11 +58,11 @@ struct SignUpView: View {
                             isFocused: focusedField == .email
                         )
                         .focused($focusedField, equals: .email)
-
+                        
                         NationalIDView(nationalID: $vm.nationalID, focusedField: $focusedField)
-
+                        
                         countryAndGovernoratePickers
-
+                        
                         AppInputField(
                             icon: "lock",
                             title: "Password",
@@ -69,7 +71,7 @@ struct SignUpView: View {
                             isFocused: focusedField == .password
                         )
                         .focused($focusedField, equals: .password)
-
+                        
                         AppInputField(
                             icon: "lock.shield",
                             title: "Confirm Password",
@@ -81,14 +83,16 @@ struct SignUpView: View {
                             isFocused: focusedField == .confirm
                         )
                         .focused($focusedField, equals: .confirm)
+                        
+                        specialtiesAndBioButton
                     }
                     .padding(.horizontal)
-
-                    ActionButton(title: "Create Account", systemImage: "plus", tint: .blue, isLoading: vm.isLoading) {
+                    
+                    ActionButton(title: "Create Account", systemImage: "plus.circle", tint: .blue, isLoading: vm.isLoading) {
                         Task { await submit() }
                     }
                     .disabled(!vm.isSignUpFormValid || vm.isLoading)
-
+                    
                     Button {
                         withAnimation(.spring()) { screen = .signIn }
                     } label: {
@@ -106,37 +110,64 @@ struct SignUpView: View {
         .task {
             await vm.loadLookupsIfNeeded()
         }
+        .sheet(isPresented: $showSpecialtiesSheet) {
+            SpecialtiesBioSheet(vm: vm)
+                .appSheetStyle()
+        }
     }
-
+    
         // MARK: - Private Methods
     private func submit() async {
         guard await vm.signUp() else { return }
         container.setAppState(.main)
         container.relaunchRoot()
     }
-
+    
+        // MARK: - Specialties & Bio Entry Point
+    private var specialtiesAndBioButton: some View {
+        Button {
+            showSpecialtiesSheet = true
+        } label: {
+            HStack {
+                Image(systemName: "briefcase.fill")
+                Text(vm.selectedSpecialties.isEmpty
+                     ? "Specialties & Bio (optional)"
+                     : "\(vm.selectedSpecialties.count) specialties selected")
+                Spacer()
+                Image(systemName: "chevron.right")
+            }
+            .font(.subheadline)
+            .foregroundStyle(.accent)
+            .padding()
+        }
+    }
+    
         // MARK: - Country / Governorate Pickers
     @ViewBuilder
     private var countryAndGovernoratePickers: some View {
         VStack(spacing: Spacing.lg) {
-
+            
                 // Country Picker
             AppPickerField(
                 icon: "globe",
                 placeholder: "Select Country",
                 selection: $vm.selectedCountry,
                 options: vm.availableCountries,
-                labelProvider: { $0.label }
+                labelProvider: { $0.label },
+                isFocused: focusedField == .country
             )
-
+            .focused($focusedField, equals: .country)
+            
                 // Governorate Picker
             AppPickerField(
                 icon: "mappin.and.ellipse",
                 placeholder: "Select Governorate",
                 selection: $vm.selectedGovernorate,
                 options: vm.availableGovernorates,
-                labelProvider: { $0.label }
+                labelProvider: { $0.label },
+                isFocused: focusedField == .governorate
             )
+            .focused($focusedField, equals: .governorate)
             .disabled(vm.selectedCountry == nil)
             .opacity(vm.selectedCountry == nil ? 0.5 : 1)
         }

@@ -15,11 +15,13 @@ enum APIConfig {
         return resolved
     }
     
-    static func requestHeaders(accessToken: String, contentType: String? = nil) -> [String: String] {
-        var headers = [
-            "Authorization": "Bearer \(accessToken)",
+    static func requestHeaders(accessToken: String?, contentType: String? = nil) -> [String: String] {
+        var headers: [String: String] = [
             "Accept-Language": LanguageManager.shared.currentLanguage == .arabic ? "ar" : "en",
         ]
+        if let accessToken {
+            headers["Authorization"] = "Bearer \(accessToken)"
+        }
         if let contentType {
             headers["Content-Type"] = contentType
         }

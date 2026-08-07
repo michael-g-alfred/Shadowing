@@ -30,8 +30,6 @@ struct TaskDetailsView: View {
             content
         }
         .task { await vm.loadDetails() }
-        .navigationTitle("Task Details")
-        .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $vm.selectedUserForRatings) { user in
             container.makeRatingsView(userId: user.id, userName: user.displayName)
                 .appSheetStyle()
@@ -198,6 +196,8 @@ struct TaskDetailsView: View {
     private func userRows(for user: UserSummaryModel) -> some View {
         
         AvatarView(profile: user, size: 36, nameLayout: .horizontal)
+            .listRowBackground(Color(.tertiaryLabel))
+            .listRowSeparator(.hidden)
         
         InfoRow(
             title: "Completed Tasks",

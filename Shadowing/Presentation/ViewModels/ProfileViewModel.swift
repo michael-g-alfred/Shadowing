@@ -25,6 +25,14 @@ final class ProfileViewModel {
     var isRatingsPresented = false
     var isSettingsPresented = false
     
+        // MARK: - Avatar Source Selection
+        /// Shows the "Photo Library / Take Photo" confirmation dialog.
+    var isPhotoSourceDialogPresented = false
+        /// Drives presentation of the camera sheet.
+    var isCameraPresented = false
+        /// Drives presentation of the PhotosPicker (library) sheet.
+    var isLibraryPickerPresented = false
+    
         // MARK: - Suspension Countdown
     var suspensionCountdownText: String?
     private nonisolated(unsafe) var countdownTimer: Timer?
@@ -76,6 +84,13 @@ final class ProfileViewModel {
         await uploadAvatar(imageData: data)
     }
     
+        /// Called by CameraPicker's completion closure with the captured JPEG data.
+    func handleCameraCapture(_ data: Data) {
+        Task {
+            await uploadAvatar(imageData: data)
+        }
+    }
+    
     func uploadAvatar(imageData: Data) async {
         guard let userId = user?.id else { return }
         errorMessage = nil
@@ -94,7 +109,7 @@ final class ProfileViewModel {
             }
             AlertCenter.shared.show(responseType: result.type, message: result.message)
         } catch {
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     

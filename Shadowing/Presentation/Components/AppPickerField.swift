@@ -2,14 +2,18 @@ import SwiftUI
 
 struct AppPickerField<T: Hashable>: View {
     
+        // MARK: - Environment
+    @Environment(DIContainer.self) private var container
     @Environment(\.colorScheme) private var colorScheme
     
-    private var backgroundColor: Color {
+        // MARK: - Properties
+    private var backgroundColor: Color? {
         colorScheme == .dark
         ? .accentColor.opacity(0.15)
         : .gray.opacity(0.15)
     }
     
+        // MARK: Config
     let icon: String
     let placeholder: LocalizedStringResource
     @Binding var selection: T?
@@ -19,44 +23,27 @@ struct AppPickerField<T: Hashable>: View {
     var isFocused: Bool = false
     
     var body: some View {
-        Menu {
-            Picker("", selection: $selection) {
+        HStack(spacing: 0) {
+            Image(systemName: icon)
+                .foregroundStyle(iconColor)
+                .frame(width: 30)
+            
+            Picker(placeholder, selection: $selection) {
                 Text(placeholder).tag(T?.none)
                 ForEach(options, id: \.self) { option in
                     Text(labelProvider(option)).tag(Optional(option))
                 }
             }
-        } label: {
-            HStack(spacing: 0) {
-                Image(systemName: icon)
-                    .foregroundStyle(iconColor)
-                    .frame(width: 30, alignment: .leading)
-                
-                Text(selection != nil ? labelProvider(selection!) : String(localized: placeholder))
-                    .foregroundStyle(selection == nil ? .secondary : .primary)
-                
-                Spacer()
-                
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-            .contentShape(Rectangle())
+            .pickerStyle(.menu)
+            .font(.body)
+            .tint(.primary)
+            .labelsHidden()
+            
+            Spacer()
         }
-        .buttonStyle(.plain)
+        .frame(height: 8)
         .padding()
-        .background(backgroundColor)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .strokeBorder(.separator, lineWidth: 1)
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .strokeBorder(.blue, lineWidth: 3)
-                .scaleEffect(isFocused ? 1 : 0.8)
-                .opacity(isFocused ? 1 : 0)
-        }
+        .appGlassCapsule()
         .animation(isFocused ? .spring(response: 0.35, dampingFraction: 0.75) : .none, value: isFocused)
     }
 }

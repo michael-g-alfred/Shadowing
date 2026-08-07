@@ -12,6 +12,8 @@ extension APIConfig {
         let nationalId: String
         let countryId: Int
         let governorateId: Int
+        let bio: String
+        let specialtyIds: [Int]
     }
     
     static func signup(_ body: SignupBody) -> MGRequestConfig {
@@ -19,7 +21,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.signupPath,
             method: .post,
-            headers: ["Content-Type": "application/json"],
+            headers: self.requestHeaders(accessToken: nil),
             body: body
         )
     }
@@ -34,7 +36,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.signinPath,
             method: .post,
-            headers: ["Content-Type": "application/json"],
+            headers: self.requestHeaders(accessToken: nil),
             body: body
         )
     }
@@ -48,7 +50,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.signoutPath,
             method: .post,
-            headers: ["Content-Type": "application/json"],
+            headers: self.requestHeaders(accessToken: nil),
             body: body
         )
     }
@@ -58,7 +60,7 @@ extension APIConfig {
             baseURL: APIEndpoints.baseURL,
             path: APIEndpoints.refreshPath,
             method: .post,
-            headers: ["Content-Type": "application/json"],
+            headers: self.requestHeaders(accessToken: nil),
             body: body
         )
     }

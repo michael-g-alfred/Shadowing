@@ -30,7 +30,7 @@ final class AlertCenter {
         show(type: .warning, message: message)
     }
     
-    func showError(_ error: Error) {
-        show(type: .error, message: error.localizedDescription)
+    func showError(_ error: String) {
+        show(type: .error, message: error)
     }
 }

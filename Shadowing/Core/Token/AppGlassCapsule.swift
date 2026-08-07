@@ -1,15 +1,20 @@
 import SwiftUI
 
 struct AppGlassCapsule: ViewModifier {
+    
+        // MARK: - Environment
+    @Environment(\.colorScheme) private var colorScheme
+    
     var fill: AnyShapeStyle = AnyShapeStyle(.thinMaterial)
     var overlayColor: Color = .accentColor.opacity(0.15)
     var strokeColor: Color = Color(.separator).opacity(0.2)
     var shadowColor: Color = .accentColor.opacity(0.25)
-    var shadowRadius: CGFloat = 0.1
+    var shadowRadius: CGFloat = 1
     var shadowY: CGFloat = 0
     
+    @ViewBuilder
     func body(content: Content) -> some View {
-        content
+        let baseContent = content
             .background(
                 Capsule()
                     .fill(fill)
@@ -18,7 +23,12 @@ struct AppGlassCapsule: ViewModifier {
             )
             .clipShape(Capsule())
             .shadow(color: shadowColor, radius: shadowRadius, x: 0, y: shadowY)
-            .glassEffect()
+        
+        if colorScheme == .dark {
+            baseContent.glassEffect()
+        } else {
+            baseContent
+        }
     }
 }
 
@@ -43,5 +53,3 @@ extension View {
         )
     }
 }
-
-

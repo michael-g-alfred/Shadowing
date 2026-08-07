@@ -88,7 +88,6 @@ struct AddTaskSheet: View {
 
                     if vm.timing == .scheduled {
                         DatePicker("Schedule", selection: $vm.scheduledDate, in: Date()...)
-                            .listRowBackground(Color(.secondarySystemGroupedBackground))
                     }
                 } header: {
                     Text("Task Timing")
@@ -101,53 +100,12 @@ struct AddTaskSheet: View {
                     )) {
                         Label("I need a certain time of day", systemImage: "clock.badge.checkmark")
                     }
-
+                    
                     if vm.isPreferredTimeOfDay {
-                        let columns = [
-                            GridItem(.flexible(), spacing: Spacing.md),
-                            GridItem(.flexible(), spacing: Spacing.md)
-                        ]
-
-                        LazyVGrid(columns: columns, spacing: Spacing.md) {
-                            ForEach(vm.availableTimesOfDay) { time in
-                                let isSelected = vm.preferredTimeOfDay == time
-
-                                Button {
-                                    vm.preferredTimeOfDay = time
-                                } label: {
-                                    VStack(alignment: .leading, spacing: Spacing.sm) {
-                                        HStack {
-                                            Image(systemName: time.icon)
-                                                .font(.title3)
-                                            Spacer()
-                                            if isSelected {
-                                                Image(systemName: "checkmark.circle.fill")
-                                            }
-                                        }
-                                        .foregroundStyle(isSelected ? .white : .accentColor)
-
-                                        VStack(alignment: .leading, spacing: Spacing.xxs) {
-                                            Text(time.label)
-                                                .font(.headline)
-                                                .foregroundStyle(isSelected ? .white : .primary)
-
-                                            Text(time.label)
-                                                .font(.caption)
-                                                .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(Spacing.md)
-                                    .background(
-                                        isSelected ? Color.accentColor : Color.gray.opacity(0.1)
-                                    )
-                                    .cornerRadius(CornerRadius.sm)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.all, Spacing.md)
-                        .listRowBackground(Color(.secondarySystemGroupedBackground))
+                        TimeOfDaySelectionView(
+                            availableTimesOfDay: vm.availableTimesOfDay,
+                            selection: $vm.preferredTimeOfDay
+                        )
                         .listRowInsets(EdgeInsets())
                     }
                 } header: {

@@ -70,7 +70,7 @@ final class DIContainer {
         // MARK: - Shared ViewModels
     
     @ObservationIgnored
-    lazy var lookupStore = LookupStore(lookupRepo: lookupRepository)
+    lazy var lookupStore = LookupStore(lookupRepo: lookupRepository, languageManager: languageManager)
     
     @ObservationIgnored
     lazy var authViewModel = AuthViewModel(authRepo: authRepository, lookupStore: lookupStore)
@@ -115,7 +115,7 @@ final class DIContainer {
         OnboardingViewModel()
     }
     
-        // MARK: - Setup Flow (Language + Mode)
+        // MARK: - Setup Flow
     
     func makeSetupFlowView() -> SetupFlowView {
         SetupFlowView(vm: settingsViewModel) { [weak self] in

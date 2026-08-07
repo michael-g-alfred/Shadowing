@@ -86,7 +86,7 @@ final class RatingSheetViewModel {
                 print("⚠️ Server said (status \(statusCode)): \(bodyString)")
             }
             
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
 }

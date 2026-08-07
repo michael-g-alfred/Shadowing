@@ -113,7 +113,7 @@ final class AddTaskSheetViewModel {
             
         } catch {
             errorMessage = error.localizedDescription
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     

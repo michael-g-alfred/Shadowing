@@ -26,7 +26,6 @@ extension DIContainer {
                                 Label("Delete", systemImage: "trash")
                             }
                             .tint(.red)
-                            .appGlassCapsule()
                         }
                         
                         if task.status == TaskStatus.published.rawValue
@@ -37,7 +36,6 @@ extension DIContainer {
                                 Label("Cancel", systemImage: "xmark.circle")
                             }
                             .tint(.yellow)
-                            .appGlassCapsule()
                         }
                         
                         if task.status == TaskStatus.cancelled.rawValue {
@@ -47,7 +45,6 @@ extension DIContainer {
                                 Label("Publish", systemImage: "square.and.arrow.up.badge.checkmark")
                             }
                             .tint(.blue)
-                            .appGlassCapsule()
                         }
                     }
                 )
@@ -64,7 +61,6 @@ extension DIContainer {
                                 Label("Applicants", systemImage: "person.3.fill")
                             }
                             .tint(.orange)
-                            .appGlassCapsule()
                         }
                         if task.status == TaskStatus.pendingCompleted.rawValue {
                             Button {
@@ -73,7 +69,6 @@ extension DIContainer {
                                 Label("Completed", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
-                            .appGlassCapsule()
                         }
                         
                         if task.status == TaskStatus.inProgress.rawValue
@@ -81,10 +76,9 @@ extension DIContainer {
                             Button {
                                 requesterViewModel.openChat(for: task.id)
                             } label: {
-                                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
+                                Label("Chats", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tint(.blue)
-                            .appGlassCapsule()
                         }
                     }
                 )
@@ -133,7 +127,6 @@ extension DIContainer {
                                 Label("Accept", systemImage: "checkmark.circle")
                             }
                             .tint(.green)
-                            .appGlassCapsule()
                             
                         } else if task.isApplicant {
                             Button {
@@ -142,7 +135,6 @@ extension DIContainer {
                                 Label("Withdraw", systemImage: "arrow.uturn.backward")
                             }
                             .tint(.orange)
-                            .appGlassCapsule()
                         }
                     }
                 )
@@ -171,7 +163,6 @@ extension DIContainer {
                                 Label("Withdraw", systemImage: "arrow.uturn.backward")
                             }
                             .tint(.red)
-                            .appGlassCapsule()
                         }
                     }
                 )
@@ -186,7 +177,6 @@ extension DIContainer {
                                 Label("Done", systemImage: "checkmark.seal")
                             }
                             .tint(.green)
-                            .appGlassCapsule()
                         }
                         
                         if task.status == TaskStatus.inProgress.rawValue
@@ -194,10 +184,9 @@ extension DIContainer {
                             Button {
                                 executorViewModel.openChat(for: task.id)
                             } label: {
-                                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
+                                Label("Chats", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tint(.blue)
-                            .appGlassCapsule()
                         }
                     }
                 )

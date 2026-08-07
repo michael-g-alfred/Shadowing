@@ -54,7 +54,7 @@ struct SignInView: View {
                     }
                     .padding(.horizontal)
                     
-                    ActionButton(title: "Sign In", systemImage: "arrow.right", tint: .blue, isLoading: vm.isLoading, action: {
+                    ActionButton(title: "Sign In", systemImage: "arrow.right.circle", tint: .blue, isLoading: vm.isLoading, action: {
                         Task { await submit() }
                     })
                     .disabled(vm.isLoading)

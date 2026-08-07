@@ -13,6 +13,8 @@ final class AuthViewModel {
     var displayName = ""
     var confirmPassword = ""
     var nationalID: String = ""
+    var bio: String = ""
+    var selectedSpecialties: Set<TaskServiceLookup> = []
     var selectedCountry: CountryLookup? {
         didSet {
             guard oldValue?.id != selectedCountry?.id else { return }
@@ -40,10 +42,13 @@ final class AuthViewModel {
         guard let selectedCountry else { return [] }
         return lookupStore.governorates(for: selectedCountry.id)
     }
+    var availableSpecialties: [TaskServiceLookup] { lookupStore.services }
     
         // MARK: - Validation
     var isSignUpFormValid: Bool {
-        password == confirmPassword && selectedCountry != nil && selectedGovernorate != nil
+        password == confirmPassword
+        && selectedCountry != nil
+        && selectedGovernorate != nil
     }
     
         // MARK: - Actions
@@ -66,7 +71,9 @@ final class AuthViewModel {
                 displayName: self.displayName.trimmingCharacters(in: .whitespacesAndNewlines),
                 nationalId: self.nationalID,
                 countryId: selectedCountry.id,
-                governorateId: selectedGovernorate.id
+                governorateId: selectedGovernorate.id,
+                bio: self.bio.trimmingCharacters(in: .whitespacesAndNewlines),
+                specialtyIds: self.selectedSpecialties.map(\.id)
             )
         }
     }
@@ -78,7 +85,7 @@ final class AuthViewModel {
             try await operation()
             return true
         } catch {
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
             return false
         }
     }

@@ -2,7 +2,7 @@ import SwiftUI
 
 extension Locale {
     var isArabic: Bool {
-        language.languageCode?.identifier == "ar"
+        LanguageManager.shared.currentLanguage == .arabic
     }
 }
 

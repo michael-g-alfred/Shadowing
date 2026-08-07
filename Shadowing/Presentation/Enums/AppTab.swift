@@ -3,7 +3,7 @@ import Foundation
 enum AppTab: String, CaseIterable, Identifiable {
     case map
     case home
-    case chat
+    case chats
     case profile
 
     var id: String { rawValue }
@@ -12,7 +12,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         switch self {
             case .map:      return "Map"
             case .home:     return "Home"
-            case .chat:     return "Chat"
+            case .chats:     return "Chats"
             case .profile:  return "Profile"
         }
     }
@@ -21,7 +21,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         switch self {
             case .map:      return "map"
             case .home:     return "house"
-            case .chat:     return "bubble.left.and.text.bubble.right"
+            case .chats:     return "bubble.left.and.text.bubble.right"
             case .profile:  return "person"
         }
     }

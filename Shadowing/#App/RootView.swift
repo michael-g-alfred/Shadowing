@@ -81,10 +81,6 @@ struct RootView: View {
                     container.makeAdminDashboardView()
             }
         }
-        .environment(\.layoutDirection, container.languageManager.currentLanguage.layoutDirection)
-        .environment(\.locale, container.languageManager.currentLanguage.locale)
-        .id(container.rootID)
-        .id(container.languageManager.currentLanguage)
         .animation(.easeInOut, value: container.appState)
         .responseAlert(
             isPresented: Bindable(AlertCenter.shared).isPresented,

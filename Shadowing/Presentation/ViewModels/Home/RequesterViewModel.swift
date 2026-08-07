@@ -75,7 +75,7 @@ final class RequesterViewModel {
             
             assignResult = result
         } catch {
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
@@ -98,7 +98,7 @@ final class RequesterViewModel {
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await checkPendingRatings()
         } catch {
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
@@ -108,7 +108,7 @@ final class RequesterViewModel {
             requesterPublishedTasks.removeAll { $0.id == task.id }
             AlertCenter.shared.show(responseType: result.type, message: result.message)
         } catch {
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
@@ -118,7 +118,7 @@ final class RequesterViewModel {
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await loadPublishedTasks()
         } catch {
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
@@ -128,7 +128,7 @@ final class RequesterViewModel {
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await loadPublishedTasks()
         } catch {
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
@@ -152,7 +152,7 @@ final class RequesterViewModel {
             selectedTaskApplicants.removeAll { $0.id == applicant.id }
             AlertCenter.shared.show(responseType: result.type, message: result.message)
         } catch {
-            AlertCenter.shared.showError(error)
+            AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     

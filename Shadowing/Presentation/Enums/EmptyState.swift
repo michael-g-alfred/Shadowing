@@ -50,9 +50,9 @@ enum EmptyState: CaseIterable {
             case .noTasks:
                 return "No tasks available. Try\nsearching for something else."
             case .noRequesterPublishedTasks:
-                return "Post your first task and let\nsomeone take care of it for you."
+                return "Post your first task and let someone take care of it for you."
             case .noAvailableTasks:
-                return "Check back soon — new tasks\nare posted all the time."
+                return "Check back soon — new tasks are posted all the time."
             case .noAssignedTasks:
                 return "Tasks you've been assigned will appear here."
             case .noExecutorCompletedTasks, .noRequesterCompletedTasks:
@@ -60,7 +60,7 @@ enum EmptyState: CaseIterable {
             case .noExecutorFavoriteTasks:
                 return "Your favorite tasks will appear here."
             case .noFilteredRequesterTasks:
-                return "No tasks match this filter.\nTry a different status."
+                return "No tasks match this filter. Try a different status."
             case .noChats:
                 return "Active conversations will appear here."
             case .noApplicantsYet:
@@ -109,6 +109,8 @@ enum EmptyState: CaseIterable {
             Label(title, systemImage: systemImage)
         } description: {
             Text(description)
+                .frame(width: 250)
+                .multilineTextAlignment(.center)
         } actions: {
             if self == .noLocationAccess, let settingsAction {
                 Button("Open Settings") {
