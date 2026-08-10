@@ -17,6 +17,40 @@ extension DIContainer {
             leadingSwipe: { [requesterViewModel] task in
                 AnyView(
                     Group {
+                        
+                        if task.status == TaskStatus.published.rawValue
+                            || task.status == TaskStatus.pending.rawValue {
+                            Button {
+                                Task { await requesterViewModel.showApplicants(for: task) }
+                            } label: {
+                                Label("Applicants", systemImage: "person.3.fill")
+                            }
+                            .tint(.orange)
+                        }
+                        if task.status == TaskStatus.pendingCompleted.rawValue {
+                            Button {
+                                Task { await requesterViewModel.confirmTaskCompletion(task) }
+                            } label: {
+                                Label("Completed", systemImage: "checkmark.seal")
+                            }
+                            .tint(.green)
+                        }
+                        
+                        if task.status == TaskStatus.inProgress.rawValue
+                            || task.status == TaskStatus.pendingCompleted.rawValue {
+                            Button {
+                                requesterViewModel.openChat(for: task.id)
+                            } label: {
+                                Label("Chats", systemImage: "bubble.left.and.bubble.right.fill")
+                            }
+                            .tint(.blue)
+                        }
+                    }
+                )
+            },
+            trailingSwipe: { [requesterViewModel] task in
+                AnyView(
+                    Group {
                         if task.status == TaskStatus.published.rawValue
                             || task.status == TaskStatus.pending.rawValue
                             || task.status == TaskStatus.cancelled.rawValue {
@@ -43,40 +77,6 @@ extension DIContainer {
                                 Task { await requesterViewModel.publishTask(task) }
                             } label: {
                                 Label("Publish", systemImage: "square.and.arrow.up.badge.checkmark")
-                            }
-                            .tint(.blue)
-                        }
-                    }
-                )
-            },
-            trailingSwipe: { [requesterViewModel] task in
-                AnyView(
-                    Group {
-                        
-                        if task.status == TaskStatus.published.rawValue
-                            || task.status == TaskStatus.pending.rawValue {
-                            Button {
-                                Task { await requesterViewModel.showApplicants(for: task) }
-                            } label: {
-                                Label("Applicants", systemImage: "person.3.fill")
-                            }
-                            .tint(.orange)
-                        }
-                        if task.status == TaskStatus.pendingCompleted.rawValue {
-                            Button {
-                                Task { await requesterViewModel.confirmTaskCompletion(task) }
-                            } label: {
-                                Label("Completed", systemImage: "checkmark.seal")
-                            }
-                            .tint(.green)
-                        }
-                        
-                        if task.status == TaskStatus.inProgress.rawValue
-                            || task.status == TaskStatus.pendingCompleted.rawValue {
-                            Button {
-                                requesterViewModel.openChat(for: task.id)
-                            } label: {
-                                Label("Chats", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tint(.blue)
                         }
@@ -157,20 +157,6 @@ extension DIContainer {
                 AnyView(
                     Group {
                         if task.status == TaskStatus.inProgress.rawValue {
-                            Button(role: .destructive) {
-                                Task { await executorViewModel.withdrawFromTask(task) }
-                            } label: {
-                                Label("Withdraw", systemImage: "arrow.uturn.backward")
-                            }
-                            .tint(.red)
-                        }
-                    }
-                )
-            },
-            trailingSwipe: { [executorViewModel] task in
-                AnyView(
-                    Group {
-                        if task.status == TaskStatus.inProgress.rawValue {
                             Button(role: .confirm) {
                                 Task { await executorViewModel.markTaskDone(task) }
                             } label: {
@@ -187,6 +173,20 @@ extension DIContainer {
                                 Label("Chats", systemImage: "bubble.left.and.bubble.right.fill")
                             }
                             .tint(.blue)
+                        }
+                    }
+                )
+            },
+            trailingSwipe: { [executorViewModel] task in
+                AnyView(
+                    Group {
+                        if task.status == TaskStatus.inProgress.rawValue {
+                            Button(role: .destructive) {
+                                Task { await executorViewModel.withdrawFromTask(task) }
+                            } label: {
+                                Label("Withdraw", systemImage: "arrow.uturn.backward")
+                            }
+                            .tint(.red)
                         }
                     }
                 )

@@ -3,8 +3,12 @@ import SwiftUI
     // MARK: - App Sheet Style Modifier
 
 struct AppSheetStyle: ViewModifier {
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
+        // MARK: - Environment
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.colorScheme) private var colorScheme
+
+        // MARK: - Properties
     var detents: Set<PresentationDetent> = [.fraction(0.75)]
     var interactiveDismissDisabled: Bool = false
     
@@ -18,7 +22,7 @@ struct AppSheetStyle: ViewModifier {
             .presentationDetents(detents)
             .presentationDragIndicator(.visible)
             .presentationBackground {
-                AppBackground()
+                colorScheme == .dark ? AppBackground() : nil
             }
             .interactiveDismissDisabled(interactiveDismissDisabled)
             .presentationCompactAdaptation(compactAdaptation)

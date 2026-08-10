@@ -1,42 +1,15 @@
 import SwiftUI
 
+// MARK: - Container
+
 struct LanguageSetupView: View {
     @Bindable var vm: SettingsViewModel
-    
+
     var body: some View {
-        ZStack {
-            AppBackground()
-            
+        ScreenContainer {
             VStack(spacing: Spacing.xxl) {
-                
-                    // MARK: - Header
-                SetupHeaderView(
-                    icon: "globe",
-                    title: vm.greetings[vm.currentGreetingIndex],
-                    subtitle: vm.currentLanguage == .arabic
-                        ? "اختر لغتك المفضلـة للمتابعة"
-                        : "Choose your preferred language to continue"
-                )
-                .id(vm.currentGreetingIndex)
-                .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                .padding(.top, Spacing.xl)
-                
-                    // MARK: - Language Options
-                VStack(spacing: Spacing.sm) {
-                    ForEach(AppLanguage.allCases) { language in
-                        SetupOptionCard(
-                            icon: language == .arabic ? "text.justify.right" : "text.justify.left",
-                            title: language.title,
-                            isSelected: vm.currentLanguage == language
-                        ) {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                                vm.setLanguage(language)
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal)
-                
+                LanguageSetupHeader(vm: vm)
+                LanguageOptionsList(vm: vm)
                 Spacer()
             }
         }
@@ -51,7 +24,50 @@ struct LanguageSetupView: View {
     }
 }
 
-    // MARK: - Previews
+// MARK: - Header
+
+private struct LanguageSetupHeader: View {
+    let vm: SettingsViewModel
+
+    var body: some View {
+        SetupHeaderView(
+            icon: "globe",
+            title: vm.greetings[vm.currentGreetingIndex],
+            subtitle: vm.currentLanguage == .arabic
+                ? "اختر لغتك المفضلـة للمتابعة"
+                : "Choose your preferred language to continue"
+        )
+        .id(vm.currentGreetingIndex)
+        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+        .padding(.top, Spacing.xl)
+    }
+}
+
+// MARK: - Options
+
+private struct LanguageOptionsList: View {
+    let vm: SettingsViewModel
+
+    var body: some View {
+        VStack(spacing: Spacing.sm) {
+            ForEach(AppLanguage.allCases) { language in
+                SetupOptionCard(
+                    icon: language == .arabic ? "text.justify.right" : "text.justify.left",
+                    title: language.title,
+                    isSelected: vm.currentLanguage == language
+                ) {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                        vm.setLanguage(language)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - Previews
+
 #Preview("Language Setup - Light") {
     LanguageSetupView(
         vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared, appearanceManager: .shared)

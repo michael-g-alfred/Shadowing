@@ -1,108 +1,38 @@
 import SwiftUI
 
+// MARK: - Container
+
 struct SignUpView: View {
-    
-        // MARK: - Environment
+
+    // MARK: Environment
     @Environment(DIContainer.self) private var container
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.locale) private var locale
-    
-        // MARK: - Bindings
+
+    // MARK: Bindings
     @Binding var screen: AuthScreen
-    
-        // MARK: - State
+
+    // MARK: State
     @Bindable var vm: AuthViewModel
     @State private var showSpecialtiesSheet = false
-    
-        // MARK: - Focus
-    @FocusState private var focusedField: Field?
-    enum Field: Hashable {
-        case name, email, password, confirm
-        case nationalID
-        case country, governorate
-    }
-    
-        // MARK: - Body
+
+    // MARK: Focus
+    @FocusState private var focusedField: SignUpField?
+
+    // MARK: Body
     var body: some View {
-        ZStack {
-            AppBackground()
+        ScreenContainer {
             ScrollView {
                 VStack(spacing: Spacing.xxl) {
-                    VStack(spacing: Spacing.md) {
-                        
-                        AppIcon(icon: "person.crop.circle.fill.badge.plus")
-                        
-                        Text("Create Account").font(.largeTitle.bold())
-                        
-                        Text("Join us today and start your experience")
-                            .font(.subheadline).foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 40)
-                    
-                    VStack(spacing: Spacing.lg) {
-                        AppInputField(
-                            icon: "person",
-                            title: "Full Name",
-                            text: $vm.displayName,
-                            textContentType: .name,
-                            isFocused: focusedField == .name
-                        )
-                        .focused($focusedField, equals: .name)
-                        
-                        AppInputField(
-                            icon: "envelope",
-                            title: "Email Address",
-                            text: $vm.email,
-                            keyboardType: .emailAddress,
-                            textContentType: .emailAddress,
-                            isFocused: focusedField == .email
-                        )
-                        .focused($focusedField, equals: .email)
-                        
-                        NationalIDView(nationalID: $vm.nationalID, focusedField: $focusedField)
-                        
-                        countryAndGovernoratePickers
-                        
-                        AppInputField(
-                            icon: "lock",
-                            title: "Password",
-                            text: $vm.password,
-                            isSecure: true,
-                            isFocused: focusedField == .password
-                        )
-                        .focused($focusedField, equals: .password)
-                        
-                        AppInputField(
-                            icon: "lock.shield",
-                            title: "Confirm Password",
-                            text: $vm.confirmPassword,
-                            iconColor: vm.confirmPassword.isEmpty
-                            ? .blue
-                            : (vm.password == vm.confirmPassword ? .green : .red),
-                            isSecure: true,
-                            isFocused: focusedField == .confirm
-                        )
-                        .focused($focusedField, equals: .confirm)
-                        
-                        specialtiesAndBioButton
-                    }
+                    SignUpHeader()
+                    SignUpFormFields(
+                        vm: vm,
+                        focusedField: $focusedField,
+                        showSpecialtiesSheet: $showSpecialtiesSheet
+                    )
                     .padding(.horizontal)
-                    
-                    ActionButton(title: "Create Account", systemImage: "plus.circle", tint: .blue, isLoading: vm.isLoading) {
+                    SignUpSubmitButton(vm: vm) {
                         Task { await submit() }
                     }
-                    .disabled(!vm.isSignUpFormValid || vm.isLoading)
-                    
-                    Button {
-                        withAnimation(.spring()) { screen = .signIn }
-                    } label: {
-                        HStack {
-                            Text("Already have an account?").foregroundStyle(.blue.opacity(0.75))
-                            Text("Sign In").fontWeight(.bold).foregroundStyle(.blue)
-                        }
-                        .font(.footnote)
-                    }
-                    .padding(.bottom)
+                    SignUpSwitchToSignInButton(screen: $screen)
                 }
             }
             .navigationBarHidden(true)
@@ -115,16 +45,137 @@ struct SignUpView: View {
                 .appSheetStyle()
         }
     }
-    
-        // MARK: - Private Methods
+
+    // MARK: Private Methods
     private func submit() async {
         guard await vm.signUp() else { return }
         container.setAppState(.main)
         container.relaunchRoot()
     }
-    
-        // MARK: - Specialties & Bio Entry Point
-    private var specialtiesAndBioButton: some View {
+}
+
+// MARK: - Focus
+
+enum SignUpField: Hashable {
+    case name, email, password, confirm
+    case nationalID
+    case country, governorate
+}
+
+// MARK: - Header
+
+private struct SignUpHeader: View {
+    var body: some View {
+        VStack(spacing: Spacing.md) {
+            AppIcon(icon: "person.crop.circle.fill.badge.plus")
+
+            Text("Create Account").font(.largeTitle.bold())
+
+            Text("Join us today and start your experience")
+                .font(.subheadline).foregroundStyle(.secondary)
+        }
+        .padding(.top, 40)
+    }
+}
+
+// MARK: - Form Fields
+
+private struct SignUpFormFields: View {
+    @Bindable var vm: AuthViewModel
+    var focusedField: FocusState<SignUpField?>.Binding
+    @Binding var showSpecialtiesSheet: Bool
+
+    var body: some View {
+        VStack(spacing: Spacing.lg) {
+            AppInputField(
+                icon: "person",
+                title: "Full Name",
+                text: $vm.displayName,
+                textContentType: .name,
+                isFocused: focusedField.wrappedValue == .name
+            )
+            .focused(focusedField, equals: .name)
+
+            AppInputField(
+                icon: "envelope",
+                title: "Email Address",
+                text: $vm.email,
+                keyboardType: .emailAddress,
+                textContentType: .emailAddress,
+                isFocused: focusedField.wrappedValue == .email
+            )
+            .focused(focusedField, equals: .email)
+
+            NationalIDView(nationalID: $vm.nationalID, focusedField: focusedField)
+
+            SignUpLocationPickers(vm: vm, focusedField: focusedField)
+
+            AppInputField(
+                icon: "lock",
+                title: "Password",
+                text: $vm.password,
+                isSecure: true,
+                isFocused: focusedField.wrappedValue == .password
+            )
+            .focused(focusedField, equals: .password)
+
+            AppInputField(
+                icon: "lock.shield",
+                title: "Confirm Password",
+                text: $vm.confirmPassword,
+                iconColor: vm.confirmPassword.isEmpty
+                ? .blue
+                : (vm.password == vm.confirmPassword ? .green : .red),
+                isSecure: true,
+                isFocused: focusedField.wrappedValue == .confirm
+            )
+            .focused(focusedField, equals: .confirm)
+
+            SignUpSpecialtiesButton(vm: vm, showSpecialtiesSheet: $showSpecialtiesSheet)
+        }
+    }
+}
+
+// MARK: - Location Pickers
+
+private struct SignUpLocationPickers: View {
+    @Bindable var vm: AuthViewModel
+    var focusedField: FocusState<SignUpField?>.Binding
+
+    var body: some View {
+        VStack(spacing: Spacing.lg) {
+            AppPickerField(
+                icon: "globe",
+                placeholder: "Select Country",
+                selection: $vm.selectedCountry,
+                options: vm.availableCountries,
+                labelProvider: { $0.label },
+                isFocused: focusedField.wrappedValue == .country
+            )
+            .focused(focusedField, equals: .country)
+
+            AppPickerField(
+                icon: "mappin.and.ellipse",
+                placeholder: "Select Governorate",
+                selection: $vm.selectedGovernorate,
+                options: vm.availableGovernorates,
+                labelProvider: { $0.label },
+                isFocused: focusedField.wrappedValue == .governorate
+            )
+            .focused(focusedField, equals: .governorate)
+            .disabled(vm.selectedCountry == nil)
+            .opacity(vm.selectedCountry == nil ? 0.5 : 1)
+        }
+    }
+}
+
+// MARK: - Specialties Entry Point
+
+private struct SignUpSpecialtiesButton: View {
+    let vm: AuthViewModel
+    @Binding var showSpecialtiesSheet: Bool
+
+    var body: some View {
         Button {
             showSpecialtiesSheet = true
         } label: {
@@ -141,35 +192,35 @@ struct SignUpView: View {
             .padding()
         }
     }
-    
-        // MARK: - Country / Governorate Pickers
-    @ViewBuilder
-    private var countryAndGovernoratePickers: some View {
-        VStack(spacing: Spacing.lg) {
-            
-                // Country Picker
-            AppPickerField(
-                icon: "globe",
-                placeholder: "Select Country",
-                selection: $vm.selectedCountry,
-                options: vm.availableCountries,
-                labelProvider: { $0.label },
-                isFocused: focusedField == .country
-            )
-            .focused($focusedField, equals: .country)
-            
-                // Governorate Picker
-            AppPickerField(
-                icon: "mappin.and.ellipse",
-                placeholder: "Select Governorate",
-                selection: $vm.selectedGovernorate,
-                options: vm.availableGovernorates,
-                labelProvider: { $0.label },
-                isFocused: focusedField == .governorate
-            )
-            .focused($focusedField, equals: .governorate)
-            .disabled(vm.selectedCountry == nil)
-            .opacity(vm.selectedCountry == nil ? 0.5 : 1)
+}
+
+// MARK: - Submit
+
+private struct SignUpSubmitButton: View {
+    let vm: AuthViewModel
+    let action: () -> Void
+
+    var body: some View {
+        ActionButton(title: "Create Account", systemImage: "plus.circle", tint: .blue, isLoading: vm.isLoading, action: action)
+            .disabled(!vm.isSignUpFormValid || vm.isLoading)
+    }
+}
+
+// MARK: - Switch Screen
+
+private struct SignUpSwitchToSignInButton: View {
+    @Binding var screen: AuthScreen
+
+    var body: some View {
+        Button {
+            withAnimation(.spring()) { screen = .signIn }
+        } label: {
+            HStack {
+                Text("Already have an account?").foregroundStyle(.blue.opacity(0.75))
+                Text("Sign In").fontWeight(.bold).foregroundStyle(.blue)
+            }
+            .font(.footnote)
         }
+        .padding(.bottom)
     }
 }

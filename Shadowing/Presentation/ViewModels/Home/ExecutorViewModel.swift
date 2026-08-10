@@ -38,11 +38,46 @@ final class ExecutorViewModel {
     
     private let taskRepo: TaskRepositoryProtocol
     private let chatRepo: ChatRepositoryProtocol
+    private let notificationRepo: NotificationRepositoryProtocol
+    private let authRepo: AuthRepositoryProtocol
     
         // Applied sheet state
     var showAppliedSheet: Bool = false
     var selectedTaskForApply: TaskModel?
     var isApplying = false
+    
+        // MARK: - Fee Confirmation Alert (10% platform fee)
+    
+        /// Percentage withheld from the displayed budget before payout.
+    private let platformFeeRate: Double = 0.10
+    
+    var showFeeConfirmationAlert: Bool = false
+    private var pendingApplyTask: TaskModel?
+    private var pendingApplyBudget: Double?
+    
+        /// The budget amount currently being confirmed (proposed budget if set, otherwise the task's budget).
+    var feeConfirmationGrossAmount: Double {
+        pendingApplyBudget ?? pendingApplyTask?.budget ?? 0
+    }
+    
+        /// Net amount the executor will actually receive after the platform fee.
+    var feeConfirmationNetAmount: Double {
+        feeConfirmationGrossAmount * (1 - platformFeeRate)
+    }
+    
+    var feeConfirmationMessage: String {
+        let gross = formattedCurrency(feeConfirmationGrossAmount)
+        let net = formattedCurrency(feeConfirmationNetAmount)
+        return "A 10% platform fee will be deducted from the offered amount (\(gross)). You'll actually receive \(net)."
+    }
+    
+    private func formattedCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 2
+        formatter.minimumFractionDigits = 0
+        return formatter.string(from: NSNumber(value: value)) ?? String(format: "%.2f", value)
+    }
     
         // MARK: - Rating Queue
     
@@ -56,9 +91,16 @@ final class ExecutorViewModel {
     
     var selectedChatTaskId: String?
     
-    init(taskRepo: TaskRepositoryProtocol, chatRepo: ChatRepositoryProtocol) {
+    init(
+        taskRepo: TaskRepositoryProtocol,
+        chatRepo: ChatRepositoryProtocol,
+        notificationRepo: NotificationRepositoryProtocol,
+        authRepo: AuthRepositoryProtocol
+    ) {
         self.taskRepo = taskRepo
         self.chatRepo = chatRepo
+        self.notificationRepo = notificationRepo
+        self.authRepo = authRepo
     }
     
     func beginApply(to task: TaskModel) {
@@ -72,6 +114,34 @@ final class ExecutorViewModel {
     
         // MARK: - Task Actions
     
+        /// Call this from the "Apply" button instead of `acceptTask(_:proposedBudget:)` directly.
+        /// It shows a confirmation alert with the net payout (after the platform fee) before submitting.
+    func requestApply(to task: TaskModel, proposedBudget: Double? = nil) {
+        pendingApplyTask = task
+        pendingApplyBudget = proposedBudget
+            // Close the applied sheet first — an alert on the parent view won't
+            // show while this sheet is still presented on top of it.
+        showAppliedSheet = false
+        showFeeConfirmationAlert = true
+    }
+    
+        /// Called when the user confirms the fee alert. Proceeds with the actual application.
+    func confirmApply() async {
+        guard let task = pendingApplyTask else { return }
+        let budget = pendingApplyBudget
+        showFeeConfirmationAlert = false
+        pendingApplyTask = nil
+        pendingApplyBudget = nil
+        await acceptTask(task, proposedBudget: budget)
+    }
+    
+        /// Called when the user cancels the fee alert.
+    func cancelApply() {
+        showFeeConfirmationAlert = false
+        pendingApplyTask = nil
+        pendingApplyBudget = nil
+    }
+    
     func acceptTask(_ task: TaskModel, proposedBudget: Double? = nil) async {
         isApplying = true
         defer { isApplying = false }
@@ -81,6 +151,7 @@ final class ExecutorViewModel {
             showAppliedSheet = false
             selectedTaskForApply = nil
             AlertCenter.shared.show(responseType: result.type, message: result.message)
+            await notifyRequesterOfApplication(for: task)
             await loadAvailableTasks()
         } catch {
             AlertCenter.shared.showError(error.localizedDescription)
@@ -97,6 +168,8 @@ final class ExecutorViewModel {
                 AlertCenter.shared.show(responseType: result.type, message: result.message)
             }
             
+            await notifyRequesterOfWithdrawal(from: task)
+            
             if task.status == TaskStatus.inProgress.rawValue {
                 try? await chatRepo.deleteChat(taskId: task.id)
                 await loadAssignedTasks()
@@ -112,6 +185,7 @@ final class ExecutorViewModel {
         do {
             let result = try await taskRepo.markTaskDone(id: task.id)
             AlertCenter.shared.show(responseType: result.type, message: result.message)
+            await notifyRequesterOfMarkDone(for: task)
             await loadAssignedTasks()
         } catch {
             AlertCenter.shared.showError(error.localizedDescription)
@@ -316,6 +390,44 @@ final class ExecutorViewModel {
     
     func openChat(for taskId: String) {
         self.selectedChatTaskId = taskId
+    }
+    
+        // MARK: - Notifications
+        /// Fire-and-forget: a failed notification send should never block or
+        /// roll back the task action that triggered it, so failures are swallowed.
+    
+    private var currentUserDisplayName: String {
+        authRepo.currentUser?.displayName ?? "Someone"
+    }
+    
+    private func notifyRequesterOfApplication(for task: TaskModel) async {
+        try? await notificationRepo.send(
+            to: task.requester.id,
+            type: .taskApplied,
+            title: "New applicant",
+            body: "\(currentUserDisplayName) applied to your task \"\(task.title)\"",
+            taskId: task.id
+        )
+    }
+    
+    private func notifyRequesterOfWithdrawal(from task: TaskModel) async {
+        try? await notificationRepo.send(
+            to: task.requester.id,
+            type: .taskWithdrawn,
+            title: "Executor withdrew",
+            body: "\(currentUserDisplayName) withdrew from your task \"\(task.title)\"",
+            taskId: task.id
+        )
+    }
+    
+    private func notifyRequesterOfMarkDone(for task: TaskModel) async {
+        try? await notificationRepo.send(
+            to: task.requester.id,
+            type: .taskCompleted,
+            title: "Task marked as done",
+            body: "\(currentUserDisplayName) marked \"\(task.title)\" as done — please confirm completion",
+            taskId: task.id
+        )
     }
     
         // MARK: - Helpers

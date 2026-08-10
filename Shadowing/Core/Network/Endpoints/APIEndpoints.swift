@@ -41,6 +41,9 @@ enum APIEndpoints {
     static func userAvatarPath(id: String) -> String {
         return userRoute + "/\(id)/avatar"
     }
+    static func usersBySpecialtyPath(serviceId: Int) -> String {
+        return userRoute + "/by-specialty/\(serviceId)"
+    }
     
         // MARK: - Shared Tasks
     static func taskDetailsPath(id: String) -> String {

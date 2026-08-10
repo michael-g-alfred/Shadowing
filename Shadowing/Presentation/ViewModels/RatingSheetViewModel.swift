@@ -3,15 +3,22 @@ import Observation
 import MGNetworkingKit
 
 enum RatingTarget {
-    case executor(displayName: String)
-    case requester(displayName: String)
+    case executor(userId: String, displayName: String)
+    case requester(userId: String, displayName: String)
     
     var personTitle: LocalizedStringResource {
         switch self {
-            case .executor(let displayName):
+            case .executor(_, let displayName):
                 return "\(displayName)"
-            case .requester(let displayName):
+            case .requester(_, let displayName):
                 return "\(displayName)"
+        }
+    }
+    
+    var userId: String {
+        switch self {
+            case .executor(let userId, _): return userId
+            case .requester(let userId, _): return userId
         }
     }
 }
@@ -31,12 +38,23 @@ final class RatingSheetViewModel {
     private(set) var didSubmit = false
     
     private let taskRepo: TaskRepositoryProtocol
+    private let notificationRepo: NotificationRepositoryProtocol
+    private let authRepo: AuthRepositoryProtocol
     
-    init(taskId: String, taskTitle: String, target: RatingTarget, taskRepo: TaskRepositoryProtocol) {
+    init(
+        taskId: String,
+        taskTitle: String,
+        target: RatingTarget,
+        taskRepo: TaskRepositoryProtocol,
+        notificationRepo: NotificationRepositoryProtocol,
+        authRepo: AuthRepositoryProtocol
+    ) {
         self.taskId = taskId
         self.taskTitle = taskTitle
         self.target = target
         self.taskRepo = taskRepo
+        self.notificationRepo = notificationRepo
+        self.authRepo = authRepo
     }
     
     private var trimmedComment: String {
@@ -78,6 +96,7 @@ final class RatingSheetViewModel {
             }
             didSubmit = true
             AlertCenter.shared.show(responseType: result.type, message: result.message)
+            await notifyTargetOfRating()
         } catch {
             print("⚠️ Rating submit failed — taskId: \(taskId), target: \(target), error: \(error)")
             
@@ -88,5 +107,20 @@ final class RatingSheetViewModel {
             
             AlertCenter.shared.showError(error.localizedDescription)
         }
+    }
+    
+        // MARK: - Notifications
+        /// Fire-and-forget: a failed notification send should never block or
+        /// roll back the rating that was just submitted, so failures are swallowed.
+    
+    private func notifyTargetOfRating() async {
+        let raterName = authRepo.currentUser?.displayName ?? "Someone"
+        try? await notificationRepo.send(
+            to: target.userId,
+            type: .ratingReceived,
+            title: "New rating",
+            body: "\(raterName) rated you \(rating) star\(rating == 1 ? "" : "s") for \"\(taskTitle)\"",
+            taskId: taskId
+        )
     }
 }

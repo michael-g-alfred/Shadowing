@@ -8,7 +8,7 @@ final class DIContainer {
     
         // MARK: - App State
     @ObservationIgnored
-    @AppStorage("appState") var appState: AppState = .onboarding
+    @AppStorage("appState") var appState: AppState = .setup
     
     var rootID = UUID()
     
@@ -67,6 +67,12 @@ final class DIContainer {
         network: networkService
     )
     
+    @ObservationIgnored
+    private(set) lazy var notificationRepository: NotificationRepositoryProtocol = NotificationRepository()
+    
+    @ObservationIgnored
+    private(set) lazy var notificationService: NotificationServiceProtocol = NotificationService()
+    
         // MARK: - Shared ViewModels
     
     @ObservationIgnored
@@ -79,17 +85,31 @@ final class DIContainer {
     lazy var requesterViewModel = RequesterViewModel(
         taskRepo: taskRepository,
         chatRepo: chatRepository,
-        userRepo: userRepository
+        userRepo: userRepository,
+        notificationRepo: notificationRepository,
+        authRepo: authRepository
     )
     
     @ObservationIgnored
-    lazy var executorViewModel = ExecutorViewModel(taskRepo: taskRepository, chatRepo: chatRepository)
+    lazy var executorViewModel = ExecutorViewModel(
+        taskRepo: taskRepository,
+        chatRepo: chatRepository,
+        notificationRepo: notificationRepository,
+        authRepo: authRepository
+    )
     
     @ObservationIgnored
     lazy var chatViewModel = ChatViewModel(
         authRepo: authRepository,
         userRepo: userRepository,
         chatRepo: chatRepository
+    )
+    
+    @ObservationIgnored
+    lazy var notificationViewModel = NotificationViewModel(
+        notificationRepo: notificationRepository,
+        notificationService: notificationService,
+        authRepo: authRepository
     )
     
     @ObservationIgnored
@@ -119,7 +139,7 @@ final class DIContainer {
     
     func makeSetupFlowView() -> SetupFlowView {
         SetupFlowView(vm: settingsViewModel) { [weak self] in
-            self?.setAppState(.auth)
+            self?.setAppState(.onboarding)
             self?.relaunchRoot()
         }
     }
@@ -225,6 +245,12 @@ final class DIContainer {
         MapViewModel(taskRepo: taskRepository)
     }
     
+        // MARK: - Notifications
+    
+    func makeNotificationView() -> NotificationView {
+        NotificationView(vm: notificationViewModel)
+    }
+    
         // MARK: - Chat
     
     func makeChatView() -> ChatView {
@@ -252,6 +278,7 @@ final class DIContainer {
     func makeAddTaskViewModel() -> AddTaskSheetViewModel {
         AddTaskSheetViewModel(
             taskRepo: taskRepository,
+            userRepo: userRepository,
             locationService: locationService,
             lookupStore: lookupStore,
             onTaskAdded: { [weak requesterViewModel = requesterViewModel] in
@@ -273,7 +300,14 @@ final class DIContainer {
     }
     
     func makeRatingViewModel(taskId: String, taskTitle: String, target: RatingTarget) -> RatingSheetViewModel {
-        RatingSheetViewModel(taskId: taskId, taskTitle: taskTitle, target: target, taskRepo: taskRepository)
+        RatingSheetViewModel(
+            taskId: taskId,
+            taskTitle: taskTitle,
+            target: target,
+            taskRepo: taskRepository,
+            notificationRepo: notificationRepository,
+            authRepo: authRepository
+        )
     }
     
         // MARK: - Ratings
@@ -305,10 +339,11 @@ final class DIContainer {
         // MARK: - User
     
     func makeUserView(userId: String) -> UserView {
-        UserView(userId: userId, vm: makeUserViewModel(userId: userId))
+        UserView(vm: makeUserViewModel(userId: userId))
     }
     
     func makeUserViewModel(userId: String) -> UserViewModel {
         UserViewModel(userId: userId, userRepo: userRepository)
     }
+    
 }

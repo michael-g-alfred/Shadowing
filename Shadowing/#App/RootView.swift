@@ -21,14 +21,14 @@ struct RootView: View {
         if let task = container.executorViewModel.currentRatingTask {
             return PendingRating(
                 task: task,
-                target: .requester(displayName: task.requester.displayName),
+                target: .requester(userId: task.requester.id, displayName: task.requester.displayName),
                 source: .executor
             )
         }
         if let task = container.requesterViewModel.currentRatingTask {
             return PendingRating(
                 task: task,
-                target: .executor(displayName: task.executor?.displayName ?? ""),
+                target: .executor(userId: task.executor?.id ?? "", displayName: task.executor?.displayName ?? ""),
                 source: .requester
             )
         }
@@ -51,7 +51,6 @@ struct RootView: View {
                     container.makeMainView()
                         .task {
                             CLLocationServiceImpl().requestLocation()
-                            container.chatViewModel.listenToConversations()
                         }
                         .sheet(item: Binding(
                             get: { pendingRating },

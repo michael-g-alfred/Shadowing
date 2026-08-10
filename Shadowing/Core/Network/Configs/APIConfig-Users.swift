@@ -63,4 +63,16 @@ extension APIConfig {
             headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
+    
+    static func usersBySpecialty(serviceId: Int, limit: Int? = nil, accessToken: String) -> MGRequestConfig {
+        MGRequestConfig(
+            baseURL: APIEndpoints.baseURL,
+            path: APIEndpoints.usersBySpecialtyPath(serviceId: serviceId),
+            method: .get,
+            queryItems: Self.queryItems([
+                ("limit", limit.map(String.init))
+            ]),
+            headers: Self.requestHeaders(accessToken: accessToken)
+        )
+    }
 }

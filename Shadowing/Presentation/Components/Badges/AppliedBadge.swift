@@ -1,6 +1,13 @@
 import SwiftUI
 
 struct AppliedBadge: View {
+    
+        // MARK: - Environment
+    @Environment(\.colorScheme) private var colorScheme
+    
+        // MARK: - Properties
+    var darkMode: Bool { colorScheme == .dark }
+    
     var body: some View {
         HStack(spacing: 4) {
             Circle()
@@ -11,12 +18,13 @@ struct AppliedBadge: View {
                 .font(.caption2)
                 .fontWeight(.bold)
                 .foregroundStyle(.white)
+                .fixedSize(horizontal: true, vertical: false)
         }
         .padding(.horizontal, 6).padding(.vertical, 4)
         .appGlassCapsule(
-            overlayColor: .green.opacity(0.1),
-            strokeColor: .green.opacity(0.05),
-            shadowColor: .green.opacity(0.05)
+            overlayColor: darkMode ? .green.opacity(0.1) : .green.opacity(0.2),
+            strokeColor: darkMode ? .green.opacity(0.05) : .green,
+            shadowColor: darkMode ? .green.opacity(0.05) : .green.opacity(0.1)
         )
     }
 }

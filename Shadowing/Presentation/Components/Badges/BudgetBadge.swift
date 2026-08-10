@@ -5,8 +5,10 @@ struct BudgetBadge: View {
     
         // MARK: - Environment
     @Environment(DIContainer.self) private var container
+    @Environment(\.colorScheme) private var colorScheme
     
         // MARK: - Properties
+    var darkMode: Bool { colorScheme == .dark }
     let task: TaskModel
     
         // MARK: - Lookup-resolved value
@@ -20,10 +22,11 @@ struct BudgetBadge: View {
         Text(task.budget.formatted(.currency(code: task.currency)))
             .font(.caption2).fontWeight(.bold).foregroundStyle(priorityColor)
             .padding(.horizontal, 6).padding(.vertical, 4)
+            .fixedSize(horizontal: true, vertical: false)
             .appGlassCapsule(
-                overlayColor: priorityColor.opacity(0.1),
-                strokeColor: priorityColor.opacity(0.05),
-                shadowColor: priorityColor.opacity(0.05)
+                overlayColor: darkMode ? priorityColor.opacity(0.1) : priorityColor.opacity(0.2),
+                strokeColor: darkMode ? priorityColor.opacity(0.05) : priorityColor,
+                shadowColor: darkMode ? priorityColor.opacity(0.05) : priorityColor.opacity(0.1)
             )
     }
 }

@@ -51,11 +51,21 @@ final class RequesterViewModel {
     private let taskRepo: TaskRepositoryProtocol
     private let chatRepo: ChatRepositoryProtocol
     private let userRepo: UserRepositoryProtocol
+    private let notificationRepo: NotificationRepositoryProtocol
+    private let authRepo: AuthRepositoryProtocol
     
-    init(taskRepo: TaskRepositoryProtocol, chatRepo: ChatRepositoryProtocol, userRepo: UserRepositoryProtocol) {
+    init(
+        taskRepo: TaskRepositoryProtocol,
+        chatRepo: ChatRepositoryProtocol,
+        userRepo: UserRepositoryProtocol,
+        notificationRepo: NotificationRepositoryProtocol,
+        authRepo: AuthRepositoryProtocol
+    ) {
         self.taskRepo = taskRepo
         self.chatRepo = chatRepo
         self.userRepo = userRepo
+        self.notificationRepo = notificationRepo
+        self.authRepo = authRepo
     }
     
     func select(_ tab: RequesterTab) {
@@ -72,6 +82,8 @@ final class RequesterViewModel {
             
             let requesterId = task.requester.id
             try await chatRepo.createChat(taskId: task.id, requesterId: requesterId, executorId: applicant.id)
+            
+            await notifyExecutorOfAssignment(applicant, for: task)
             
             assignResult = result
         } catch {
@@ -96,6 +108,7 @@ final class RequesterViewModel {
             try await chatRepo.deleteChat(taskId: task.id)
             requesterPublishedTasks.removeAll { $0.id == task.id }
             AlertCenter.shared.show(responseType: result.type, message: result.message)
+            await notifyExecutorOfConfirmation(for: task)
             await checkPendingRatings()
         } catch {
             AlertCenter.shared.showError(error.localizedDescription)
@@ -116,6 +129,7 @@ final class RequesterViewModel {
         do {
             let result = try await taskRepo.cancelTask(id: task.id)
             AlertCenter.shared.show(responseType: result.type, message: result.message)
+            await notifyExecutorOfCancellation(for: task)
             await loadPublishedTasks()
         } catch {
             AlertCenter.shared.showError(error.localizedDescription)
@@ -151,6 +165,7 @@ final class RequesterViewModel {
             let result = try await taskRepo.declineApplicant(taskId: task.id, applicantId: applicant.id)
             selectedTaskApplicants.removeAll { $0.id == applicant.id }
             AlertCenter.shared.show(responseType: result.type, message: result.message)
+            await notifyApplicantOfDecline(applicant, for: task)
         } catch {
             AlertCenter.shared.showError(error.localizedDescription)
         }
@@ -278,6 +293,58 @@ final class RequesterViewModel {
     
     func openChat(for taskId: String) {
         self.selectedChatTaskId = taskId
+    }
+    
+        // MARK: - Notifications
+        /// Fire-and-forget: a failed notification send should never block or
+        /// roll back the task action that triggered it, so failures are swallowed.
+    
+    private var currentUserDisplayName: String {
+        authRepo.currentUser?.displayName ?? "Someone"
+    }
+    
+    private func notifyExecutorOfAssignment(_ applicant: ApplicantModel, for task: TaskModel) async {
+        try? await notificationRepo.send(
+            to: applicant.id,
+            type: .taskAccepted,
+            title: "You're assigned!",
+            body: "\(currentUserDisplayName) assigned you to \"\(task.title)\"",
+            taskId: task.id
+        )
+    }
+    
+    private func notifyExecutorOfConfirmation(for task: TaskModel) async {
+        guard let executorId = task.executor?.id else { return }
+        try? await notificationRepo.send(
+            to: executorId,
+            type: .taskConfirmed,
+            title: "Task confirmed!",
+            body: "\(currentUserDisplayName) confirmed completion of \"\(task.title)\"",
+            taskId: task.id
+        )
+    }
+    
+    private func notifyApplicantOfDecline(_ applicant: ApplicantModel, for task: TaskModel) async {
+        try? await notificationRepo.send(
+            to: applicant.id,
+            type: .taskDeclined,
+            title: "Application declined",
+            body: "\(currentUserDisplayName) declined your application for \"\(task.title)\"",
+            taskId: task.id
+        )
+    }
+    
+        /// Only relevant if the task already had an executor assigned when it was
+        /// cancelled — a task cancelled while still unassigned has no one to notify.
+    private func notifyExecutorOfCancellation(for task: TaskModel) async {
+        guard let executorId = task.executor?.id else { return }
+        try? await notificationRepo.send(
+            to: executorId,
+            type: .taskCancelled,
+            title: "Task cancelled",
+            body: "\(currentUserDisplayName) cancelled \"\(task.title)\"",
+            taskId: task.id
+        )
     }
     
         // MARK: - Helpers

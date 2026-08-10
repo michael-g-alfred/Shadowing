@@ -1,63 +1,83 @@
 import SwiftUI
 
+    // MARK: - Container
+
 struct UserView: View {
     
-        // MARK: - Environment
+        // MARK: Environment
     @Environment(DIContainer.self) private var container
-    @Environment(\.colorScheme) private var colorScheme
     
-        // MARK: - Properties
-    private var listRowColor: Color? {
-        colorScheme == .dark
-        ? Color.accentColor.opacity(0.15)
-        : nil
-    }
-    
-    private var listErrorRowColor: Color? {
-        colorScheme == .dark
-        ? Color.orange.opacity(0.15)
-        : nil
-    }
-    
-        // MARK: - State
+        // MARK: State
     @State private var vm: UserViewModel
     
-        // MARK: - Init
-    init(userId: String, vm: UserViewModel) {
-        _vm = State(initialValue: vm)
+        // MARK: Init
+    init(vm: UserViewModel) {
+        self.vm = vm
     }
     
-        // MARK: - Body
+        // MARK: Body
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppBackground()
-                Group {
-                    if vm.isLoading && vm.user == nil {
-                        LoadingState.loading(title: "Loading profile…", subtitle: "Please wait a moment").view
-                    } else if let user = vm.user {
-                        userContent(for: user)
-                    } else {
-                        EmptyState.noProfile.view {
-                            await vm.loadUser()
-                        }
-                    }
-                }
+        ScreenContainer {
+            UserContentView(state: state(for: vm), vm: vm)
+        }
+        .sheet(isPresented: Bindable(vm).isRatingsPresented) {
+            if let user = vm.user {
+                container.makeRatingsView(userId: user.id, userName: user.displayName)
+                    .appSheetStyle()
             }
-            .task {
-                await vm.loadUser()
-            }
-            .sheet(isPresented: Bindable(vm).isRatingsPresented) {
-                if let user = vm.user {
-                    container.makeRatingsView(userId: user.id, userName: user.displayName)
-                        .appSheetStyle()
-                }
-            }
+        }
+        .task {
+            await vm.loadUser()
         }
     }
     
-        // MARK: - Private Views
-    private func userContent(for user: UserSummaryModel) -> some View {
+        // MARK: Private Helpers
+    private func state(for vm: UserViewModel) -> ViewState<UserSummaryModel> {
+        if vm.isLoading && vm.user == nil { return .loading }
+        guard let user = vm.user else { return .empty }
+        return .loaded(user)
+    }
+}
+
+    // MARK: - Content (state routing)
+
+private struct UserContentView: View {
+    let state: ViewState<UserSummaryModel>
+    let vm: UserViewModel
+    
+    var body: some View {
+        DataStateView(
+            state: state,
+            loadingState: .loading(title: "Loading profile…", subtitle: "Please wait a moment"),
+            emptyState: .noProfile,
+            retryAction: { await vm.loadUser() }
+        ) { user in
+            UserLoadedView(user: user, vm: vm)
+        }
+    }
+}
+
+    // MARK: - Loaded
+
+private struct UserLoadedView: View {
+    
+        // MARK: Environment
+    @Environment(\.colorScheme) private var colorScheme
+    
+        // MARK: Properties
+    let user: UserSummaryModel
+    let vm: UserViewModel
+    
+    private var listRowColor: Color? {
+        colorScheme == .dark ? Color.accentColor.opacity(0.15) : nil
+    }
+    
+    private var listErrorRowColor: Color? {
+        colorScheme == .dark ? Color.orange.opacity(0.15) : nil
+    }
+    
+        // MARK: Body
+    var body: some View {
         List {
             Section {
                 AvatarView(profile: user, size: 100, nameLayout: .vertical, nameFont: .title2, subtitle: user.email)
@@ -77,7 +97,7 @@ struct UserView: View {
                 }
                 .listRowBackground(listErrorRowColor)
             }
-
+            
             if let bio = user.bio, !bio.isEmpty {
                 Section("About") {
                     Text(bio).bold()
@@ -85,10 +105,10 @@ struct UserView: View {
                 }
                 .listRowBackground(listRowColor)
             }
-
+            
             if !user.specialties.isEmpty {
                 Section("Specialties") {
-                    specialtiesFlow(user.specialties)
+                    SpecialtiesFlow(specialties: user.specialties)
                 }
                 .listRowBackground(listRowColor)
             }
@@ -103,9 +123,7 @@ struct UserView: View {
                 InfoRow(
                     title: "Total Ratings",
                     systemImage: "person.2",
-                    localizedValue: user.totalRatings > 0
-                    ? "\(user.totalRatings)"
-                    : "No ratings yet"
+                    localizedValue: user.totalRatings > 0 ? "\(user.totalRatings)" : "-"
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -115,31 +133,11 @@ struct UserView: View {
                 InfoRow(
                     title: "Rating",
                     systemImage: "star",
-                    localizedValue: user.totalRatings > 0
-                    ? "\(user.rating, specifier: "%.1f")"
-                    : "No ratings yet"
+                    localizedValue: user.totalRatings > 0 ? "\(user.rating, specifier: "%.1f")" : "-"
                 )
             }
             .listRowBackground(listRowColor)
         }
         .scrollContentBackground(.hidden)
-    }
-
-    private func specialtiesFlow(_ specialties: [SpecialtyModel]) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.sm) {
-                ForEach(specialties) { specialty in
-                    Label(specialty.label, systemImage: specialty.icon)
-                        .font(.footnote).bold()
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .appGlassCapsule(
-                            overlayColor: .green.opacity(0.1),
-                            strokeColor: .green.opacity(0.05),
-                            shadowColor: .green.opacity(0.05)
-                        )
-                }
-            }
-        }
     }
 }

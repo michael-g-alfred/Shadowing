@@ -1,17 +1,17 @@
 import SwiftUI
 
-    // MARK: - NationalIDView
+// MARK: - NationalIDView
 
 struct NationalIDView: View {
     @Binding var nationalID: String
-    @FocusState.Binding var focusedField: SignUpView.Field?
-    
+    @FocusState.Binding var focusedField: SignUpField?
+
     private var isValid: Bool {
         nationalID.count == 14
     }
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             AppInputField(
                 icon: "person.text.rectangle",
                 title: "14 digit national ID",
@@ -22,7 +22,7 @@ struct NationalIDView: View {
             )
             .focused($focusedField, equals: .nationalID)
             .environment(\.layoutDirection, .leftToRight)
-            
+
             if !nationalID.isEmpty && !isValid {
                 Text("Must be exactly 14 digits (\(nationalID.count)/14)")
                     .font(.caption2)
@@ -30,7 +30,7 @@ struct NationalIDView: View {
             }
         }
     }
-    
+
     private static func digitsOnly(_ value: String) -> String {
         let formatter = NumberFormatter()
         formatter.locale = Locale(identifier: "en")

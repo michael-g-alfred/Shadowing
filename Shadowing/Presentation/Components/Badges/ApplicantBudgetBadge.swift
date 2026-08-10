@@ -1,6 +1,12 @@
 import SwiftUI
 
 struct ApplicantBudgetBadge: View {
+    
+        // MARK: - Environment
+    @Environment(\.colorScheme) private var colorScheme
+
+        // MARK: - Properties
+    var darkMode: Bool { colorScheme == .dark }
     let taskBudget: Double
     let proposedBudget: Double?
 
@@ -23,13 +29,14 @@ struct ApplicantBudgetBadge: View {
 
         Label(info.text, systemImage: info.icon)
             .font(.caption2.weight(.semibold))
+            .fixedSize(horizontal: true, vertical: false)
             .foregroundStyle(info.color)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .appGlassCapsule(
-                overlayColor: info.color.opacity(0.1),
-                strokeColor: info.color.opacity(0.05),
-                shadowColor: info.color.opacity(0.05)
+                overlayColor: darkMode ? info.color.opacity(0.1) : info.color.opacity(0.2),
+                strokeColor: darkMode ? info.color.opacity(0.05) : info.color,
+                shadowColor: darkMode ? info.color.opacity(0.05) : info.color.opacity(0.1)
             )
     }
 }

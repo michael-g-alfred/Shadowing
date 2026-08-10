@@ -101,7 +101,9 @@ struct AppliedSheet: View {
                         Button("Send") {
                             guard let task else { return }
                             let budgetToSend = proposedBudget == task.budget ? nil : proposedBudget
-                            Task { await vm.acceptTask(task, proposedBudget: budgetToSend) }
+                                // Shows a confirmation alert with the net amount (after the
+                                // platform fee) before the application is actually sent.
+                            vm.requestApply(to: task, proposedBudget: budgetToSend)
                         }
                         .buttonStyle(.glassProminent)
                     }

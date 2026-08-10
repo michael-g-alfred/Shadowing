@@ -11,7 +11,12 @@ final class AddTaskSheetViewModel {
     var budget: Double = 0
     var selectedCurrency: CurrencyLookup?
     var selectedPriority: PriorityLookup?
-    var selectedService: TaskServiceLookup?
+    var selectedService: TaskServiceLookup? {
+        didSet {
+            guard oldValue?.id != selectedService?.id else { return }
+            Task { await loadSuggestedSpecialists() }
+        }
+    }
     var serviceOther: String = ""
     var address: String = ""
     var timing: TaskTiming = .now
@@ -21,21 +26,41 @@ final class AddTaskSheetViewModel {
     
     var isLoading: Bool = false
     var errorMessage: String?
+    private(set) var didAttemptSubmit: Bool = false
     var didPostSuccessfully: Bool = false
+    
+        // MARK: - Validation / Alert State
+    
+    var showErrorsAlert: Bool = false
+    
+    var currentValidation: TaskValidationResult { validate() }
+    var isFormValid: Bool { currentValidation.isValid }
+    var validationAlertMessage: String {
+        currentValidation.errors.map { "• \($0)" }.joined(separator: "\n")
+    }
+    
+        // MARK: - Suggested Specialists
+    
+    private(set) var suggestedSpecialists: [UserSummaryModel] = []
+    private(set) var isLoadingSpecialists: Bool = false
+    private var specialistsGeneration = 0
     
     var onTaskAdded: (() async -> Void)?
     
     private let taskRepo: TaskRepositoryProtocol
+    private let userRepo: UserRepositoryProtocol
     private let locationService: LocationService
     let lookupStore: LookupStore
     
     init(
         taskRepo: TaskRepositoryProtocol,
+        userRepo: UserRepositoryProtocol,
         locationService: LocationService,
         lookupStore: LookupStore,
         onTaskAdded: (() async -> Void)? = nil
     ) {
         self.taskRepo = taskRepo
+        self.userRepo = userRepo
         self.locationService = locationService
         self.lookupStore = lookupStore
         self.onTaskAdded = onTaskAdded
@@ -60,11 +85,52 @@ final class AddTaskSheetViewModel {
         }
     }
     
+        // MARK: - Suggested Specialists
+    
+        /// Fetches the top-rated users registered under the currently selected
+        /// service type. Silent on failure - this is a nice-to-have preview,
+        /// not something that should block or clutter the form with an error.
+    func loadSuggestedSpecialists() async {
+        guard let selectedService else {
+            suggestedSpecialists = []
+            return
+        }
+        
+        specialistsGeneration += 1
+        let myGeneration = specialistsGeneration
+        isLoadingSpecialists = true
+        defer { isLoadingSpecialists = false }
+        
+        do {
+            let result = try await userRepo.fetchUsersBySpecialty(serviceId: selectedService.id, limit: 50)
+            guard myGeneration == specialistsGeneration else { return }
+            suggestedSpecialists = result
+        } catch {
+            guard myGeneration == specialistsGeneration else { return }
+            print("⚠️ loadSuggestedSpecialists failed for serviceId \(selectedService.id): \(error)")
+            suggestedSpecialists = []
+        }
+    }
+    
+    func makeSpecialistsSelectionViewModel() -> SpecialistsSelectionViewModel {
+        SpecialistsSelectionViewModel(specialists: suggestedSpecialists, userRepo: userRepo)
+    }
+    
+        // MARK: - Submission
+    
+        /// Single entry point the view calls for the "Post" action (and the
+        /// warning-triangle toolbar button). Decides itself whether to submit
+        /// or surface the validation errors alert.
+    func attemptSubmit() {
+        Task { await submitTask() }
+        
+    }
+    
     func submitTask() async {
+        didAttemptSubmit = true
         let validation = validate()
         
         guard validation.isValid else {
-            errorMessage = validation.errors.first
             return
         }
         
@@ -133,35 +199,54 @@ final class AddTaskSheetViewModel {
         
         isPreferredTimeOfDay = false
         preferredTimeOfDay = nil
+        
+        suggestedSpecialists = []
+        didAttemptSubmit = false
+        showErrorsAlert = false
     }
     
     var isValid: Bool {
         validate().isValid
     }
     
+        // MARK: - Validation
+        // Mirrors task.schema.js (Joi) exactly, so a submission that passes
+        // here is guaranteed to pass backend validation too:
+        //   title: min 3, max 100
+        //   description: min 10, max 500
+        //   budget: positive, min 1 (no upper bound - backend has none)
+        //   address: min 3
+        //   scheduledAt: cannot be in the past (when timing == .scheduled)
     func validate() -> TaskValidationResult {
         var errors: [String] = []
         
-        if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedTitle.isEmpty {
             errors.append("Title is required")
-        } else if title.count < 3 {
+        } else if trimmedTitle.count < 3 {
             errors.append("Title must be at least 3 characters")
+        } else if trimmedTitle.count > 100 {
+            errors.append("Title must be at most 100 characters")
         }
         
-        if description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        let trimmedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedDescription.isEmpty {
             errors.append("Description is required")
-        } else if description.count < 10 {
+        } else if trimmedDescription.count < 10 {
             errors.append("Description must be at least 10 characters")
+        } else if trimmedDescription.count > 500 {
+            errors.append("Description must be at most 500 characters")
         }
         
-        if budget <= 0 {
-            errors.append("Budget must be greater than 0")
-        } else if budget > 100000 {
-            errors.append("Budget seems too high")
+        if budget < 1 {
+            errors.append("Budget must be at least 1")
         }
         
-        if address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        let trimmedAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedAddress.isEmpty {
             errors.append("Address is required")
+        } else if trimmedAddress.count < 3 {
+            errors.append("Address must be at least 3 characters")
         }
         
         if timing == .scheduled && scheduledDate < Date().addingTimeInterval(-60) {
@@ -186,4 +271,29 @@ final class AddTaskSheetViewModel {
 struct TaskValidationResult {
     let isValid: Bool
     let errors: [String]
+}
+
+    // MARK: - Specialists Selection View Model
+
+@MainActor
+@Observable
+final class SpecialistsSelectionViewModel {
+    
+    let specialists: [UserSummaryModel]
+    var selectedIDs: Set<UserSummaryModel.ID> = []
+    
+    private let userRepo: UserRepositoryProtocol
+    
+    init(specialists: [UserSummaryModel], userRepo: UserRepositoryProtocol) {
+        self.specialists = specialists
+        self.userRepo = userRepo
+    }
+    
+    var hasSelection: Bool { !selectedIDs.isEmpty }
+    var selectionCount: Int { selectedIDs.count }
+    
+    func inviteSelectedSpecialists() {
+            // selectedIDs contains the selected specialists
+        print("Invite selected specialists: \(selectedIDs)")
+    }
 }

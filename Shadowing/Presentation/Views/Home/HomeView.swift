@@ -1,59 +1,75 @@
 import SwiftUI
 
+// MARK: - Container
+
 struct HomeView: View {
-    
-        // MARK: - Environment
+
+    // MARK: Environment
     @Environment(DIContainer.self) private var container
-    
-        // MARK: - State
+
+    // MARK: State
     @State private var vm: HomeViewModel
-    
-        // MARK: - Init
+
+    // MARK: Init
     init(vm: HomeViewModel) {
         _vm = State(initialValue: vm)
     }
-    
-        // MARK: - Body
+
+    // MARK: Body
     var body: some View {
         NavigationStack {
-            ZStack {
-                AppBackground()
-                
-                Group {
-                    switch vm.selectedMode {
-                        case .requester:
-                            container.makeRequesterView()
-                            
-                        case .executor:
-                            container.makeExecutorView()
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ScreenContainer {
+                HomeModeContentView(container: container, selectedMode: vm.selectedMode)
             }
             .navigationTitle(vm.selectedMode.navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        vm.toggleMode()
-                    } label: {
-                        Label(
-                            vm.selectedMode == .requester
-                            ? UserMode.executor.title
-                            : UserMode.requester.title,
-                            systemImage: vm.selectedMode == .requester
-                            ? UserMode.executor.image
-                            : UserMode.requester.image
-                        )
-                        .labelStyle(.titleAndIcon)
-                    }
+                    HomeModeToggleButton(vm: vm)
                 }
             }
         }
     }
 }
 
-    // MARK: - Preview
+// MARK: - Content
+
+private struct HomeModeContentView: View {
+    let container: DIContainer
+    let selectedMode: UserMode
+
+    var body: some View {
+        Group {
+            switch selectedMode {
+                case .requester:
+                    container.makeRequesterView()
+                case .executor:
+                    container.makeExecutorView()
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Toolbar
+
+private struct HomeModeToggleButton: View {
+    let vm: HomeViewModel
+
+    var body: some View {
+        Button {
+            vm.toggleMode()
+        } label: {
+            Label(
+                vm.selectedMode == .requester ? UserMode.executor.title : UserMode.requester.title,
+                systemImage: vm.selectedMode == .requester ? UserMode.executor.image : UserMode.requester.image
+            )
+            .labelStyle(.titleAndIcon)
+        }
+    }
+}
+
+// MARK: - Preview
 
 #Preview {
     HomeView(vm: HomeViewModel())

@@ -99,6 +99,19 @@ final class UserRepository: UserRepositoryProtocol {
         )
     }
     
+        // MARK: - Specialty Suggestions
+    
+        /// Top-rated users registered under a given specialty (task_services id).
+        /// Used to auto-suggest people to a requester right after they pick a
+        /// service type while creating a task — no search, no invite, just a
+        /// "here's who's around for this" preview.
+    func fetchUsersBySpecialty(serviceId: Int, limit: Int? = nil) async throws -> [UserSummaryModel] {
+        let accessToken = try await getValidToken()
+        let config = APIConfig.usersBySpecialty(serviceId: serviceId, limit: limit, accessToken: accessToken)
+        let response: APIResponseDTO<UsersBySpecialtyResponseDTO> = try await network.request(config)
+        return response.data.users.map { $0.toDomain() }
+    }
+    
     func uploadAvatar(userId: String, imageData: Data, fileName: String, mimeType: String) async throws -> (avatarUrl: String, message: String, type: String) {
         let accessToken = try await getValidToken()
         let config = APIConfig.uploadAvatar(
@@ -123,4 +136,12 @@ final class UserRepository: UserRepositoryProtocol {
             type: response.type
         )
     }
+}
+
+// MARK: - DTO
+// Move this to your DTOs file if you keep them separate from the repository -
+// added here since UserSummaryResponseDTO / UserSummaryDTO's actual file
+// wasn't part of what I could see.
+struct UsersBySpecialtyResponseDTO: Codable {
+    let users: [UserSummaryDTO]
 }

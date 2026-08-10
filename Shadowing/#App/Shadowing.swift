@@ -22,9 +22,12 @@ struct Shadowing: App {
                         container.setAppState(.admin)
                     } else if container.authRepository.isAuthenticated {
                         container.setAppState(.main)
+                        container.chatViewModel.listenToConversations()
+                        container.notificationViewModel.startListening()
+                        async let notification = container.notificationService.requestAuthorization()
                         async let executorRatings: () = container.executorViewModel.checkPendingRatings()
                         async let requesterRatings: () = container.requesterViewModel.checkPendingRatings()
-                        _ = await (executorRatings, requesterRatings)
+                        _ = await (notification, executorRatings, requesterRatings)
                     }
                 }
                 .task(id: container.languageManager.currentLanguage) {

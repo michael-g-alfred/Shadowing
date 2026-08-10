@@ -13,6 +13,7 @@ enum EmptyState: CaseIterable {
     case noApplicantsYet
     case noNotifications
     case noProfile
+    case noRatings
     case noTaskSelection
     case noLocationAccess
     
@@ -35,9 +36,11 @@ enum EmptyState: CaseIterable {
             case .noApplicantsYet:
                 return "No Applicants Yet"
             case .noNotifications:
-                return "No Notifications"
+                return "No Notifications Yet"
             case .noProfile:
                 return "No Profile"
+            case .noRatings:
+                return "No Ratings Yet"
             case .noTaskSelection:
                 return "No Task Selection"
             case .noLocationAccess:
@@ -48,7 +51,7 @@ enum EmptyState: CaseIterable {
     var description: LocalizedStringResource {
         switch self {
             case .noTasks:
-                return "No tasks available. Try\nsearching for something else."
+                return "No tasks available. Try searching for something else."
             case .noRequesterPublishedTasks:
                 return "Post your first task and let someone take care of it for you."
             case .noAvailableTasks:
@@ -66,9 +69,11 @@ enum EmptyState: CaseIterable {
             case .noApplicantsYet:
                 return "No one has applied for this task yet."
             case .noNotifications:
-                return "You have no notifications yet."
+                return "You'll see updates about your tasks here."
             case .noProfile:
                 return "You have no profile yet."
+            case .noRatings:
+                return "This user hasn't received any ratings yet."
             case .noTaskSelection:
                 return "Select a task from the list to view its details."
             case .noLocationAccess:
@@ -92,6 +97,8 @@ enum EmptyState: CaseIterable {
                 return "bell.slash"
             case .noProfile:
                 return "person.crop.circle"
+            case .noRatings:
+                return "star.slash"
             case .noLocationAccess:
                 return "location.slash"
             default:

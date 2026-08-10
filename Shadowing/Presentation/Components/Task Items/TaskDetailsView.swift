@@ -210,7 +210,7 @@ struct TaskDetailsView: View {
             systemImage: "person.2",
             localizedValue: user.totalRatings > 0
             ? "\(user.totalRatings)"
-            : "No ratings yet"
+            : "-"
         )
         .contentShape(Rectangle())
         .onTapGesture {
@@ -222,7 +222,7 @@ struct TaskDetailsView: View {
             systemImage: "star",
             localizedValue: user.totalRatings > 0
             ? "\(user.rating, specifier: "%.1f")"
-            : "No ratings yet"
+            : "-"
         )
     }
     
@@ -246,8 +246,8 @@ struct TaskDetailsView: View {
     
         // MARK: Id
     private func idSection(for task: TaskModel) -> some View {
-        Section("ID") {
-            InfoRow(title: "Id", systemImage: "number.circle") {
+        Section("Reference Code") {
+            InfoRow(title: "Reference Code", systemImage: "number.circle") {
                 Text(task.id.isEmpty ? "—" : displayedId(for: task.id))
                     .font(.caption)
                     .contentTransition(.numericText())
@@ -266,7 +266,7 @@ struct TaskDetailsView: View {
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.success)
             } label: {
-                Label("Copy ID", systemImage: "doc.on.doc")
+                Label("Copy Reference Code", systemImage: "doc.on.doc")
             }
         }
     }

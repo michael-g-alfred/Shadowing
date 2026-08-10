@@ -1,105 +1,39 @@
 import SwiftUI
 import PhotosUI
 
+// MARK: - Container
+
 struct ProfileView: View {
-    
-        // MARK: - Environment
+
+    // MARK: Environment
     @Environment(DIContainer.self) private var container
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.locale) private var locale
-    
-        // MARK: - Properties
-    private var listRowColor: Color? {
-        colorScheme == .dark
-        ? Color.accentColor.opacity(0.15)
-        : nil
-    }
-    
-    private var listErrorRowColor: Color? {
-        colorScheme == .dark
-        ? Color.orange.opacity(0.15)
-        : nil
-    }
-    
-        // MARK: - State
+
+    // MARK: State
     @State private var vm: ProfileViewModel
-    
-        // MARK: - Init
+
+    // MARK: Init
     init(vm: ProfileViewModel) {
         _vm = State(initialValue: vm)
     }
-    
-        // MARK: - Body
+
+    // MARK: Body
     var body: some View {
         NavigationStack {
-            ZStack {
-                AppBackground()
-                Group {
-                    if vm.isLoading && vm.user == nil {
-                        LoadingState.loading(title: "Loading profile…", subtitle: "Please wait a moment").view
-                    } else if let user = vm.user {
-                        profileContent(for: user)
-                    } else {
-                        EmptyState.noProfile.view {
-                            await vm.loadProfile()
-                        }
-                    }
-                }
+            ScreenContainer {
+                ProfileContentView(state: state, vm: vm, container: container)
             }
             .navigationTitle("\(vm.user?.displayName ?? "Guest")")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        vm.isSettingsPresented = true
-                    } label: {
-                        Label("Settings", systemImage: "gearshape.fill")
-                    }
-                }
-                
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        vm.isPhotoSourceDialogPresented = true
-                    } label: {
-                        if vm.isUploadingAvatar {
-                            ProgressView()
-                        } else {
-                            Label("Change Photo", systemImage: "camera.fill")
-                        }
-                    }
-                    .disabled(vm.isUploadingAvatar || vm.user == nil)
-                }
-                
-                ToolbarSpacer(placement: .topBarTrailing)
-                
-                ToolbarItem(placement: .destructiveAction) {
-                    Button(role: .destructive) {
-                        Task {
-                            await submit()
-                        }
-                    } label: {
-                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                    }
-                    .tint(.red)
-                }
+                ProfileToolbar(vm: vm, onSignOut: { await signOut() })
             }
-            .task {
-                await vm.loadProfile()
-            }
-            .refreshable {
-                await vm.loadProfile()
-            }
-                // Hidden PhotosPicker driven by the "Photo Library" dialog option.
-                // PhotosPicker needs a real control to attach to, so we keep a
-                // zero-size one in the background and trigger it programmatically
-                // isn't directly possible — instead we present it via the dialog button below.
+            .task { await vm.loadProfile() }
+            .refreshable { await vm.loadProfile() }
             .confirmationDialog("Change Photo", isPresented: $vm.isPhotoSourceDialogPresented, titleVisibility: .visible) {
                 Button("Take Photo") {
                     vm.isCameraPresented = true
                 }
                 Button("Choose from Library") {
-                        // Triggering programmatically: PhotosPicker is presented via
-                        // its own binding below using isLibraryPickerPresented.
                     vm.isLibraryPickerPresented = true
                 }
                 Button("Cancel", role: .cancel) {}
@@ -127,123 +61,239 @@ struct ProfileView: View {
             }
         }
     }
-    
-        // MARK: - Private Views
-    private func profileContent(for user: UserModel) -> some View {
+
+    // MARK: Private Helpers
+    private var state: ViewState<UserModel> {
+        if vm.isLoading && vm.user == nil { return .loading }
+        guard let user = vm.user else { return .empty }
+        return .loaded(user)
+    }
+
+    private func signOut() async {
+        guard await vm.signout() else { return }
+        container.setAppState(.auth)
+        container.relaunchRoot()
+    }
+}
+
+// MARK: - Content (state routing)
+
+private struct ProfileContentView: View {
+    let state: ViewState<UserModel>
+    let vm: ProfileViewModel
+    let container: DIContainer
+
+    var body: some View {
+        DataStateView(
+            state: state,
+            loadingState: .loading(title: "Loading profile…", subtitle: "Please wait a moment"),
+            emptyState: .noProfile,
+            retryAction: { await vm.loadProfile() }
+        ) { user in
+            ProfileLoadedView(user: user, vm: vm, container: container)
+        }
+    }
+}
+
+// MARK: - Toolbar
+
+private struct ProfileToolbar: ToolbarContent {
+    let vm: ProfileViewModel
+    let onSignOut: () async -> Void
+
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button {
+                vm.isSettingsPresented = true
+            } label: {
+                Label("Settings", systemImage: "gearshape.fill")
+            }
+        }
+
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                vm.isPhotoSourceDialogPresented = true
+            } label: {
+                if vm.isUploadingAvatar {
+                    ProgressView()
+                } else {
+                    Label("Change Photo", systemImage: "camera.fill")
+                }
+            }
+            .disabled(vm.isUploadingAvatar || vm.user == nil)
+        }
+
+        ToolbarSpacer(placement: .topBarTrailing)
+
+        ToolbarItem(placement: .destructiveAction) {
+            Button(role: .destructive) {
+                Task { await onSignOut() }
+            } label: {
+                Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+            }
+            .tint(.red)
+        }
+    }
+}
+
+// MARK: - Loaded
+
+private struct ProfileLoadedView: View {
+
+    // MARK: Environment
+    @Environment(\.colorScheme) private var colorScheme
+
+    // MARK: Properties
+    let user: UserModel
+    let vm: ProfileViewModel
+    let container: DIContainer
+
+    private var listRowColor: Color? {
+        colorScheme == .dark ? Color.accentColor.opacity(0.15) : nil
+    }
+
+    private var listErrorRowColor: Color? {
+        colorScheme == .dark ? Color.orange.opacity(0.15) : nil
+    }
+
+    // MARK: Body
+    var body: some View {
         let accountStatus = container.lookupStore.accountStatus(named: user.accountStatus)
         let statusLabel = accountStatus?.label ?? user.accountStatus
         let statusColor = accountStatus?.color ?? .gray
-        
-        return List {
-            Section {
-                AvatarView(profile: user, size: 100, nameLayout: .vertical, nameFont: .title2)
-                    .frame(maxWidth: .infinity)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(.all, 0)
-                    .padding(.vertical, Spacing.sm)
-            }
-            .listRowBackground(Color.clear)
-            
+
+        List {
+            avatarSection
+
             if user.isSuspended {
-                Section {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Label(statusLabel, systemImage: "exclamationmark.triangle.fill")
-                            .font(.subheadline).bold()
-                        Text("You can't apply to new tasks or post new ones right now.")
-                            .font(.footnote)
-                        if let countdown = vm.suspensionCountdownText {
-                            Text(countdown)
-                                .font(.footnote).bold()
-                        }
-                    }
-                    .foregroundStyle(statusColor)
-                }
+                suspensionSection(statusLabel: statusLabel, statusColor: statusColor)
             }
-            
+
             if let errorMessage = vm.errorMessage {
-                Section {
-                    Text(errorMessage)
-                        .foregroundStyle(.orange)
-                        .font(.footnote).bold()
-                } header: {
-                    Label("Error Message", systemImage: "exclamationmark.triangle")
-                }
-                .listRowBackground(listErrorRowColor)
+                ProfileErrorSection(message: errorMessage, background: listErrorRowColor)
             }
-            
+
             if let bio = user.bio, !bio.isEmpty {
                 Section("About") {
                     Text(bio).bold()
                 }
                 .listRowBackground(listRowColor)
             }
-            
+
             if !user.specialties.isEmpty {
                 Section("Specialties") {
-                    specialtiesFlow(user.specialties)
+                    SpecialtiesFlow(specialties: user.specialties)
                 }
                 .listRowBackground(listRowColor)
             }
-            
-            Section("Account") {
-                InfoRow(title: "Account Status", systemImage: "checkmark.shield") {
-                    Text(statusLabel)
-                        .bold()
-                        .foregroundStyle(statusColor)
-                }
-                
-                InfoRow(
-                    title: "Email",
-                    systemImage: "envelope",
-                    value: user.email.isEmpty ? "—" : user.email
-                )
-                
-                if let nationalId = user.nationalId, !nationalId.isEmpty {
-                    nationalIdRow(nationalId: nationalId)
-                }
-                
-                InfoRow(
-                    title: "Completed Tasks",
-                    systemImage: "checklist",
-                    localizedValue: "\(user.completedTasks)"
-                )
-                
-                InfoRow(
-                    title: "Total Ratings",
-                    systemImage: "person.2",
-                    localizedValue: user.totalRatings > 0
-                    ? "\(user.totalRatings)"
-                    : "No ratings yet"
-                )
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    vm.isRatingsPresented = true
-                }
-                
-                InfoRow(
-                    title: "Rating",
-                    systemImage: "star",
-                    localizedValue: user.totalRatings > 0
-                    ? "\(user.rating, specifier: "%.1f")"
-                    : "No ratings yet"
-                )
-                
-                if let createdAt = user.createdAt {
-                    InfoRow(
-                        title: "Member Since",
-                        systemImage: "calendar",
-                        value: createdAt.formatted(date: .abbreviated, time: .omitted)
-                    )
-                }
-                
-                idRow(for: user)
-            }
-            .listRowBackground(listRowColor)
+
+            accountSection(user: user, statusLabel: statusLabel, statusColor: statusColor)
         }
         .scrollContentBackground(.hidden)
     }
-    
-    private func specialtiesFlow(_ specialties: [SpecialtyModel]) -> some View {
+
+    // MARK: Sections
+    private var avatarSection: some View {
+        Section {
+            AvatarView(profile: user, size: 100, nameLayout: .vertical, nameFont: .title2)
+                .frame(maxWidth: .infinity)
+                .listRowBackground(Color.clear)
+                .listRowInsets(.all, 0)
+                .padding(.vertical, Spacing.sm)
+        }
+        .listRowBackground(Color.clear)
+    }
+
+    private func suspensionSection(statusLabel: String, statusColor: Color) -> some View {
+        Section {
+            VStack(alignment: .leading, spacing: 4) {
+                Label(statusLabel, systemImage: "exclamationmark.triangle.fill")
+                    .font(.subheadline).bold()
+                Text("You can't apply to new tasks or post new ones right now.")
+                    .font(.footnote)
+                if let countdown = vm.suspensionCountdownText {
+                    Text(countdown)
+                        .font(.footnote).bold()
+                }
+            }
+            .foregroundStyle(statusColor)
+        }
+    }
+
+    private func accountSection(user: UserModel, statusLabel: String, statusColor: Color) -> some View {
+        Section("Account") {
+            InfoRow(title: "Account Status", systemImage: "checkmark.shield") {
+                Text(statusLabel)
+                    .bold()
+                    .foregroundStyle(statusColor)
+            }
+
+            InfoRow(
+                title: "Email",
+                systemImage: "envelope",
+                value: user.email.isEmpty ? "—" : user.email
+            )
+
+            InfoRow(
+                title: "Completed Tasks",
+                systemImage: "checklist",
+                localizedValue: "\(user.completedTasks)"
+            )
+
+            InfoRow(
+                title: "Total Ratings",
+                systemImage: "person.2",
+                localizedValue: user.totalRatings > 0 ? "\(user.totalRatings)" : "-"
+            )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                vm.isRatingsPresented = true
+            }
+
+            InfoRow(
+                title: "Rating",
+                systemImage: "star",
+                localizedValue: user.totalRatings > 0 ? "\(user.rating, specifier: "%.1f")" : "-"
+            )
+
+            if let createdAt = user.createdAt {
+                InfoRow(
+                    title: "Member Since",
+                    systemImage: "calendar",
+                    value: createdAt.formatted(date: .abbreviated, time: .omitted)
+                )
+            }
+
+            ProfileIdRow(user: user, vm: vm)
+        }
+        .listRowBackground(listRowColor)
+    }
+}
+
+// MARK: - Error Banner
+
+private struct ProfileErrorSection: View {
+    let message: String
+    let background: Color?
+
+    var body: some View {
+        Section {
+            Text(message)
+                .foregroundStyle(.orange)
+                .font(.footnote).bold()
+        } header: {
+            Label("Error Message", systemImage: "exclamationmark.triangle")
+        }
+        .listRowBackground(background)
+    }
+}
+
+// MARK: - Specialties
+
+struct SpecialtiesFlow: View {
+    let specialties: [SpecialtyModel]
+
+    var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Spacing.sm) {
                 ForEach(specialties) { specialty in
@@ -260,23 +310,16 @@ struct ProfileView: View {
             }
         }
     }
-    
-    private func nationalIdRow(nationalId: String) -> some View {
-        InfoRow(title: "National ID", systemImage: "person.text.rectangle") {
-            Text(vm.isNationalIDAppearance ? nationalId : String(repeating: "*", count: 14))
-                .bold()
-                .contentTransition(.numericText())
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            withAnimation {
-                vm.toggleNationalIDAppearance()
-            }
-        }
-    }
-    
-    private func idRow(for user: UserModel) -> some View {
-        InfoRow(title: "Id", systemImage: "person.badge.key") {
+}
+
+// MARK: - ID Row
+
+private struct ProfileIdRow: View {
+    let user: UserModel
+    let vm: ProfileViewModel
+
+    var body: some View {
+        InfoRow(title: "Reference Code", systemImage: "person.badge.key") {
             Text(user.id.isEmpty ? "—" : vm.displayedId(for: user.id))
                 .font(.caption2)
                 .contentTransition(.numericText())
@@ -293,15 +336,8 @@ struct ProfileView: View {
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.success)
             } label: {
-                Label("Copy ID", systemImage: "doc.on.doc")
+                Label("Copy Reference Code", systemImage: "doc.on.doc")
             }
         }
-    }
-    
-        // MARK: - Private Methods
-    private func submit() async {
-        guard await vm.signout() else { return }
-        container.setAppState(.auth)
-        container.relaunchRoot()
     }
 }
