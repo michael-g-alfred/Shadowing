@@ -149,7 +149,7 @@ private struct NotificationRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: Spacing.md) {
             Image(systemName: notification.type.iconName)
-                .foregroundStyle(notification.isRead ? .secondary : Color(.accent))
+                .foregroundStyle(notification.isRead ? .primary : Color(.accent))
                 .imageScale(.large)
             
             VStack(alignment: .leading, spacing: Spacing.xs) {

@@ -12,6 +12,6 @@ struct ServiceBadge: View {
                 .fixedSize(horizontal: true, vertical: false)
             
         }
-        .font(.caption).fontWeight(.bold).foregroundStyle(.tertiary)
+        .font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
     }
 }

@@ -26,7 +26,6 @@ struct BudgetBadge: View {
             .appGlassCapsule(
                 overlayColor: darkMode ? priorityColor.opacity(0.1) : priorityColor.opacity(0.2),
                 strokeColor: darkMode ? priorityColor.opacity(0.05) : priorityColor,
-                shadowColor: darkMode ? priorityColor.opacity(0.05) : priorityColor.opacity(0.1)
             )
     }
 }

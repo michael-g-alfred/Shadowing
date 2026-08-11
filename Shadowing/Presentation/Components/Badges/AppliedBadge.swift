@@ -11,20 +11,19 @@ struct AppliedBadge: View {
     var body: some View {
         HStack(spacing: 4) {
             Circle()
-                .fill(.white)
+                .fill(darkMode ? .white : .green)
                 .frame(width: 5, height: 5)
             
             Text("Applied")
                 .font(.caption2)
                 .fontWeight(.bold)
-                .foregroundStyle(.white)
+                .foregroundStyle(darkMode ? .white : .green)
                 .fixedSize(horizontal: true, vertical: false)
         }
         .padding(.horizontal, 6).padding(.vertical, 4)
         .appGlassCapsule(
             overlayColor: darkMode ? .green.opacity(0.1) : .green.opacity(0.2),
             strokeColor: darkMode ? .green.opacity(0.05) : .green,
-            shadowColor: darkMode ? .green.opacity(0.05) : .green.opacity(0.1)
         )
     }
 }

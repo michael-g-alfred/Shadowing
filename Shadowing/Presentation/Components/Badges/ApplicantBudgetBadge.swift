@@ -29,14 +29,12 @@ struct ApplicantBudgetBadge: View {
 
         Label(info.text, systemImage: info.icon)
             .font(.caption2.weight(.semibold))
-            .fixedSize(horizontal: true, vertical: false)
             .foregroundStyle(info.color)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .appGlassCapsule(
                 overlayColor: darkMode ? info.color.opacity(0.1) : info.color.opacity(0.2),
                 strokeColor: darkMode ? info.color.opacity(0.05) : info.color,
-                shadowColor: darkMode ? info.color.opacity(0.05) : info.color.opacity(0.1)
             )
     }
 }

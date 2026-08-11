@@ -12,7 +12,7 @@ struct TaskCardSkeleton: View {
             VStack(alignment: .leading, spacing: 12) {
                 
                 
-                VStack(alignment: .leading, spacing: 13) {
+                VStack(alignment: .leading, spacing: 12) {
                     
                     VStack(alignment: .leading, spacing: 14) {
                         
@@ -30,7 +30,8 @@ struct TaskCardSkeleton: View {
                                     VStack(alignment: .leading, spacing: Spacing.sm) {
                                         RoundedRectangle(cornerRadius: CornerRadius.xs)
                                             .fill(shimmerColor)
-                                            .frame(width: 120, height: 14)
+                                            .frame(width: 120, height: 20)
+                                            .offset(y: 2.5)
                                         
                                         RoundedRectangle(cornerRadius: CornerRadius.xs)
                                             .fill(shimmerColor)
@@ -44,7 +45,8 @@ struct TaskCardSkeleton: View {
                                 VStack(alignment: .trailing, spacing: Spacing.sm) {
                                     Capsule()
                                         .fill(shimmerColor)
-                                        .frame(width: 85, height: 22)
+                                        .frame(width: 89, height: 23)
+                                        .offset(y: 1)
                                     
                                     RoundedRectangle(cornerRadius: CornerRadius.xs)
                                         .fill(shimmerColor)
@@ -54,7 +56,7 @@ struct TaskCardSkeleton: View {
                         }
                         
                             // MARK: 2. Content (Title + Description)
-                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                        VStack(alignment: .leading, spacing: Spacing.md) {
                             RoundedRectangle(cornerRadius: CornerRadius.xs)
                                 .fill(shimmerColor)
                                 .frame(width: 180, height: 20)
@@ -73,7 +75,7 @@ struct TaskCardSkeleton: View {
                 HStack(alignment: .center, spacing: Spacing.sm) {
                     Capsule()
                         .fill(shimmerColor)
-                        .frame(width: 70, height: 24)
+                        .frame(width: 68, height: 23)
                     
                     RoundedRectangle(cornerRadius: CornerRadius.xs)
                         .fill(shimmerColor)
@@ -86,15 +88,18 @@ struct TaskCardSkeleton: View {
                         .fill(shimmerColor)
                         .frame(width: 60, height: 23)
                     
-                    Capsule()
-                        .fill(shimmerColor)
-                        .frame(width: 73, height: 23)
-                    
-                    Capsule()
-                        .fill(shimmerColor)
-                        .frame(width: 40, height: 23)
-                    
-                    Spacer()
+                    HStack(spacing: 5) {
+                        
+                        Capsule()
+                            .fill(shimmerColor)
+                            .frame(width: 86, height: 23)
+                        
+                        Capsule()
+                            .fill(shimmerColor)
+                            .frame(width: 40, height: 23)
+                        
+                        Spacer()
+                    }
                 }
             }
         }
@@ -127,7 +132,12 @@ struct TaskCardSkeleton: View {
     // MARK: - Preview
 
 #Preview {
-    TaskCardSkeleton()
+    ZStack {
+        TaskCardSkeleton().padding().offset(x: 0, y: -102)
+//        Image(.image1).resizable(resizingMode: .stretch)
+//            .ignoresSafeArea()
+//            .opacity(0.2)
+    }
 }
 
 struct TaskCardSingletonList: View {

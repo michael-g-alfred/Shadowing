@@ -31,7 +31,6 @@ struct DistanceBadge: View {
             .appGlassCapsule(
                 overlayColor: darkMode ? .cyan.opacity(0.1) : .cyan.opacity(0.2),
                 strokeColor: darkMode ? .cyan.opacity(0.05) : .cyan,
-                shadowColor: darkMode ? .cyan.opacity(0.05) : .cyan.opacity(0.1)
             )
         }
     }

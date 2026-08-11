@@ -303,8 +303,7 @@ struct SpecialtiesFlow: View {
                         .padding(.vertical, 6)
                         .appGlassCapsule(
                             overlayColor: .green.opacity(0.1),
-                            strokeColor: .green.opacity(0.05),
-                            shadowColor: .green.opacity(0.05)
+                            strokeColor: .green.opacity(0.05)
                         )
                 }
             }

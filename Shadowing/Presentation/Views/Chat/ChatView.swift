@@ -47,7 +47,7 @@ struct ConversationRow: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, text.count > 1 ? Spacing.sm : 0)
                     .frame(minWidth: 16, minHeight: 16)
-                    .appGlassCapsule(overlayColor: .red.opacity(0.75), shadowColor: .red.opacity(0.25))
+                    .appGlassCapsule(overlayColor: .red.opacity(0.75))
             }
         }
     }
@@ -137,7 +137,7 @@ struct MessageBubble: View {
                     }
                     .padding(.horizontal, Spacing.xxl)
                     .padding(.vertical, 6)
-                    .appGlassCapsule(fill: bubbleBackground, overlayColor: bubbleOverlayColor, shadowColor: bubbleShadowColor)
+                    .appGlassCapsule(fill: bubbleBackground, overlayColor: bubbleOverlayColor)
                     
                     if !message.reactions.isEmpty {
                         ReactionBadgeView(reactions: message.reactions)

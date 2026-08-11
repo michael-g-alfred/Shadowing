@@ -14,15 +14,15 @@ enum NotificationType: String, Codable {
     
     var iconName: String {
         switch self {
-            case .taskApplied: return "person.badge.plus"
+            case .taskApplied: return "plus.circle"
             case .taskAccepted: return "checkmark.circle"
-            case .taskDeclined: return "hand.raised.slash"
-            case .taskCompleted: return "flag.pattern.checkered"
+            case .taskDeclined: return "slash.circle"
+            case .taskCompleted: return "flag.circle"
             case .taskConfirmed: return "checkmark.seal"
             case .taskCancelled: return "xmark.circle"
             case .taskWithdrawn: return "arrow.uturn.left.circle"
             case .newMessage: return "message.circle"
-            case .ratingReceived: return "star.circle.fill"
+            case .ratingReceived: return "star.circle"
             case .system: return "bell.circle"
         }
     }

@@ -25,7 +25,6 @@ struct ApplicantsBadge: View {
         .appGlassCapsule(
             overlayColor: darkMode ? color.opacity(0.1) : color.opacity(0.2),
             strokeColor: darkMode ? color.opacity(0.05) : color,
-            shadowColor: darkMode ? color.opacity(0.05) : color.opacity(0.1)
         )
     }
 }

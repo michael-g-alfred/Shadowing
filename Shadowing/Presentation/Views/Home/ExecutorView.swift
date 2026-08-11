@@ -42,7 +42,6 @@ struct ExecutorView: View {
             Button("Cancel", role: .cancel) {
                 vm.cancelApply()
             }
-            .tint(.red)
             
             Button("Confirm", role: .confirm) {
                 Task { await vm.confirmApply() }

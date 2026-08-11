@@ -5,7 +5,7 @@ struct TaskCard: View {
     
         // MARK: - Environment
     @Environment(DIContainer.self) private var container
-    @Environment(\.locale) private var locale
+    @Environment(\.colorScheme) private var colorScheme
     
         // MARK: - Properties
     let task: TaskModel
@@ -27,6 +27,9 @@ struct TaskCard: View {
     }
     private var priorityColor: Color {
         Color(lookupName: priorityLookup?.color ?? "gray")
+    }
+    private var darkMode: Bool {
+        colorScheme == .dark
     }
     
         // MARK: - Body
@@ -73,7 +76,7 @@ struct TaskCard: View {
                 LocationBadge(task: task)
             }
             
-            HStack(alignment: .top, spacing: Spacing.xs) {
+            HStack(alignment: .center, spacing: Spacing.xs) {
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: Spacing.xs) {
                         badgesRow
@@ -112,7 +115,7 @@ struct TaskCard: View {
                 .fill(.thinMaterial)
                 .overlay(
                     RoundedRectangle(cornerRadius: CornerRadius.xl, style: .continuous)
-                        .fill(priorityColor.opacity(0.05))
+                        .fill(darkMode ? priorityColor.opacity(0.075) : priorityColor.opacity(0.1))
                 )
         )
         .overlay {
@@ -137,6 +140,7 @@ struct TaskCard: View {
         // MARK: - Private Views
     @ViewBuilder
     private var badgesRow: some View {
+        
         if let priorityLookup {
             PriorityBadge(priority: priorityLookup)
         }
@@ -150,12 +154,11 @@ struct TaskCard: View {
         Button(action: action) {
             Image(systemName: task.isFavourite ? "star.fill" : "star")
                 .imageScale(.medium)
-                .foregroundStyle(task.isFavourite ? .rating : .secondary)
+                .foregroundStyle(darkMode ? .rating : Color.black.opacity(0.75))
                 .frame(width: 32, height: 32)
                 .appGlassCapsule(
-                    overlayColor: .yellow.opacity(0.1),
-                    strokeColor: .yellow.opacity(0.05),
-                    shadowColor: .yellow.opacity(0.05)
+                    overlayColor: darkMode ? .rating.opacity(0.1) : .rating.opacity(0.5),
+                    strokeColor: darkMode ? .rating.opacity(0.1) : Color.black.opacity(0.15)
                 )
         }
         .buttonStyle(.plain)
