@@ -110,7 +110,8 @@ private struct UserLoadedView: View {
                 Section("Specialties") {
                     SpecialtiesFlow(specialties: user.specialties)
                 }
-                .listRowBackground(listRowColor)
+                .listRowInsets(.all, 0)
+                .listRowBackground(Color.clear)
             }
             
             Section("Stats") {

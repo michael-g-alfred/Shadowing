@@ -87,7 +87,7 @@ private struct SignUpFormFields: View {
     @Binding var showSpecialtiesSheet: Bool
     
     var body: some View {
-        VStack(spacing: Spacing.lg) {
+        VStack(alignment: .leading, spacing: Spacing.lg) {
             AppInputField(
                 icon: "person",
                 title: "Full Name",
@@ -215,17 +215,14 @@ private struct SignUpSpecialtiesButton: View {
         Button {
             showSpecialtiesSheet = true
         } label: {
-            HStack {
-                Image(systemName: "briefcase.fill")
-                Text(vm.selectedSpecialties.isEmpty
-                     ? "Specialties & Bio (optional)"
-                     : "\(vm.selectedSpecialties.count) specialties selected")
-                Spacer()
-                Image(systemName: "chevron.right")
-            }
-            .font(.subheadline)
+            Label(vm.selectedSpecialties.isEmpty
+                  ? "Specialties & Bio (optional)"
+                  : "\(vm.selectedSpecialties.count) specialties selected", systemImage: "briefcase.fill")
+            .font(.footnote)
+            .underline()
             .foregroundStyle(.accent)
-            .padding()
+            .padding(.horizontal)
+            .padding(.horizontal)
         }
     }
 }

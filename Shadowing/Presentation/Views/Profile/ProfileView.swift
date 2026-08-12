@@ -193,7 +193,8 @@ private struct ProfileLoadedView: View {
                 Section("Specialties") {
                     SpecialtiesFlow(specialties: user.specialties)
                 }
-                .listRowBackground(listRowColor)
+                .listRowInsets(.all, 0)
+                .listRowBackground(Color.clear)
             }
             
             accountSection(user: user, statusLabel: statusLabel, statusColor: statusColor)
@@ -308,7 +309,7 @@ struct SpecialtiesFlow: View {
                 ForEach(specialties) { specialty in
                     Label(specialty.label, systemImage: specialty.icon)
                         .font(.footnote).bold()
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 8)
                         .padding(.vertical, 6)
                         .appGlassCapsule(
                             overlayColor: .green.opacity(0.1),
