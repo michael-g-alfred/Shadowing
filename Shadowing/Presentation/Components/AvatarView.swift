@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct AvatarView: View {
+struct AvatarView<Accessory: View>: View {
     
         // MARK: - Environment
     @Environment(\.colorScheme) private var colorScheme
@@ -19,6 +19,25 @@ struct AvatarView: View {
     var nameLayout: NameLayout = .none
     var nameFont: Font = .body
     var subtitle: String? = nil
+    @ViewBuilder var accessory: () -> Accessory
+    
+    init(
+        profile: Profile?,
+        size: CGFloat = 44,
+        accentColor: Color = .accent,
+        nameLayout: NameLayout = .none,
+        nameFont: Font = .body,
+        subtitle: String? = nil,
+        @ViewBuilder accessory: @escaping () -> Accessory
+    ) {
+        self.profile = profile
+        self.size = size
+        self.accentColor = accentColor
+        self.nameLayout = nameLayout
+        self.nameFont = nameFont
+        self.subtitle = subtitle
+        self.accessory = accessory
+    }
     
     private var avatarBackground: Color {
         colorScheme == .dark
@@ -98,11 +117,29 @@ struct AvatarView: View {
     
     private func nameBlock(alignment: HorizontalAlignment) -> some View {
         VStack(alignment: alignment, spacing: 0) {
-            Text(profile?.displayName ?? "Guest")
-                .font(nameFont)
-                .bold()
-                .foregroundStyle(.primary)
-                .lineLimit(1)
+            if alignment == .leading {
+                HStack(alignment: .center,spacing: Spacing.sm) {
+                    Text(profile?.displayName ?? "Guest")
+                        .font(nameFont)
+                        .bold()
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    
+                    Spacer()
+                    
+                    accessory()
+                }
+            } else {
+                HStack(alignment: .center, spacing: Spacing.sm) {
+                    Text(profile?.displayName ?? "Guest")
+                        .font(nameFont)
+                        .bold()
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    
+                    accessory()
+                }
+            }
             
             if let subtitle {
                 Text(subtitle)
@@ -111,5 +148,27 @@ struct AvatarView: View {
                     .lineLimit(1)
             }
         }
+    }
+}
+
+    // MARK: - Convenience init (no accessory)
+extension AvatarView where Accessory == EmptyView {
+    init(
+        profile: Profile?,
+        size: CGFloat = 44,
+        accentColor: Color = .accent,
+        nameLayout: NameLayout = .none,
+        nameFont: Font = .body,
+        subtitle: String? = nil
+    ) {
+        self.init(
+            profile: profile,
+            size: size,
+            accentColor: accentColor,
+            nameLayout: nameLayout,
+            nameFont: nameFont,
+            subtitle: subtitle,
+            accessory: { EmptyView() }
+        )
     }
 }

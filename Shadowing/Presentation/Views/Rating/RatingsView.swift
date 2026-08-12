@@ -81,19 +81,15 @@ private struct RatingRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            HStack(alignment: .top) {
-                AvatarView(profile: rating, nameLayout: .horizontal, subtitle: rating.createdAt.toRelativeString())
-
-                Spacer()
-
-                HStack(spacing: 3) {
-                    ForEach(1...5, id: \.self) { star in
-                        Image(systemName: star <= rating.rating ? "star.fill" : "star")
-                            .font(.footnote)
-                            .foregroundStyle(star <= rating.rating ? .rating : .gray.opacity(0.3))
+                AvatarView(profile: rating, nameLayout: .horizontal, subtitle: rating.createdAt.toRelativeString()) {
+                    HStack(spacing: 3) {
+                        ForEach(1...5, id: \.self) { star in
+                            Image(systemName: star <= rating.rating ? "star.fill" : "star")
+                                .font(.footnote)
+                                .foregroundStyle(star <= rating.rating ? .rating : .gray.opacity(0.3))
+                        }
                     }
                 }
-            }
 
             if !rating.comment.isEmpty {
                 Text(rating.comment)
