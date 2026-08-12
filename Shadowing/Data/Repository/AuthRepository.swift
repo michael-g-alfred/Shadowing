@@ -44,6 +44,8 @@ final class AuthRepository: AuthRepositoryProtocol {
         nationalId: String,
         countryId: Int,
         governorateId: Int,
+        phoneCountryId: Int,
+        phoneNumber: String,
         bio: String,
         specialtyIds: [Int]
     ) async throws {
@@ -52,6 +54,8 @@ final class AuthRepository: AuthRepositoryProtocol {
             password: password,
             displayName: displayName,
             nationalId: nationalId,
+            phoneCountryId: phoneCountryId,
+            phoneNumber: phoneNumber,
             countryId: countryId,
             governorateId: governorateId,
             bio: bio,

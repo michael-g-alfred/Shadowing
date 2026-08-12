@@ -10,6 +10,8 @@ extension APIConfig {
         let password: String
         let displayName: String
         let nationalId: String
+        let phoneCountryId: Int
+        let phoneNumber: String
         let countryId: Int
         let governorateId: Int
         let bio: String

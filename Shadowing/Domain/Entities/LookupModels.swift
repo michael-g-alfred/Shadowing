@@ -179,7 +179,39 @@ extension CurrencyLookupDTO {
     }
 }
 
-    // MARK: - 6. Priority Lookup
+    // MARK: - 6. Phone Lookup
+struct PhoneLookupDTO: Codable {
+    let id: Int?
+    let countryId: Int?
+    let dialCode: String?
+    let flag: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, flag
+        case countryId = "country_id"
+        case dialCode = "dial_code"
+    }
+}
+
+struct PhoneLookup: Identifiable, Hashable {
+    let id: Int
+    let countryId: Int
+    let dialCode: String
+    let flag: String
+}
+
+extension PhoneLookupDTO {
+    func toDomain(locale: Locale) -> PhoneLookup {
+        PhoneLookup(
+            id: id ?? 0,
+            countryId: countryId ?? 0,
+            dialCode: dialCode ?? "",
+            flag: flag ?? "🏳️"
+        )
+    }
+}
+
+    // MARK: - 7. Priority Lookup
 struct PriorityLookupDTO: Codable {
     let id: Int?
     let name: String?
@@ -219,7 +251,7 @@ extension PriorityLookupDTO {
     }
 }
 
-    // MARK: - 7. Status Lookup
+    // MARK: - 8. Status Lookup
 struct StatusLookupDTO: Codable {
     let id: Int?
     let name: String?
@@ -254,7 +286,7 @@ extension StatusLookupDTO {
     }
 }
 
-    // MARK: - 8. Task Service Lookup
+    // MARK: - 9. Task Service Lookup
 struct TaskServiceLookupDTO: Codable {
     let id: Int?
     let name: String?
@@ -289,7 +321,7 @@ extension TaskServiceLookupDTO {
     }
 }
 
-    // MARK: - 9. Time Of Day Lookup
+    // MARK: - 10. Time Of Day Lookup
 struct TimeOfDayLookupDTO: Codable {
     let id: Int?
     let name: String?
@@ -333,7 +365,7 @@ extension TimeOfDayLookupDTO {
     }
 }
 
-    // MARK: - 10. Escrow Status Lookup
+    // MARK: - 11. Escrow Status Lookup
 struct EscrowStatusLookupDTO: Codable {
     let id: Int?
     let name: String?
@@ -372,6 +404,7 @@ struct AllLookupsDTO: Codable {
     let countries: [CountryLookupDTO]?
     let governorates: [GovernorateLookupDTO]?
     let currencies: [CurrencyLookupDTO]?
+    let phone: [PhoneLookupDTO]?
     let priorities: [PriorityLookupDTO]?
     let statuses: [StatusLookupDTO]?
     let services: [TaskServiceLookupDTO]?
@@ -385,6 +418,7 @@ struct AllLookups {
     let countries: [CountryLookup]
     let governorates: [GovernorateLookup]
     let currencies: [CurrencyLookup]
+    let phone: [PhoneLookup]
     let priorities: [PriorityLookup]
     let statuses: [StatusLookup]
     let services: [TaskServiceLookup]
@@ -400,6 +434,7 @@ extension AllLookupsDTO {
             countries: countries?.map { $0.toDomain(locale: locale) } ?? [],
             governorates: governorates?.map { $0.toDomain(locale: locale) } ?? [],
             currencies: currencies?.map { $0.toDomain(locale: locale) } ?? [],
+            phone: phone?.map { $0.toDomain(locale: locale) } ?? [],
             priorities: priorities?.map { $0.toDomain(locale: locale) } ?? [],
             statuses: statuses?.map { $0.toDomain(locale: locale) } ?? [],
             services: services?.map { $0.toDomain(locale: locale) } ?? [],
@@ -416,6 +451,7 @@ enum LookupType: String {
     case countries
     case governorates
     case currencies
+    case phone
     case priorities
     case statuses
     case services

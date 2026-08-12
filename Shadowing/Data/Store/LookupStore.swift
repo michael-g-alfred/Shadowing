@@ -9,6 +9,7 @@ final class LookupStore {
     private(set) var accountStatuses: [AccountStatusLookup] = []
     private(set) var countries: [CountryLookup] = []
     private(set) var governorates: [GovernorateLookup] = []
+    private(set) var phone: [PhoneLookup] = []
     private(set) var currencies: [CurrencyLookup] = []
     private(set) var priorities: [PriorityLookup] = []
     private(set) var statuses: [StatusLookup] = []
@@ -54,6 +55,7 @@ final class LookupStore {
             services = all.services
             countries = all.countries
             governorates = all.governorates
+            phone = all.phone
             currencies = all.currencies
 
             isLoaded = true
@@ -71,6 +73,10 @@ final class LookupStore {
 
     func service(named name: String) -> TaskServiceLookup? {
         services.first { $0.name == name }
+    }
+
+    func phone(for countryId: Int) -> PhoneLookup? {
+        phone.first { $0.countryId == countryId }
     }
 
     func priority(named name: String) -> PriorityLookup? {
@@ -135,6 +141,10 @@ final class LookupStore {
 
     func service(id: Int) -> TaskServiceLookup? {
         services.first { $0.id == id }
+    }
+
+    func phone(id: Int) -> PhoneLookup? {
+        phone.first { $0.id == id }
     }
 
     func currency(id: Int) -> CurrencyLookup? {

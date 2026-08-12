@@ -13,12 +13,17 @@ final class AuthViewModel {
     var displayName = ""
     var confirmPassword = ""
     var nationalID: String = ""
+    var phoneNumber: String = ""
+    var selectedPhoneCountry: PhoneLookup?
     var bio: String = ""
     var selectedSpecialties: Set<TaskServiceLookup> = []
     var selectedCountry: CountryLookup? {
         didSet {
             guard oldValue?.id != selectedCountry?.id else { return }
             selectedGovernorate = nil
+            if let selectedCountry {
+                selectedPhoneCountry = lookupStore.phone(for: selectedCountry.id)
+            }
         }
     }
     var selectedGovernorate: GovernorateLookup?
@@ -43,12 +48,20 @@ final class AuthViewModel {
         return lookupStore.governorates(for: selectedCountry.id)
     }
     var availableSpecialties: [TaskServiceLookup] { lookupStore.services }
+    var availablePhoneCodes: [PhoneLookup] { lookupStore.phone }
     
         // MARK: - Validation
+    private var isPhoneNumberValid: Bool {
+        let digitsOnly = phoneNumber.allSatisfy(\.isNumber)
+        return digitsOnly && (6...14).contains(phoneNumber.count)
+    }
+    
     var isSignUpFormValid: Bool {
         password == confirmPassword
         && selectedCountry != nil
         && selectedGovernorate != nil
+        && selectedPhoneCountry != nil
+        && isPhoneNumberValid
     }
     
         // MARK: - Actions
@@ -63,7 +76,7 @@ final class AuthViewModel {
     }
     
     func signUp() async -> Bool {
-        guard let selectedCountry, let selectedGovernorate else { return false }
+        guard let selectedCountry, let selectedGovernorate, let selectedPhoneCountry else { return false }
         return await performSubmit {
             try await self.authRepo.signUp(
                 email: self.email,
@@ -72,6 +85,8 @@ final class AuthViewModel {
                 nationalId: self.nationalID,
                 countryId: selectedCountry.id,
                 governorateId: selectedGovernorate.id,
+                phoneCountryId: selectedPhoneCountry.id,
+                phoneNumber: self.phoneNumber,
                 bio: self.bio.trimmingCharacters(in: .whitespacesAndNewlines),
                 specialtyIds: self.selectedSpecialties.map(\.id)
             )
