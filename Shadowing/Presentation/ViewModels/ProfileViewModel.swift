@@ -32,6 +32,9 @@ final class ProfileViewModel {
     var isCameraPresented = false
         /// Drives presentation of the PhotosPicker (library) sheet.
     var isLibraryPickerPresented = false
+        /// Drives presentation of the Files app document picker (choose from
+        /// iCloud Drive, On My iPhone/Mac, or other file providers).
+    var isFilePickerPresented = false
     
         // MARK: - Suspension Countdown
     var suspensionCountdownText: String?
@@ -91,16 +94,32 @@ final class ProfileViewModel {
         }
     }
     
+        /// Called by FilePicker's completion closure with the picked image's data.
+    func handleFilePicked(_ data: Data) {
+        Task {
+            await uploadAvatar(imageData: data)
+        }
+    }
+    
+    func handleFilePickerError(_ message: String) {
+        AlertCenter.shared.showError(message)
+    }
+    
     func uploadAvatar(imageData: Data) async {
         guard let userId = user?.id else { return }
         errorMessage = nil
         isUploadingAvatar = true
         defer { isUploadingAvatar = false }
         
+        guard let compressedData = Self.compressedJPEGData(from: imageData) else {
+            AlertCenter.shared.showError("Couldn't process the selected image.")
+            return
+        }
+        
         do {
             let result = try await userRepo.uploadAvatar(
                 userId: userId,
-                imageData: imageData,
+                imageData: compressedData,
                 fileName: "avatar.jpg",
                 mimeType: "image/jpeg"
             )
@@ -111,6 +130,30 @@ final class ProfileViewModel {
         } catch {
             AlertCenter.shared.showError(error.localizedDescription)
         }
+    }
+    
+        /// Resizes the image so its longest side is at most `maxDimension`,
+        /// then re-encodes it as JPEG at `quality`. Applied uniformly to
+        /// avatars coming from the camera, photo library, or Files picker —
+        /// so a raw multi-MB photo from any source never gets uploaded as-is.
+    private static func compressedJPEGData(
+        from data: Data,
+        maxDimension: CGFloat = 1024,
+        quality: CGFloat = 0.7
+    ) -> Data? {
+        guard let image = UIImage(data: data) else { return nil }
+        
+        let originalSize = image.size
+        let longestSide = max(originalSize.width, originalSize.height)
+        let scale = longestSide > maxDimension ? maxDimension / longestSide : 1
+        let targetSize = CGSize(width: originalSize.width * scale, height: originalSize.height * scale)
+        
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        let resizedImage = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+        
+        return resizedImage.jpegData(compressionQuality: quality)
     }
     
         // MARK: - ID Display

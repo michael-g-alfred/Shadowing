@@ -1,22 +1,22 @@
 import SwiftUI
 import PhotosUI
 
-// MARK: - Container
+    // MARK: - Container
 
 struct ProfileView: View {
-
-    // MARK: Environment
+    
+        // MARK: Environment
     @Environment(DIContainer.self) private var container
-
-    // MARK: State
+    
+        // MARK: State
     @State private var vm: ProfileViewModel
-
-    // MARK: Init
+    
+        // MARK: Init
     init(vm: ProfileViewModel) {
         _vm = State(initialValue: vm)
     }
-
-    // MARK: Body
+    
+        // MARK: Body
     var body: some View {
         NavigationStack {
             ScreenContainer {
@@ -36,6 +36,9 @@ struct ProfileView: View {
                 Button("Choose from Library") {
                     vm.isLibraryPickerPresented = true
                 }
+                Button("Choose File") {
+                    vm.isFilePickerPresented = true
+                }
                 Button("Cancel", role: .cancel) {}
             }
             .photosPicker(
@@ -49,6 +52,12 @@ struct ProfileView: View {
                 }
                 .ignoresSafeArea()
             }
+            .sheet(isPresented: Bindable(vm).isFilePickerPresented) {
+                FilePicker(
+                    onFilePicked: { data in vm.handleFilePicked(data) },
+                    onError: { message in vm.handleFilePickerError(message) }
+                )
+            }
             .sheet(isPresented: Bindable(vm).isRatingsPresented) {
                 if let user = vm.user {
                     container.makeRatingsView(userId: user.id, userName: user.displayName)
@@ -61,14 +70,14 @@ struct ProfileView: View {
             }
         }
     }
-
-    // MARK: Private Helpers
+    
+        // MARK: Private Helpers
     private var state: ViewState<UserModel> {
         if vm.isLoading && vm.user == nil { return .loading }
         guard let user = vm.user else { return .empty }
         return .loaded(user)
     }
-
+    
     private func signOut() async {
         guard await vm.signout() else { return }
         container.setAppState(.auth)
@@ -76,17 +85,17 @@ struct ProfileView: View {
     }
 }
 
-// MARK: - Content (state routing)
+    // MARK: - Content (state routing)
 
 private struct ProfileContentView: View {
     let state: ViewState<UserModel>
     let vm: ProfileViewModel
     let container: DIContainer
-
+    
     var body: some View {
         DataStateView(
             state: state,
-            loadingState: .loading(title: "Loading profile…", subtitle: "Please wait a moment"),
+            loadingState: .loading(title: "Loading profile", subtitle: "Please wait a moment..."),
             emptyState: .noProfile,
             retryAction: { await vm.loadProfile() }
         ) { user in
@@ -95,12 +104,12 @@ private struct ProfileContentView: View {
     }
 }
 
-// MARK: - Toolbar
+    // MARK: - Toolbar
 
 private struct ProfileToolbar: ToolbarContent {
     let vm: ProfileViewModel
     let onSignOut: () async -> Void
-
+    
     var body: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button {
@@ -109,7 +118,7 @@ private struct ProfileToolbar: ToolbarContent {
                 Label("Settings", systemImage: "gearshape.fill")
             }
         }
-
+        
         ToolbarItem(placement: .topBarTrailing) {
             Button {
                 vm.isPhotoSourceDialogPresented = true
@@ -122,9 +131,9 @@ private struct ProfileToolbar: ToolbarContent {
             }
             .disabled(vm.isUploadingAvatar || vm.user == nil)
         }
-
+        
         ToolbarSpacer(placement: .topBarTrailing)
-
+        
         ToolbarItem(placement: .destructiveAction) {
             Button(role: .destructive) {
                 Task { await onSignOut() }
@@ -136,63 +145,63 @@ private struct ProfileToolbar: ToolbarContent {
     }
 }
 
-// MARK: - Loaded
+    // MARK: - Loaded
 
 private struct ProfileLoadedView: View {
-
-    // MARK: Environment
+    
+        // MARK: Environment
     @Environment(\.colorScheme) private var colorScheme
-
-    // MARK: Properties
+    
+        // MARK: Properties
     let user: UserModel
     let vm: ProfileViewModel
     let container: DIContainer
-
+    
     private var listRowColor: Color? {
         colorScheme == .dark ? Color.accentColor.opacity(0.15) : nil
     }
-
+    
     private var listErrorRowColor: Color? {
         colorScheme == .dark ? Color.orange.opacity(0.15) : nil
     }
-
-    // MARK: Body
+    
+        // MARK: Body
     var body: some View {
         let accountStatus = container.lookupStore.accountStatus(named: user.accountStatus)
         let statusLabel = accountStatus?.label ?? user.accountStatus
         let statusColor = accountStatus?.color ?? .gray
-
+        
         List {
             avatarSection
-
+            
             if user.isSuspended {
                 suspensionSection(statusLabel: statusLabel, statusColor: statusColor)
             }
-
+            
             if let errorMessage = vm.errorMessage {
                 ProfileErrorSection(message: errorMessage, background: listErrorRowColor)
             }
-
+            
             if let bio = user.bio, !bio.isEmpty {
                 Section("About") {
                     Text(bio).bold()
                 }
                 .listRowBackground(listRowColor)
             }
-
+            
             if !user.specialties.isEmpty {
                 Section("Specialties") {
                     SpecialtiesFlow(specialties: user.specialties)
                 }
                 .listRowBackground(listRowColor)
             }
-
+            
             accountSection(user: user, statusLabel: statusLabel, statusColor: statusColor)
         }
         .scrollContentBackground(.hidden)
     }
-
-    // MARK: Sections
+    
+        // MARK: Sections
     private var avatarSection: some View {
         Section {
             AvatarView(profile: user, size: 100, nameLayout: .vertical, nameFont: .title2)
@@ -203,7 +212,7 @@ private struct ProfileLoadedView: View {
         }
         .listRowBackground(Color.clear)
     }
-
+    
     private func suspensionSection(statusLabel: String, statusColor: Color) -> some View {
         Section {
             VStack(alignment: .leading, spacing: 4) {
@@ -219,7 +228,7 @@ private struct ProfileLoadedView: View {
             .foregroundStyle(statusColor)
         }
     }
-
+    
     private func accountSection(user: UserModel, statusLabel: String, statusColor: Color) -> some View {
         Section("Account") {
             InfoRow(title: "Account Status", systemImage: "checkmark.shield") {
@@ -227,19 +236,19 @@ private struct ProfileLoadedView: View {
                     .bold()
                     .foregroundStyle(statusColor)
             }
-
+            
             InfoRow(
                 title: "Email",
                 systemImage: "envelope",
                 value: user.email.isEmpty ? "—" : user.email
             )
-
+            
             InfoRow(
                 title: "Completed Tasks",
                 systemImage: "checklist",
                 localizedValue: "\(user.completedTasks)"
             )
-
+            
             InfoRow(
                 title: "Total Ratings",
                 systemImage: "person.2",
@@ -249,13 +258,13 @@ private struct ProfileLoadedView: View {
             .onTapGesture {
                 vm.isRatingsPresented = true
             }
-
+            
             InfoRow(
                 title: "Rating",
                 systemImage: "star",
                 localizedValue: user.totalRatings > 0 ? "\(user.rating, specifier: "%.1f")" : "-"
             )
-
+            
             if let createdAt = user.createdAt {
                 InfoRow(
                     title: "Member Since",
@@ -263,19 +272,19 @@ private struct ProfileLoadedView: View {
                     value: createdAt.formatted(date: .abbreviated, time: .omitted)
                 )
             }
-
+            
             ProfileIdRow(user: user, vm: vm)
         }
         .listRowBackground(listRowColor)
     }
 }
 
-// MARK: - Error Banner
+    // MARK: - Error Banner
 
 private struct ProfileErrorSection: View {
     let message: String
     let background: Color?
-
+    
     var body: some View {
         Section {
             Text(message)
@@ -288,11 +297,11 @@ private struct ProfileErrorSection: View {
     }
 }
 
-// MARK: - Specialties
+    // MARK: - Specialties
 
 struct SpecialtiesFlow: View {
     let specialties: [SpecialtyModel]
-
+    
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Spacing.sm) {
@@ -311,12 +320,12 @@ struct SpecialtiesFlow: View {
     }
 }
 
-// MARK: - ID Row
+    // MARK: - ID Row
 
 private struct ProfileIdRow: View {
     let user: UserModel
     let vm: ProfileViewModel
-
+    
     var body: some View {
         InfoRow(title: "Reference Code", systemImage: "person.badge.key") {
             Text(user.id.isEmpty ? "—" : vm.displayedId(for: user.id))

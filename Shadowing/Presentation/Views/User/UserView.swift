@@ -48,7 +48,7 @@ private struct UserContentView: View {
     var body: some View {
         DataStateView(
             state: state,
-            loadingState: .loading(title: "Loading profile…", subtitle: "Please wait a moment"),
+            loadingState: .loading(title: "Loading user", subtitle: "Please wait a moment..."),
             emptyState: .noProfile,
             retryAction: { await vm.loadUser() }
         ) { user in

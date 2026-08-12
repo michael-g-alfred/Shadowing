@@ -7,7 +7,8 @@ final class LanguageManager {
 
     static let shared = LanguageManager()
 
-    private let storageKey = "AppLanguage"
+    private let storageKey = "appLanguage"
+
     private(set) var currentLanguage: AppLanguage = .english
 
     private init() {

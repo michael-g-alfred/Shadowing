@@ -3,11 +3,12 @@ import SwiftUI
 @MainActor
 @Observable
 final class AppearanceManager {
+    
     static let shared = AppearanceManager()
 
     private let storageKey = "appColorScheme"
 
-    var currentMode: AppColorScheme {
+    private(set) var currentMode: AppColorScheme {
         didSet {
             UserDefaults.standard.set(currentMode.rawValue, forKey: storageKey)
         }

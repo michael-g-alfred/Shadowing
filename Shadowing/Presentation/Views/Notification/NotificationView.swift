@@ -79,7 +79,7 @@ private struct NotificationContentView: View {
     var body: some View {
         DataStateView(
             state: state,
-            loadingState: .loading(title: "Loading notifications", subtitle: "Please wait a moment."),
+            loadingState: .loading(title: "Loading notifications", subtitle: "Please wait a moment..."),
             emptyState: .noNotifications
         ) { notifications in
             NotificationLoadedView(notifications: notifications, vm: vm)

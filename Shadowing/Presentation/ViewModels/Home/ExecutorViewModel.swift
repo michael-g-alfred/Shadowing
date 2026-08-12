@@ -65,10 +65,10 @@ final class ExecutorViewModel {
         feeConfirmationGrossAmount * (1 - platformFeeRate)
     }
     
-    var feeConfirmationMessage: String {
+    var feeConfirmationMessage: LocalizedStringResource {
         let gross = formattedCurrency(feeConfirmationGrossAmount)
         let net = formattedCurrency(feeConfirmationNetAmount)
-        return "A 10% platform fee will be deducted from the offered amount (\(gross)). You'll actually receive \(net)."
+        return "A 10% fee will be deducted from the offered amount (\(gross)). You'll actually receive \(net)."
     }
     
     private func formattedCurrency(_ value: Double) -> String {

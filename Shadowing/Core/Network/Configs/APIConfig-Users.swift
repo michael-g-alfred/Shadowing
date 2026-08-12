@@ -46,7 +46,7 @@ extension APIConfig {
             path: APIEndpoints.userAvatarPath(id: userId),
             method: .post,
             headers: Self.requestHeaders(accessToken: accessToken, contentType: "multipart/form-data; boundary=\(boundary)"),
-            body: body
+            rawBody: body
         )
     }
     
