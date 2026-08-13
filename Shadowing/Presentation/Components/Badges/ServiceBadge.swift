@@ -6,7 +6,7 @@ struct ServiceBadge: View {
     let service: TaskServiceLookup
     
     var body: some View {
-        HStack(alignment: .center, spacing: 2) {
+        HStack(alignment: .center, spacing: Spacing.xs) {
             Image(systemName: service.icon)
             Text(service.label)
                 .fixedSize(horizontal: true, vertical: false)

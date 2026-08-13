@@ -298,29 +298,6 @@ private struct ProfileErrorSection: View {
     }
 }
 
-    // MARK: - Specialties
-
-struct SpecialtiesFlow: View {
-    let specialties: [SpecialtyModel]
-    
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.sm) {
-                ForEach(specialties) { specialty in
-                    Label(specialty.label, systemImage: specialty.icon)
-                        .font(.footnote).bold()
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 4)
-                        .appGlassCapsule(
-                            overlayColor: .green.opacity(0.25),
-                            strokeColor: .green.opacity(0.05)
-                        )
-                }
-            }
-        }
-    }
-}
-
     // MARK: - ID Row
 
 private struct ProfileIdRow: View {
