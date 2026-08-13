@@ -252,7 +252,7 @@ private struct ProfileLoadedView: View {
             
             InfoRow(
                 title: "Total Ratings",
-                systemImage: "person.2",
+                systemImage: "list.star",
                 localizedValue: user.totalRatings > 0 ? "\(user.totalRatings)" : "-"
             )
             .contentShape(Rectangle())
@@ -309,10 +309,10 @@ struct SpecialtiesFlow: View {
                 ForEach(specialties) { specialty in
                     Label(specialty.label, systemImage: specialty.icon)
                         .font(.footnote).bold()
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 4)
                         .appGlassCapsule(
-                            overlayColor: .green.opacity(0.1),
+                            overlayColor: .green.opacity(0.25),
                             strokeColor: .green.opacity(0.05)
                         )
                 }

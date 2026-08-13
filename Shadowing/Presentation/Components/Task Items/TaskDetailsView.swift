@@ -207,7 +207,7 @@ struct TaskDetailsView: View {
         
         InfoRow(
             title: "Total Ratings",
-            systemImage: "person.2",
+            systemImage: "list.star",
             localizedValue: user.totalRatings > 0
             ? "\(user.totalRatings)"
             : "-"
