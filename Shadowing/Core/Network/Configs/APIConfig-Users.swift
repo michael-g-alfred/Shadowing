@@ -75,4 +75,19 @@ extension APIConfig {
             headers: Self.requestHeaders(accessToken: accessToken)
         )
     }
+    
+        /// PATCH /users/:id — partial profile update. `payload` only encodes
+        /// the fields that were actually set (see EditProfilePayload), so this
+        /// naturally sends a minimal, whitelisted body matching the backend's
+        /// editProfileSchema.
+    static func updateProfile(userId: String, payload: EditProfilePayload, accessToken: String) throws -> MGRequestConfig {
+        let body = try JSONEncoder().encode(payload)
+        return MGRequestConfig(
+            baseURL: APIEndpoints.baseURL,
+            path: APIEndpoints.userPath(id: userId),
+            method: .patch,
+            headers: Self.requestHeaders(accessToken: accessToken, contentType: "application/json"),
+            rawBody: body
+        )
+    }
 }

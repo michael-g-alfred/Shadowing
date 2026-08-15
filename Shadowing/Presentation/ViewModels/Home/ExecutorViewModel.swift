@@ -146,19 +146,41 @@ final class ExecutorViewModel {
         isApplying = true
         defer { isApplying = false }
         
+            // Optimistic local state update: mark as applicant immediately
+        guard let index = executorAvailableTasks.firstIndex(where: { $0.id == task.id }) else { return }
+        let previousTask = executorAvailableTasks[index]
+        executorAvailableTasks[index].isApplicant = true
+        
+        showAppliedSheet = false
+        selectedTaskForApply = nil
+        
         do {
             let result = try await taskRepo.applyToTask(id: task.id, proposedBudget: proposedBudget)
-            showAppliedSheet = false
-            selectedTaskForApply = nil
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await notifyRequesterOfApplication(for: task)
-            await loadAvailableTasks()
         } catch {
+                // Rollback on error
+            if let rollbackIndex = executorAvailableTasks.firstIndex(where: { $0.id == task.id }) {
+                executorAvailableTasks[rollbackIndex] = previousTask
+            }
             AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
     func withdrawFromTask(_ task: TaskModel) async {
+        let wasInProgress = (task.status == TaskStatus.inProgress.rawValue)
+        
+            // Optimistic local update
+        let previousAssignedTasks = executorAssignedTasks
+        let previousAvailableIndex = executorAvailableTasks.firstIndex(where: { $0.id == task.id })
+        let previousAvailableTask = previousAvailableIndex.map { executorAvailableTasks[$0] }
+        
+        if wasInProgress {
+            executorAssignedTasks.removeAll { $0.id == task.id }
+        } else if let index = previousAvailableIndex {
+            executorAvailableTasks[index].isApplicant = false
+        }
+        
         do {
             let result = try await taskRepo.withdrawFromTask(id: task.id)
             
@@ -170,24 +192,34 @@ final class ExecutorViewModel {
             
             await notifyRequesterOfWithdrawal(from: task)
             
-            if task.status == TaskStatus.inProgress.rawValue {
+            if wasInProgress {
                 try? await chatRepo.deleteChat(taskId: task.id)
-                await loadAssignedTasks()
-            } else {
-                await loadAvailableTasks()
             }
         } catch {
+                // Rollback on error
+            if wasInProgress {
+                executorAssignedTasks = previousAssignedTasks
+            } else if let index = previousAvailableIndex, let prev = previousAvailableTask {
+                executorAvailableTasks[index] = prev
+            }
             AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
     func markTaskDone(_ task: TaskModel) async {
+        guard let index = executorAssignedTasks.firstIndex(where: { $0.id == task.id }) else { return }
+        let previousTask = executorAssignedTasks[index]
+        
+            // Optimistic update: Change status to pendingCompleted
+        executorAssignedTasks[index].status = TaskStatus.pendingCompleted.rawValue
+        
         do {
             let result = try await taskRepo.markTaskDone(id: task.id)
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await notifyRequesterOfMarkDone(for: task)
-            await loadAssignedTasks()
         } catch {
+                // Rollback on error
+            executorAssignedTasks[index] = previousTask
             AlertCenter.shared.showError(error.localizedDescription)
         }
     }

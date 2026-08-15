@@ -19,6 +19,8 @@ struct UserDTO: Codable {
     let suspendedUntil: Date?
     let countryId: Int?
     let governorateId: Int?
+    let phoneCountryId: Int?
+    let phoneNumber: String?
     let specialties: [SpecialtyModel]?
     let createdAt: Date?
 }
@@ -40,6 +42,8 @@ extension UserDTO {
             suspendedUntil: suspendedUntil,
             countryId: countryId,
             governorateId: governorateId,
+            phoneCountryId: phoneCountryId,
+            phoneNumber: phoneNumber,
             specialties: specialties ?? [],
             createdAt: createdAt
         )

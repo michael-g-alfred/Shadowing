@@ -2,61 +2,57 @@ import SwiftUI
 
 struct RatingSheet: View {
     
-        // MARK: - Environment
     @Environment(\.dismiss) private var dismiss
     
-        // MARK: - State
     @State var vm: RatingSheetViewModel
     
-        // MARK: - Focus
     @FocusState private var commentFocused: Bool
     
-        // MARK: - Init
     init(vm: RatingSheetViewModel) {
         _vm = State(initialValue: vm)
     }
     
-        // MARK: - Body
     var body: some View {
         NavigationStack {
-            VStack(spacing: Spacing.xxl) {
-                VStack(spacing: 6) {
-                    Text("Rate \(vm.target.personTitle)")
-                        .font(.title2.bold())
+            ScrollView {
+                VStack(spacing: Spacing.xxl) {
+                    VStack(spacing: Spacing.sm) {
+                        Text("Rate \(vm.target.personTitle)")
+                            .font(.title2.bold())
+                            .multilineTextAlignment(.center)
+                        
+                        Text("for Task: \(vm.taskTitle)")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                    .padding(.top, Spacing.lg)
+                    
+                    Text("This step is required to complete the task.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                     
-                    Text("for Task: \(vm.taskTitle)")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                    starPicker
+                    
+                    commentField
+                    
+                    if let errorMessage = vm.errorMessage {
+                        Text(errorMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .multilineTextAlignment(.center)
+                    }
+                    
+                    ActionButton(title: "Submit Rating", systemImage: "checkmark", tint: .blue) {
+                        commentFocused = false
+                        Task { await vm.submit() }
+                    }
+                    .disabled(!vm.canSubmit)
                 }
-                .padding(.top, Spacing.lg)
-                
-                Text("This step is required to complete the task.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                
-                starPicker
-                
-                commentField
-                
-                if let errorMessage = vm.errorMessage {
-                    Text(errorMessage)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
-                }
-                
-                Spacer()
-                
-                ActionButton(title: "Submit Rating", systemImage: "checkmark", tint: .blue) {
-                    commentFocused = false
-                    Task { await vm.submit() }
-                }
-                .disabled(!vm.canSubmit)
+                .padding()
             }
-            .padding()
+            .scrollDismissesKeyboard(.interactively)
             .navigationBarTitleDisplayMode(.inline)
             .interactiveDismissDisabled(true)
             .onChange(of: vm.didSubmit) { _, didSubmit in
@@ -65,7 +61,6 @@ struct RatingSheet: View {
         }
     }
     
-        // MARK: - Private Views
     private var starPicker: some View {
         VStack(spacing: Spacing.lg) {
             HStack(spacing: Spacing.md) {
@@ -107,7 +102,7 @@ struct RatingSheet: View {
             TextEditor(text: $vm.comment)
                 .scrollContentBackground(.hidden)
                 .padding(Spacing.md)
-                .frame(height: 100)
+                .frame(height: 120)
                 .overlay {
                     RoundedRectangle(cornerRadius: CornerRadius.md)
                         .strokeBorder(.gray.opacity(0.5), lineWidth: 1)

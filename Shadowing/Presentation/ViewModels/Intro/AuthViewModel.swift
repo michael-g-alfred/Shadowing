@@ -66,7 +66,7 @@ final class AuthViewModel {
     
         // MARK: - Actions
     func loadLookupsIfNeeded() async {
-        await lookupStore.loadIfNeeded()
+        await lookupStore.loadLookup()
     }
     
     func signIn() async -> Bool {

@@ -3,33 +3,34 @@ import Foundation
 @MainActor
 @Observable
 final class RatingsViewModel {
-
+    
     let userId: String
     let userName: String
-
+    
     var ratings: [RatingModel] = []
     var isLoading = false
     var isLoadingMore = false
     var errorMessage: String?
-
+    var selectedRaterId: String?
+    
     private var cursor: String?
     private var hasMore = true
-
+    
     private let userRepo: UserRepositoryProtocol
-
+    
     init(userId: String, userName: String, userRepo: UserRepositoryProtocol) {
         self.userId = userId
         self.userName = userName
         self.userRepo = userRepo
     }
-
+    
     func loadRatings() async {
         isLoading = true
         errorMessage = nil
         cursor = nil
         hasMore = true
         defer { isLoading = false }
-
+        
         do {
             let result = try await userRepo.fetchUserRatings(userId: userId, cursor: nil, limit: nil)
             ratings = result.ratings
@@ -39,7 +40,7 @@ final class RatingsViewModel {
             errorMessage = error.localizedDescription
         }
     }
-
+    
     func loadMoreIfNeeded(current rating: RatingModel) async {
         
         guard shouldLoadMore(
@@ -58,6 +59,10 @@ final class RatingsViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+    
+    func didTapRater(of rating: RatingModel) {
+        selectedRaterId = rating.rater.id
     }
     
         // MARK: - Helpers

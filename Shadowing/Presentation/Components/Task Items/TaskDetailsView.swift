@@ -6,6 +6,7 @@ struct TaskDetailsView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(DIContainer.self) private var container
     @Environment(\.locale) private var locale
+    @Environment(\.dismiss) private var dismiss
     
         // MARK: - Properties
     private var listRowColor: Color? {
@@ -30,9 +31,40 @@ struct TaskDetailsView: View {
             content
         }
         .task { await vm.loadDetails() }
+        .toolbar {
+            if !vm.availableActions.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    actionsMenu
+                }
+            }
+        }
         .sheet(item: $vm.selectedUserForRatings) { user in
             container.makeRatingsView(userId: user.id, userName: user.displayName)
                 .appSheetStyle()
+        }
+    }
+    
+        // MARK: - Actions Menu
+    private var actionsMenu: some View {
+        Menu {
+            ForEach(vm.availableActions) { action in
+                Button(role: action.role) {
+                    Task {
+                        await vm.perform(action)
+                        if action == .delete {
+                            dismiss()
+                        } else {
+                            await vm.loadDetails()
+                        }
+                    }
+                } label: {
+                    Label(action.title, systemImage: action.systemImage)
+                        .foregroundStyle(action.color)
+                }
+                .tint(action.color)
+            }
+        } label: {
+            Image(systemName: "ellipsis")
         }
     }
     

@@ -61,13 +61,13 @@ private struct ModeOptionsList: View {
 
 #Preview("Mode Setup - Light") {
     ModeSetupView(
-        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared, appearanceManager: .shared)
+        vm: SettingsViewModel(locationService: LocationService(), languageManager: .shared, appearanceManager: .shared)
     )
 }
 
 #Preview("Mode Setup - Dark") {
     ModeSetupView(
-        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared, appearanceManager: .shared)
+        vm: SettingsViewModel(locationService: LocationService(), languageManager: .shared, appearanceManager: .shared)
     )
     .preferredColorScheme(.dark)
 }

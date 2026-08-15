@@ -30,7 +30,7 @@ final class LookupStore {
         self.languageManager = languageManager
     }
     
-    func loadIfNeeded() async {
+    func loadLookup() async {
         guard !isLoading else { return }
         guard !isLoaded || loadedLanguage != languageManager.currentLanguage else { return }
         await fetch()

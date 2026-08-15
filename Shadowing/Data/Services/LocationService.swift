@@ -2,15 +2,8 @@ import Foundation
 import CoreLocation
 
 @MainActor
-protocol LocationService: AnyObject {
-    var currentLocation: CLLocation? { get }
-    var authorizationStatus: CLAuthorizationStatus { get }
-    func requestLocation()
-}
-
-@MainActor
 @Observable
-final class CLLocationServiceImpl: NSObject, LocationService {
+final class LocationService: NSObject, LocationServiceProtocol {
     
     private(set) var currentLocation: CLLocation?
     private(set) var authorizationStatus: CLAuthorizationStatus
@@ -40,7 +33,7 @@ final class CLLocationServiceImpl: NSObject, LocationService {
     }
 }
 
-extension CLLocationServiceImpl: CLLocationManagerDelegate {
+extension LocationService: CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         Task { @MainActor in
             authorizationStatus = manager.authorizationStatus
@@ -65,7 +58,7 @@ extension CLLocationServiceImpl: CLLocationManagerDelegate {
 
 #if DEBUG
 @MainActor
-final class PreviewLocationService: LocationService {
+final class PreviewLocationService: LocationServiceProtocol {
     var currentLocation: CLLocation? = CLLocation(latitude: 31.2653, longitude: 32.3019) // Port Said
     var authorizationStatus: CLAuthorizationStatus = .authorizedWhenInUse
     func requestLocation() {}

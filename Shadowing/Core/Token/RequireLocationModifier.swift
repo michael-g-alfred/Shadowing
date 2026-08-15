@@ -2,19 +2,13 @@ import SwiftUI
 import CoreLocation
 
 struct RequireLocationModifier: ViewModifier {
-    let locationService: LocationService
+    let locationService: LocationServiceProtocol
     
     func body(content: Content) -> some View {
         Group {
             switch locationService.authorizationStatus {
                 case .authorizedWhenInUse, .authorizedAlways:
                     content
-                    
-                case .notDetermined:
-                    ProgressView()
-                        .task {
-                            locationService.requestLocation()
-                        }
                     
                 default:
                     EmptyState.noLocationAccess.view(settingsAction:  {
@@ -28,7 +22,7 @@ struct RequireLocationModifier: ViewModifier {
 }
 
 extension View {
-    func requireLocation(_ locationService: LocationService) -> some View {
+    func requireLocation(_ locationService: LocationServiceProtocol) -> some View {
         modifier(RequireLocationModifier(locationService: locationService))
     }
 }

@@ -38,20 +38,18 @@ struct RootView: View {
     var body: some View {
         Group {
             switch container.appState {
-                case .onboarding:
-                    container.makeOnboardingView()
-                    
                 case .setup:
                     container.makeSetupFlowView()
                     
+                case .onboarding:
+                    container.makeOnboardingView()
+                
                 case .auth:
                     AuthCoordinatorView()
                     
                 case .main:
                     container.makeMainView()
-                        .task {
-                            CLLocationServiceImpl().requestLocation()
-                        }
+                        .requireLocation(container.locationService)
                         .sheet(item: Binding(
                             get: { pendingRating },
                             set: { newValue in

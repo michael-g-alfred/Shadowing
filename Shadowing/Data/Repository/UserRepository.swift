@@ -136,12 +136,31 @@ final class UserRepository: UserRepositoryProtocol {
             type: response.type
         )
     }
+    
+        /// PATCH /users/:id — self-service profile edit (display name, bio,
+        /// location, phone, specialties). Updates `currentUser` in place when
+        /// editing your own profile, and invalidates the summary cache so any
+        /// other screens showing this user's summary (chat, task cards, etc.)
+        /// pick up the change on next fetch rather than showing stale data.
+    func updateProfile(userId: String, payload: EditProfilePayload) async throws -> (user: UserModel, message: String, type: String) {
+        let accessToken = try await getValidToken()
+        let config = try APIConfig.updateProfile(userId: userId, payload: payload, accessToken: accessToken)
+        let response: APIResponseDTO<ProfileResponseDTO> = try await network.request(config)
+        let updatedUser = response.data.user.toDomain()
+        
+        if currentUser?.id == userId {
+            self.currentUser = updatedUser
+        }
+        invalidateSummaryCache(id: userId)
+        
+        return (user: updatedUser, message: response.message, type: response.type)
+    }
 }
 
-// MARK: - DTO
-// Move this to your DTOs file if you keep them separate from the repository -
-// added here since UserSummaryResponseDTO / UserSummaryDTO's actual file
-// wasn't part of what I could see.
+    // MARK: - DTO
+    // Move this to your DTOs file if you keep them separate from the repository -
+    // added here since UserSummaryResponseDTO / UserSummaryDTO's actual file
+    // wasn't part of what I could see.
 struct UsersBySpecialtyResponseDTO: Codable {
     let users: [UserSummaryDTO]
 }

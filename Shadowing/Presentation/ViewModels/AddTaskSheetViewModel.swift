@@ -49,13 +49,13 @@ final class AddTaskSheetViewModel {
     
     private let taskRepo: TaskRepositoryProtocol
     private let userRepo: UserRepositoryProtocol
-    private let locationService: LocationService
+    private let locationService: LocationServiceProtocol
     let lookupStore: LookupStore
     
     init(
         taskRepo: TaskRepositoryProtocol,
         userRepo: UserRepositoryProtocol,
-        locationService: LocationService,
+        locationService: LocationServiceProtocol,
         lookupStore: LookupStore,
         onTaskAdded: (() async -> Void)? = nil
     ) {
@@ -73,7 +73,7 @@ final class AddTaskSheetViewModel {
     var availableCurrencies: [CurrencyLookup] { lookupStore.currencies }
     
     func loadLookupsIfNeeded() async {
-        await lookupStore.loadIfNeeded()
+        await lookupStore.loadLookup()
         if selectedPriority == nil {
             selectedPriority = lookupStore.priority(named: "normal")
         }

@@ -25,6 +25,10 @@ final class ProfileViewModel {
     var isRatingsPresented = false
     var isSettingsPresented = false
     
+        // MARK: - Edit Profile
+    var isEditProfilePresented = false
+    var isSavingProfile = false
+    
         // MARK: - Avatar Source Selection
         /// Shows the "Photo Library / Take Photo" confirmation dialog.
     var isPhotoSourceDialogPresented = false
@@ -76,6 +80,25 @@ final class ProfileViewModel {
             return true
         } catch {
             errorMessage = error.localizedDescription
+            return false
+        }
+    }
+    
+        // MARK: - Edit Profile
+    
+    @discardableResult
+    func saveProfile(_ payload: EditProfilePayload) async -> Bool {
+        guard let userId = user?.id else { return false }
+        isSavingProfile = true
+        defer { isSavingProfile = false }
+        
+        do {
+            let result = try await userRepo.updateProfile(userId: userId, payload: payload)
+            user = result.user
+            AlertCenter.shared.show(responseType: result.type, message: result.message)
+            return true
+        } catch {
+            AlertCenter.shared.showError(error.localizedDescription)
             return false
         }
     }
@@ -172,10 +195,6 @@ final class ProfileViewModel {
     }
     
         // MARK: - Suspension Countdown
-    
-        /// Starts (or restarts) a 1-minute repeating timer that refreshes
-        /// `suspensionCountdownText` while the account is suspended. Stops
-        /// itself automatically once the suspension has expired.
     private func updateSuspensionCountdown() {
         countdownTimer?.invalidate()
         countdownTimer = nil
@@ -201,8 +220,6 @@ final class ProfileViewModel {
             suspensionCountdownText = nil
             countdownTimer?.invalidate()
             countdownTimer = nil
-                // Suspension expired locally — reload so the server-confirmed
-                // "active" status (lazily reactivated on the next fetch) shows up.
             Task { await loadProfile() }
             return
         }

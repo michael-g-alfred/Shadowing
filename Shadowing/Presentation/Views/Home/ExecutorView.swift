@@ -21,7 +21,6 @@ struct ExecutorView: View {
             ExecutorTabHeader(vm: vm)
             ExecutorTabContent(container: container, selectedTab: vm.selectedTab)
         }
-        .requireLocation(container.locationService)
         .task {
             await vm.checkPendingRatings()
         }

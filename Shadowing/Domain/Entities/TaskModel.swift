@@ -18,7 +18,7 @@ struct TaskModel: Identifiable {
     let address: String
     let latitude: Double?
     let longitude: Double?
-    let status: String
+    var status: String
     let escrowStatus: String
     let scheduledAt: Date?
     let preferredTimeOfDay: String?
@@ -29,7 +29,7 @@ struct TaskModel: Identifiable {
     let requester: UserSummaryModel
     let executor: UserSummaryModel?
     let applicantsCount: Int
-    let isApplicant: Bool
+    var isApplicant: Bool
     var isFavourite: Bool
 
     var coordinate: CLLocationCoordinate2D {

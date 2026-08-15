@@ -70,13 +70,13 @@ private struct LanguageOptionsList: View {
 
 #Preview("Language Setup - Light") {
     LanguageSetupView(
-        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared, appearanceManager: .shared)
+        vm: SettingsViewModel(locationService: LocationService(), languageManager: .shared, appearanceManager: .shared)
     )
 }
 
 #Preview("Language Setup - Dark") {
     LanguageSetupView(
-        vm: SettingsViewModel(locationService: CLLocationServiceImpl(), languageManager: .shared, appearanceManager: .shared)
+        vm: SettingsViewModel(locationService: LocationService(), languageManager: .shared, appearanceManager: .shared)
     )
     .preferredColorScheme(.dark)
 }

@@ -65,8 +65,9 @@ private struct SpecialtiesPickerView: View {
                     Spacer()
                     if vm.selectedSpecialties.contains(specialty) {
                         Image(systemName: "checkmark")
+                            .imageScale(.medium)
+                            .bold()
                             .foregroundStyle(.accent)
-                            .fontWeight(.semibold)
                     }
                 }
             }
@@ -78,10 +79,10 @@ private struct SpecialtiesPickerView: View {
         .navigationTitle("Select Specialties")
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
-            Text("Pick up to \(maxSpecialties)")
+            Text("Pick (\(vm.selectedSpecialties.count)/\(maxSpecialties))")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.sm)
                 .frame(maxWidth: .infinity)
                 .background(.bar)
         }

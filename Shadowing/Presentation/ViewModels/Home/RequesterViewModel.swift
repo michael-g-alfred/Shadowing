@@ -27,6 +27,7 @@ final class RequesterViewModel {
     var isLoadingApplicants = false
     var selectedTaskForApplicants: TaskModel?
     var isAssigningExecutor = false
+    
         /// Set on a successful assign; ApplicantsSheet shows this as a local
         /// alert (so it can appear above the sheet) and dismisses the sheet
         /// itself only when the user taps OK.
@@ -95,53 +96,83 @@ final class RequesterViewModel {
         /// ApplicantsSheet — closes the sheet only now, so the alert and the
         /// sheet dismissal never race each other.
     func dismissAssignSuccessAlert() {
+            // 1. Local state mutation: update task status to inProgress instead of fetching all tasks
+        if let task = selectedTaskForApplicants,
+           let index = requesterPublishedTasks.firstIndex(where: { $0.id == task.id }) {
+            requesterPublishedTasks[index].status = TaskStatus.inProgress.rawValue
+        }
+        
+            // 2. Clear state and dismiss sheet
         assignResult = nil
         showApplicantsSheet = false
         selectedTaskApplicants = []
         selectedTaskForApplicants = nil
-        Task { await loadPublishedTasks() }
     }
     
     func confirmTaskCompletion(_ task: TaskModel) async {
+            // Optimistic update: Remove immediately from published list
+        guard let index = requesterPublishedTasks.firstIndex(where: { $0.id == task.id }) else { return }
+        let removedTask = requesterPublishedTasks.remove(at: index)
+        
         do {
             let result = try await taskRepo.confirmTask(id: task.id)
             try await chatRepo.deleteChat(taskId: task.id)
-            requesterPublishedTasks.removeAll { $0.id == task.id }
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await notifyExecutorOfConfirmation(for: task)
             await checkPendingRatings()
         } catch {
+                // Rollback in case of failure
+            requesterPublishedTasks.insert(removedTask, at: index)
             AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
     func deleteTask(_ task: TaskModel) async {
+            // Optimistic update: Remove task directly
+        guard let index = requesterPublishedTasks.firstIndex(where: { $0.id == task.id }) else { return }
+        let removedTask = requesterPublishedTasks.remove(at: index)
+        
         do {
             let result = try await taskRepo.deleteTask(id: task.id)
-            requesterPublishedTasks.removeAll { $0.id == task.id }
             AlertCenter.shared.show(responseType: result.type, message: result.message)
         } catch {
+                // Rollback in case of failure
+            requesterPublishedTasks.insert(removedTask, at: index)
             AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
     func cancelTask(_ task: TaskModel) async {
+        guard let index = requesterPublishedTasks.firstIndex(where: { $0.id == task.id }) else { return }
+        let previousTask = requesterPublishedTasks[index]
+        
+            // 1. Optimistic local state mutation
+        requesterPublishedTasks[index].status = TaskStatus.cancelled.rawValue
+        
         do {
             let result = try await taskRepo.cancelTask(id: task.id)
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await notifyExecutorOfCancellation(for: task)
-            await loadPublishedTasks()
         } catch {
+                // 2. Rollback on failure
+            requesterPublishedTasks[index] = previousTask
             AlertCenter.shared.showError(error.localizedDescription)
         }
     }
     
     func publishTask(_ task: TaskModel) async {
+        guard let index = requesterPublishedTasks.firstIndex(where: { $0.id == task.id }) else { return }
+        let previousTask = requesterPublishedTasks[index]
+        
+            // 1. Optimistic local state mutation
+        requesterPublishedTasks[index].status = TaskStatus.published.rawValue
+        
         do {
             let result = try await taskRepo.publishTask(id: task.id)
             AlertCenter.shared.show(responseType: result.type, message: result.message)
-            await loadPublishedTasks()
         } catch {
+                // 2. Rollback on failure
+            requesterPublishedTasks[index] = previousTask
             AlertCenter.shared.showError(error.localizedDescription)
         }
     }
@@ -161,12 +192,17 @@ final class RequesterViewModel {
     
     func declineApplicant(_ applicant: ApplicantModel) async {
         guard let task = selectedTaskForApplicants else { return }
+        
+            // Optimistic removal of applicant from local state
+        let previousApplicants = selectedTaskApplicants
+        selectedTaskApplicants.removeAll { $0.id == applicant.id }
+        
         do {
             let result = try await taskRepo.declineApplicant(taskId: task.id, applicantId: applicant.id)
-            selectedTaskApplicants.removeAll { $0.id == applicant.id }
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await notifyApplicantOfDecline(applicant, for: task)
         } catch {
+            selectedTaskApplicants = previousApplicants
             AlertCenter.shared.showError(error.localizedDescription)
         }
     }

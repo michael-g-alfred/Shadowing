@@ -31,7 +31,7 @@ final class DIContainer {
     private lazy var keychainService: KeychainService = KeychainService.shared
     
     @ObservationIgnored
-    lazy var locationService: LocationService = CLLocationServiceImpl()
+    lazy var locationService: LocationServiceProtocol = LocationService()
     
     @ObservationIgnored
     lazy var languageManager: LanguageManager = .shared
@@ -219,9 +219,15 @@ final class DIContainer {
         )
     }
     
-        // MARK: - Settings
+        // MARK: - EditProfileSheet
     
-    func makeSettingsView() -> SettingsSheet {
+    func makeEditProfileSheet(user: UserModel, vm: ProfileViewModel) -> EditProfileSheet {
+        EditProfileSheet(user: user, vm: vm, lookupStore: lookupStore)
+    }
+    
+        // MARK: - SettingsSheet
+    
+    func makeSettingsSheet() -> SettingsSheet {
         SettingsSheet(vm: makeSettingsViewModel())
     }
     
@@ -269,7 +275,7 @@ final class DIContainer {
         DirectChatLoaderView(taskId: taskId, vm: chatViewModel)
     }
     
-        // MARK: - Add Task Sheet
+        // MARK: - AddTask Sheet
     
     func makeAddTaskSheet() -> AddTaskSheet {
         AddTaskSheet(vm: makeAddTaskViewModel())
@@ -333,7 +339,13 @@ final class DIContainer {
     }
     
     func makeTaskDetailsViewModel(taskId: String) -> TaskDetailsViewModel {
-        TaskDetailsViewModel(taskId: taskId, taskRepo: taskRepository)
+        TaskDetailsViewModel(
+            taskId: taskId,
+            taskRepo: taskRepository,
+            requesterVM: requesterViewModel,
+            executorVM: executorViewModel,
+            authRepo: authRepository
+        )
     }
     
         // MARK: - User

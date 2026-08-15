@@ -33,6 +33,9 @@ struct TaskListView: View {
             .refreshable {
                 await onLoadMoreIfNeeded()
             }
+            .navigationDestination(for: String.self) { taskId in
+                container.makeTaskDetailsView(taskId: taskId)
+            }
     }
     
         // MARK: - Private Views
@@ -138,9 +141,6 @@ struct TaskListView: View {
             }
         }
         .listStyle(.plain)
-        .navigationDestination(for: String.self) { taskId in
-            container.makeTaskDetailsView(taskId: taskId)
-        }
     }
     
         // MARK: Regular (Grid, 2 or 3 columns based on width)
@@ -184,10 +184,7 @@ struct TaskListView: View {
                         }
                     }
                 }
-                .padding(16)
-            }
-            .navigationDestination(for: String.self) { taskId in
-                container.makeTaskDetailsView(taskId: taskId)
+                .padding()
             }
         }
     }

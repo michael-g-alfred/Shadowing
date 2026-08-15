@@ -14,9 +14,7 @@ struct Shadowing: App {
         WindowGroup {
             container.makeRootView()
                 .task {
-                    async let lookups: () = container.lookupStore.loadIfNeeded()
                     try? await container.authRepository.loadCurrentUser()
-                    await lookups
                     
                     if container.authRepository.isAdmin {
                         container.setAppState(.admin)
@@ -24,21 +22,23 @@ struct Shadowing: App {
                         container.setAppState(.main)
                         container.chatViewModel.listenToConversations()
                         container.notificationViewModel.startListening()
+                        
+                        async let location = container.locationService.requestLocation()
                         async let notification = container.notificationService.requestAuthorization()
                         async let executorRatings: () = container.executorViewModel.checkPendingRatings()
                         async let requesterRatings: () = container.requesterViewModel.checkPendingRatings()
-                        _ = await (notification, executorRatings, requesterRatings)
+                        _ = await (location, notification, executorRatings, requesterRatings)
                     }
                 }
                 .task(id: container.languageManager.currentLanguage) {
-                    await container.lookupStore.loadIfNeeded()
+                    await container.lookupStore.loadLookup()
                 }
                 .environment(\.layoutDirection, container.languageManager.currentLanguage.layoutDirection)
                 .environment(\.locale, container.languageManager.currentLanguage.locale)
-                .id(container.rootID)
-                .id(container.languageManager.currentLanguage)
                 .environment(container)
                 .preferredColorScheme(container.appearanceManager.currentMode.colorScheme)
+                .id(container.languageManager.currentLanguage)
+                .id(container.rootID)
         }
     }
 }

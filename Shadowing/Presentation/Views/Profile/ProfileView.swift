@@ -65,8 +65,14 @@ struct ProfileView: View {
                 }
             }
             .sheet(isPresented: Bindable(vm).isSettingsPresented) {
-                container.makeSettingsView()
+                container.makeSettingsSheet()
                     .appSheetStyle()
+            }
+            .sheet(isPresented: Bindable(vm).isEditProfilePresented) {
+                if let user = vm.user {
+                    container.makeEditProfileSheet(user: user, vm: vm)
+                        .appSheetStyle(interactiveDismissDisabled: true)
+                }
             }
         }
     }
@@ -115,35 +121,44 @@ private struct ProfileToolbar: ToolbarContent {
             Button {
                 vm.isSettingsPresented = true
             } label: {
-                Label("Settings", systemImage: "gearshape.fill")
+                Label("Settings", systemImage: "gearshape")
             }
         }
         
         ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                vm.isPhotoSourceDialogPresented = true
-            } label: {
-                if vm.isUploadingAvatar {
-                    ProgressView()
-                } else {
-                    Label("Change Photo", systemImage: "camera.fill")
+            if vm.isUploadingAvatar {
+                ProgressView()
+            } else {
+                Menu {
+                    Button {
+                        vm.isEditProfilePresented = true
+                    } label: {
+                        Label("Edit Profile", systemImage: "long.text.page.and.pencil")
+                    }
+                    .disabled(vm.user == nil)
+                    
+                    Button {
+                        vm.isPhotoSourceDialogPresented = true
+                    } label: {
+                        Label("Change Photo", systemImage: "camera")
+                    }
+                    .disabled(vm.user == nil)
+                    
+                    Divider()
+                    
+                    Button(role: .destructive) {
+                        Task { await onSignOut() }
+                    } label: {
+                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right").bold()
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
                 }
             }
-            .disabled(vm.isUploadingAvatar || vm.user == nil)
-        }
-        
-        ToolbarSpacer(placement: .topBarTrailing)
-        
-        ToolbarItem(placement: .destructiveAction) {
-            Button(role: .destructive) {
-                Task { await onSignOut() }
-            } label: {
-                Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-            }
-            .tint(.red)
         }
     }
 }
+
 
     // MARK: - Loaded
 
@@ -245,6 +260,12 @@ private struct ProfileLoadedView: View {
             )
             
             InfoRow(
+                title: "Phone Number",
+                systemImage: "phone",
+                value: phoneDisplayValue(for: user)
+            )
+            
+            InfoRow(
                 title: "Completed Tasks",
                 systemImage: "checklist",
                 localizedValue: "\(user.completedTasks)"
@@ -277,6 +298,16 @@ private struct ProfileLoadedView: View {
             ProfileIdRow(user: user, vm: vm)
         }
         .listRowBackground(listRowColor)
+    }
+    
+    private func phoneDisplayValue(for user: UserModel) -> String {
+        guard let phoneNumber = user.phoneNumber, !phoneNumber.isEmpty else { return "—" }
+        guard let phoneCountryId = user.phoneCountryId,
+              let dialCode = container.lookupStore.phone(id: phoneCountryId)?.dialCode
+        else {
+            return phoneNumber
+        }
+        return "\(dialCode)-\(phoneNumber)"
     }
 }
 

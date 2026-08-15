@@ -73,7 +73,6 @@ struct MapView: View {
                 locationManager.requestWhenInUseAuthorization()
             }
         }
-        .requireLocation(container.locationService)
     }
 
         // MARK: - Private Methods

@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct AppInputField: View {
-    
         // MARK: - Environment
     @Environment(DIContainer.self) private var container
     @Environment(\.colorScheme) private var colorScheme
@@ -12,8 +11,8 @@ struct AppInputField: View {
         ? .accentColor.opacity(0.15)
         : .gray.opacity(0.15)
     }
-
-    // MARK: Config
+    
+        // MARK: Config
     let icon: String
     let title: LocalizedStringResource
     @Binding var text: String
@@ -22,27 +21,33 @@ struct AppInputField: View {
     var keyboardType: UIKeyboardType = .default
     var textContentType: UITextContentType? = nil
     var isFocused: Bool = false
-
+    
     var textFilter: ((String) -> String)? = nil
     
-
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
             Image(systemName: icon)
                 .foregroundStyle(iconColor)
-                .frame(width: 30)
+                .frame(width: 24)
             
-            Group {
-                if isSecure {
-                    SecureField(title, text: $text)
-                } else {
-                    TextField(title, text: $text)
+            ZStack(alignment: .leading) {
+                if text.isEmpty {
+                    Text(title)
+                        .foregroundStyle(.secondary.opacity(0.6))
                 }
+                
+                Group {
+                    if isSecure {
+                        SecureField("", text: $text)
+                    } else {
+                        TextField("", text: $text)
+                    }
+                }
+                .keyboardType(keyboardType)
+                .textContentType(textContentType)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
             }
-            .keyboardType(keyboardType)
-            .textContentType(textContentType)
-            .autocorrectionDisabled()
-            .textInputAutocapitalization(.never)
         }
         .padding()
         .appGlassCapsule()
@@ -55,6 +60,5 @@ struct AppInputField: View {
             }
         }
         .environment(\.layoutDirection, container.languageManager.currentLanguage.layoutDirection)
-        .environment(\.locale, container.languageManager.currentLanguage.locale)
     }
 }

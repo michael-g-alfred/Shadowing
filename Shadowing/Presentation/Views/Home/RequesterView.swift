@@ -22,7 +22,6 @@ struct RequesterView: View {
             RequesterTabHeader(vm: vm)
             RequesterTabContent(container: container, selectedTab: vm.selectedTab)
         }
-        .requireLocation(container.locationService)
         .task {
             await vm.checkPendingRatings()
         }
@@ -98,7 +97,7 @@ private struct RequesterTabContent: View {
 
 private struct RequesterToolbar: ToolbarContent {
     let vm: RequesterViewModel
-    let locationService: LocationService
+    let locationService: LocationServiceProtocol
 
     private var isLocationAuthorized: Bool {
         locationService.authorizationStatus == .authorizedAlways

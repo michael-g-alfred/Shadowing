@@ -5,12 +5,12 @@ import CoreLocation
 @Observable
 final class SettingsViewModel {
     
-    private let locationService: LocationService
+    private let locationService: LocationServiceProtocol
     private let languageManager: LanguageManager
     private let appearanceManager: AppearanceManager
     
     init(
-        locationService: LocationService,
+        locationService: LocationServiceProtocol,
         languageManager: LanguageManager,
         appearanceManager: AppearanceManager
     ) {

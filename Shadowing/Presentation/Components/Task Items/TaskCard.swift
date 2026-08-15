@@ -77,6 +77,7 @@ struct TaskCard: View {
             }
             
             HStack(alignment: .center, spacing: Spacing.xs) {
+                
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: Spacing.xs) {
                         badgesRow
