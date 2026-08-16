@@ -21,7 +21,7 @@ enum NotificationType: String, Codable {
             case .taskConfirmed: return "checkmark.seal"
             case .taskCancelled: return "xmark.circle"
             case .taskWithdrawn: return "arrow.uturn.left.circle"
-            case .newMessage: return "message.circle"
+            case .newMessage: return "bubble.circle"
             case .ratingReceived: return "star.circle"
             case .system: return "bell.circle"
         }

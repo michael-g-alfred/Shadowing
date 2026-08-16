@@ -1,5 +1,20 @@
 import Foundation
 
+    /// Where tapping a notification should navigate. Wrapped in an enum
+    /// (rather than two separate optionals) so at most one destination can
+    /// be active at a time, and so it plugs into `navigationDestination(item:)`.
+enum NotificationDestination: Identifiable, Hashable {
+    case taskDetails(taskId: String)
+    case chat(taskId: String)
+    
+    var id: String {
+        switch self {
+            case .taskDetails(let taskId): return "taskDetails-\(taskId)"
+            case .chat(let taskId): return "chat-\(taskId)"
+        }
+    }
+}
+
 @MainActor
 @Observable
 final class NotificationViewModel {
@@ -7,6 +22,7 @@ final class NotificationViewModel {
         // MARK: - State
     private(set) var notifications: [NotificationModel] = []
     private(set) var isLoading = false
+    var selectedDestination: NotificationDestination?
     
     var unreadCount: Int {
         notifications.filter { !$0.isRead }.count
@@ -85,6 +101,21 @@ final class NotificationViewModel {
     }
     
         // MARK: - Actions
+    
+        /// Called when a notification row is tapped: marks it read and routes
+        /// to chat for new-message notifications, or task details otherwise.
+    func didTap(_ notification: NotificationModel) {
+        Task { await markAsRead(notification) }
+        
+        guard let taskId = notification.taskId, !taskId.isEmpty else { return }
+        
+        switch notification.type {
+            case .newMessage:
+                selectedDestination = .chat(taskId: taskId)
+            default:
+                selectedDestination = .taskDetails(taskId: taskId)
+        }
+    }
     
     func markAsRead(_ notification: NotificationModel) async {
         guard let userId = currentUserId, !notification.isRead else { return }

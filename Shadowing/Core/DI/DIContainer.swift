@@ -59,7 +59,8 @@ final class DIContainer {
     @ObservationIgnored
     private(set) lazy var chatRepository: ChatRepositoryProtocol = ChatRepository(
         userRepo: userRepository,
-        taskRepo: taskRepository
+        taskRepo: taskRepository,
+        notificationRepo: notificationRepository
     )
     
     @ObservationIgnored

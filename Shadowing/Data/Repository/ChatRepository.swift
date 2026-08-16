@@ -5,10 +5,12 @@ final class ChatRepository: ChatRepositoryProtocol {
     private let db = Firestore.firestore()
     private let userRepo: UserRepositoryProtocol
     private let taskRepo: TaskRepositoryProtocol
+    private let notificationRepo: NotificationRepositoryProtocol
     
-    init(userRepo: UserRepositoryProtocol, taskRepo: TaskRepositoryProtocol) {
+    init(userRepo: UserRepositoryProtocol, taskRepo: TaskRepositoryProtocol, notificationRepo: NotificationRepositoryProtocol) {
         self.userRepo = userRepo
         self.taskRepo = taskRepo
+        self.notificationRepo = notificationRepo
     }
     
     func createChat(taskId: String, requesterId: String, executorId: String) async throws {
@@ -33,11 +35,25 @@ final class ChatRepository: ChatRepositoryProtocol {
     
     func deleteChat(taskId: String) async throws {
         let chatRef = db.collection("chats").document(taskId)
+        
+            // Grab participants before the doc is gone, so we can clean up
+            // their stale `newMessage` notifications for this task afterward.
+        let chatSnapshot = try? await chatRef.getDocument()
+        let participants = chatSnapshot?.data()?["participants"] as? [String] ?? []
+        
         let messagesSnapshot = try await chatRef.collection("messages").getDocuments()
         for doc in messagesSnapshot.documents {
             try await doc.reference.delete()
         }
         try await chatRef.delete()
+        
+        for participantId in participants {
+            do {
+                try await notificationRepo.deleteNotifications(userId: participantId, taskId: taskId)
+            } catch {
+                DebugLogger.log("❌ deleteNotifications FAILED | userId: \(participantId) | taskId: \(taskId) | error: \(error)")
+            }
+        }
     }
     
     func observeConversations(currentUserId: String) -> AsyncStream<[Conversation]> {
@@ -186,9 +202,42 @@ final class ChatRepository: ChatRepositoryProtocol {
             
             try await chatRef.updateData(chatUpdateData)
             DebugLogger.log("✅ sendMessage succeeded | taskId: \(taskId)")
+            
+            if let recipientId {
+                await createNewMessageNotification(
+                    recipientId: recipientId,
+                    senderId: senderId,
+                    taskId: taskId,
+                    messageText: messageText
+                )
+            }
         } catch {
             DebugLogger.log("❌ sendMessage FAILED | taskId: \(taskId) | error: \(error)")
             throw error
+        }
+    }
+    
+        /// Writes a `newMessage` notification so it shows up in `NotificationView`
+        /// and triggers a local alert — `sendMessage` only updated the chat doc's
+        /// unread counter before, it never created a notification document.
+    private func createNewMessageNotification(
+        recipientId: String,
+        senderId: String,
+        taskId: String,
+        messageText: String
+    ) async {
+        let senderName = (try? await userRepo.fetchUserSummary(id: senderId))?.displayName ?? "New message"
+        do {
+            try await notificationRepo.send(
+                to: recipientId,
+                type: .newMessage,
+                title: senderName,
+                body: messageText,
+                taskId: taskId
+            )
+            DebugLogger.log("✅ createNewMessageNotification succeeded | recipientId: \(recipientId) | taskId: \(taskId)")
+        } catch {
+            DebugLogger.log("❌ createNewMessageNotification FAILED | recipientId: \(recipientId) | error: \(error)")
         }
     }
     

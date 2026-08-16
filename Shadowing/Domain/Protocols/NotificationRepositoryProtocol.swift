@@ -16,4 +16,9 @@ protocol NotificationRepositoryProtocol {
     func markAllAsRead(userId: String) async throws
     func delete(userId: String, notificationId: String) async throws
     func deleteAll(userId: String) async throws
+    
+        /// Deletes this user's notifications tied to a specific task — used when a
+        /// task's chat is torn down, so stale `newMessage` notifications don't point
+        /// at a chat that no longer exists.
+    func deleteNotifications(userId: String, taskId: String) async throws
 }

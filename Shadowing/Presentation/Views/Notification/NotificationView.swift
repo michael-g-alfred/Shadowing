@@ -4,6 +4,9 @@ import SwiftUI
 
 struct NotificationView: View {
     
+        // MARK: Environment
+    @Environment(DIContainer.self) private var container
+    
         // MARK: State
     @State private var vm: NotificationViewModel
     @State private var showDeleteAllAlert = false
@@ -30,6 +33,14 @@ struct NotificationView: View {
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("This can't be undone.")
+            }
+            .navigationDestination(item: Bindable(vm).selectedDestination) { destination in
+                switch destination {
+                    case .taskDetails(let taskId):
+                        container.makeTaskDetailsView(taskId: taskId)
+                    case .chat(let taskId):
+                        container.makeDirectChatDetailView(taskId: taskId)
+                }
             }
         }
         .task {
@@ -114,7 +125,7 @@ private struct NotificationLoadedView: View {
                 NotificationRow(notification: notification)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        Task { await vm.markAsRead(notification) }
+                        vm.didTap(notification)
                     }
                     .listRowBackground(listRowColor(isRead: notification.isRead))
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {

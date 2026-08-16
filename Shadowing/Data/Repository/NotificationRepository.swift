@@ -104,4 +104,17 @@ final class NotificationRepository: NotificationRepositoryProtocol {
         }
         try await batch.commit()
     }
+    
+        /// Deletes this user's notifications tied to a specific task — used when a
+        /// task's chat is torn down, so stale `newMessage` notifications don't point
+        /// at a chat that no longer exists.
+    func deleteNotifications(userId: String, taskId: String) async throws {
+        let snapshot = try await collection(for: userId).whereField("taskId", isEqualTo: taskId).getDocuments()
+        guard !snapshot.documents.isEmpty else { return }
+        let batch = db.batch()
+        for doc in snapshot.documents {
+            batch.deleteDocument(doc.reference)
+        }
+        try await batch.commit()
+    }
 }
