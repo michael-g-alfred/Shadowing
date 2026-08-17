@@ -125,11 +125,7 @@ struct TaskDetailsView: View {
                 value: service?.label ?? task.serviceType
             )
             
-            InfoRow(
-                title: "Budget",
-                systemImage: "wallet.bifold.fill",
-                value: task.budget.formatted(.currency(code: task.currency))
-            )
+            budgetRow(task)
             
             InfoRow(
                 title: "Status",
@@ -150,6 +146,50 @@ struct TaskDetailsView: View {
         .listRowBackground(listRowColor)
     }
     
+    @ViewBuilder
+    private func budgetRow(_ task: TaskModel) -> some View {
+        if task.budgetDidChange, let originalBudget = task.originalBudget {
+            
+            InfoRow(title: "Original Budget", systemImage: "wallet.bifold.fill") {
+                
+                Text(
+                    originalBudget.formatted(
+                        .currency(code: task.currency)
+                        .precision(.fractionLength(0))
+                        .locale(locale)
+                    )
+                )
+                .bold()
+                .strikethrough()
+            }
+            
+            InfoRow(title: "Accepted Budget", systemImage: "checkmark.seal.fill") {
+                HStack(spacing: Spacing.xxs) {
+                    Image(systemName: task.budgetIncreased ? "arrow.up" : "arrow.down")
+                        .imageScale(.small)
+                    
+                    Text(
+                        task.budget.formatted(
+                            .currency(code: task.currency)
+                            .precision(.fractionLength(0))
+                            .locale(locale)
+                        )
+                    )
+                }
+                .foregroundStyle(budgetChangeColor(task))
+                .bold()
+            }
+            
+        } else {
+            
+            InfoRow(
+                title: "Budget",
+                systemImage: "wallet.bifold.fill",
+                value: task.budget.formatted(.currency(code: task.currency).precision(.fractionLength(0)).locale(locale))
+            )
+        }
+    }
+    
         // MARK: Scheduling
     @ViewBuilder
     private func schedulingSection(_ task: TaskModel) -> some View {
@@ -159,7 +199,7 @@ struct TaskDetailsView: View {
                     InfoRow(
                         title: "Scheduled",
                         systemImage: "clock.badge",
-                        value: scheduledAt.formatted(date: .abbreviated, time: .shortened)
+                        value: scheduledAt.formatted(.dateTime.day().month().year().hour().minute().locale(locale))
                     )
                 }
                 
@@ -263,13 +303,13 @@ struct TaskDetailsView: View {
             InfoRow(
                 title: "Created",
                 systemImage: "calendar",
-                value: task.createdAt.formatted(date: .abbreviated, time: .shortened)
+                value: task.createdAt.formatted(.dateTime.day().month().year().hour().minute().locale(locale))
             )
             
             InfoRow(
                 title: "Updated",
                 systemImage: "clock.badge.fill",
-                value: task.updatedAt.formatted(date: .abbreviated, time: .shortened)
+                value: task.updatedAt.formatted(.dateTime.day().month().year().hour().minute().locale(locale))
             )
         }
         .listRowBackground(listRowColor)
@@ -303,6 +343,17 @@ struct TaskDetailsView: View {
     }
     
         // MARK: - Private Methods
+    
+    private func budgetChangeColor(_ task: TaskModel) -> Color {
+        let isRequester = container.authRepository.currentUser?.id == task.requester.id
+        let increasedIsGood = isRequester ? false : true
+        if task.budgetIncreased {
+            return increasedIsGood ? .green : .red
+        } else {
+            return increasedIsGood ? .red : .green
+        }
+    }
+    
     private func displayedId(for id: String) -> String {
         guard !isIdExpanded else { return id }
         return "\(id.prefix(9))...."

@@ -62,11 +62,11 @@ struct AppliedSheet: View {
                         if proposedBudget > task.budget {
                             Label("You're asking for more than the offered budget.", systemImage: "arrow.up.circle")
                                 .font(.caption)
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(.green)
                         } else if proposedBudget < task.budget {
                             Label("You're offering to do it for less.", systemImage: "arrow.down.circle")
                                 .font(.caption)
-                                .foregroundStyle(.green)
+                                .foregroundStyle(.red)
                         } else {
                             Label("You're accepting the original budget.", systemImage: "checkmark.circle")
                                 .font(.caption)

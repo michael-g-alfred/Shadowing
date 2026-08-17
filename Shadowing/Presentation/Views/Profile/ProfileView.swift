@@ -166,6 +166,7 @@ private struct ProfileLoadedView: View {
     
         // MARK: Environment
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
     
         // MARK: Properties
     let user: UserModel
@@ -291,7 +292,7 @@ private struct ProfileLoadedView: View {
                 InfoRow(
                     title: "Member Since",
                     systemImage: "calendar",
-                    value: createdAt.formatted(date: .abbreviated, time: .omitted)
+                    value: createdAt.formatted(.dateTime.day().month().year().locale(locale))
                 )
             }
             
