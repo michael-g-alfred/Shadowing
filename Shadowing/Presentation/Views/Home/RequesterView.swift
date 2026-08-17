@@ -22,9 +22,6 @@ struct RequesterView: View {
             RequesterTabHeader(vm: vm)
             RequesterTabContent(container: container, selectedTab: vm.selectedTab)
         }
-        .task {
-            await vm.checkPendingRatings()
-        }
         .toolbar {
             RequesterToolbar(vm: vm, locationService: container.locationService)
         }

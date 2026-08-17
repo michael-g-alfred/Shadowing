@@ -21,7 +21,7 @@ struct DirectChatLoaderView: View {
             if let conversation = vm.conversations.first(where: { $0.id == taskId }) {
                 ConversationDetailView(conversation: conversation, vm: vm)
             } else {
-                LoadingState.loading(title: "Loading chat", subtitle: "Please wait while we load your chat.").view
+                LoadingState.loading(title: "Loading chat").view
                     .task { vm.listenToConversations() }
             }
         }
@@ -198,7 +198,7 @@ struct ChatView: View {
     @ViewBuilder
     private var contentView: some View {
         if vm.isLoading && vm.conversations.isEmpty {
-            LoadingState.loading(title: "Loading chats...", subtitle: "Please wait a moment.").view
+            LoadingState.loading(title: "Loading chats...").view
         } else if vm.conversations.isEmpty {
             EmptyState.noChats.view()
         } else {

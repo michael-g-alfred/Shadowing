@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct TaskListView: View {
+struct TaskListView<LeadingSwipe: View, TrailingSwipe: View>: View {
     
         // MARK: - Environment
     @Environment(DIContainer.self) private var container
@@ -13,7 +13,6 @@ struct TaskListView: View {
     let isLoadingMore: Bool
     
     let loadingTitle: LocalizedStringResource
-    let loadingSubtitle: LocalizedStringResource
     let emptyState: EmptyState
     
     let onLoad: () async -> Void
@@ -21,8 +20,37 @@ struct TaskListView: View {
     var onClearFilter: (() -> Void)? = nil
     var onToggleFavorite: ((TaskModel) -> Void)? = nil
     
-    var leadingSwipe: ((TaskModel) -> AnyView)? = nil
-    var trailingSwipe: ((TaskModel) -> AnyView)? = nil
+    let leadingSwipe: (TaskModel) -> LeadingSwipe
+    let trailingSwipe: (TaskModel) -> TrailingSwipe
+    
+        // MARK: - Initializer
+    init(
+        tasks: [TaskModel],
+        isLoading: Bool,
+        errorMessage: String?,
+        isLoadingMore: Bool,
+        loadingTitle: LocalizedStringResource,
+        emptyState: EmptyState,
+        onLoad: @escaping () async -> Void,
+        onLoadMoreIfNeeded: @escaping () async -> Void,
+        onClearFilter: (() -> Void)? = nil,
+        onToggleFavorite: ((TaskModel) -> Void)? = nil,
+        @ViewBuilder leadingSwipe: @escaping (TaskModel) -> LeadingSwipe = { _ in EmptyView() },
+        @ViewBuilder trailingSwipe: @escaping (TaskModel) -> TrailingSwipe = { _ in EmptyView() }
+    ) {
+        self.tasks = tasks
+        self.isLoading = isLoading
+        self.errorMessage = errorMessage
+        self.isLoadingMore = isLoadingMore
+        self.loadingTitle = loadingTitle
+        self.emptyState = emptyState
+        self.onLoad = onLoad
+        self.onLoadMoreIfNeeded = onLoadMoreIfNeeded
+        self.onClearFilter = onClearFilter
+        self.onToggleFavorite = onToggleFavorite
+        self.leadingSwipe = leadingSwipe
+        self.trailingSwipe = trailingSwipe
+    }
     
         // MARK: - Body
     var body: some View {
@@ -117,14 +145,10 @@ struct TaskListView: View {
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
                 .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                    if let leadingSwipe {
-                        leadingSwipe(task)
-                    }
+                    leadingSwipe(task)
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    if let trailingSwipe {
-                        trailingSwipe(task)
-                    }
+                    trailingSwipe(task)
                 }
                 .task {
                     if tasks.suffix(5).contains(where: { $0.id == task.id }) {
@@ -163,13 +187,8 @@ struct TaskListView: View {
                         }
                         .buttonStyle(.plain)
                         .contextMenu {
-                            
-                            if let trailingSwipe {
-                                trailingSwipe(task)
-                            }
-                            if let leadingSwipe {
-                                leadingSwipe(task)
-                            }
+                            trailingSwipe(task)
+                            leadingSwipe(task)
                         }
                         .task {
                             if tasks.suffix(5).contains(where: { $0.id == task.id }) {

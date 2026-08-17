@@ -18,6 +18,7 @@ struct RootView: View {
     @Environment(DIContainer.self) private var container
     
     private var pendingRating: PendingRating? {
+
         if let task = container.executorViewModel.currentRatingTask {
             return PendingRating(
                 task: task,
@@ -25,6 +26,7 @@ struct RootView: View {
                 source: .executor
             )
         }
+
         if let task = container.requesterViewModel.currentRatingTask {
             return PendingRating(
                 task: task,
@@ -32,6 +34,7 @@ struct RootView: View {
                 source: .requester
             )
         }
+
         return nil
     }
     
@@ -40,45 +43,47 @@ struct RootView: View {
             switch container.appState {
                 case .setup:
                     container.makeSetupFlowView()
-                    
+
                 case .onboarding:
                     container.makeOnboardingView()
-                
+
                 case .auth:
                     AuthCoordinatorView()
-                    
+
                 case .main:
                     container.makeMainView()
                         .requireLocation(container.locationService)
-                        .sheet(item: Binding(
-                            get: { pendingRating },
-                            set: { newValue in
-                                guard newValue == nil, let current = pendingRating else { return }
-                                switch current.source {
-                                    case .executor:
-                                        container.executorViewModel.ratingSheetDismissed(
-                                            for: current.task.id, wasSubmitted: true
-                                        )
-                                    case .requester:
-                                        container.requesterViewModel.ratingSheetDismissed(
-                                            for: current.task.id, wasSubmitted: true
-                                        )
+                        .sheet(
+                            item: Binding(
+                                get: {
+                                    pendingRating
+                                },
+                                set: { newValue in
+                                    if newValue == nil, let current = pendingRating {
+                                        switch current.source {
+                                            case .executor:
+                                                container.executorViewModel.ratingSheetDismissed(for: current.task.id, wasSubmitted: true)
+                                            case .requester:
+                                                container.requesterViewModel.ratingSheetDismissed(for: current.task.id, wasSubmitted: true)
+                                        }
+                                    }
                                 }
+                            ),
+                            content: { pending in
+                                container.makeRatingSheet(
+                                    taskId: pending.task.id,
+                                    taskTitle: pending.task.title,
+                                    target: pending.target
+                                )
+                                .appSheetStyle(interactiveDismissDisabled: true)
                             }
-                        )) { pending in
-                            container.makeRatingSheet(
-                                taskId: pending.task.id,
-                                taskTitle: pending.task.title,
-                                target: pending.target
-                            )
-                            .appSheetStyle(interactiveDismissDisabled: true)
-                        }
-                    
+                        )
+
                 case .admin:
                     container.makeAdminDashboardView()
             }
         }
-        .animation(.easeInOut, value: container.appState)
+        .animation(.spring(response: 0.35, dampingFraction: 0.75), value: container.appState)
         .responseAlert(
             isPresented: Bindable(AlertCenter.shared).isPresented,
             type: AlertCenter.shared.type,

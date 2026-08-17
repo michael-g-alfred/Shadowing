@@ -56,9 +56,20 @@ final class ChatRepository: ChatRepositoryProtocol {
         }
     }
     
+        /// Observes the current user's chats. Each Firestore snapshot is
+        /// resolved into `[Conversation]` by fetching the other participant's
+        /// summary + task title for every chat **in parallel** via a
+        /// `TaskGroup`, instead of sequentially awaiting one chat at a time.
+        ///
+        /// A monotonically increasing `snapshotGeneration` guards against
+        /// out-of-order yields: if snapshot A starts resolving, then snapshot B
+        /// arrives and finishes first, A's result — being stale by the time it
+        /// completes — is dropped instead of overwriting B's newer data.
     func observeConversations(currentUserId: String) -> AsyncStream<[Conversation]> {
         DebugLogger.log("👂 observeConversations STARTED listening for currentUserId: \(currentUserId)")
         return AsyncStream([Conversation].self) { continuation in
+            let generationBox = SnapshotGenerationBox()
+            
             let listener = db.collection("chats")
                 .whereField("participants", arrayContains: currentUserId)
                 .addSnapshotListener { [weak self] snapshot, error in
@@ -74,37 +85,21 @@ final class ChatRepository: ChatRepositoryProtocol {
                         return
                     }
                     
+                    let myGeneration = generationBox.next()
+                    
                     Task {
-                        var conversations: [Conversation] = []
+                        let conversations = await self.resolveConversations(
+                            documents: documents,
+                            currentUserId: currentUserId
+                        )
                         
-                        for doc in documents {
-                            let data = doc.data()
-                            let id = doc.documentID
-                            let requesterId = data["requesterId"] as? String ?? ""
-                            let executorId = data["executorId"] as? String ?? ""
-                            let otherUserId = (currentUserId == requesterId) ? executorId : requesterId
-                            
-                            DebugLogger.log("🔄 currentUserId: \(currentUserId) | requesterId: \(requesterId) | executorId: \(executorId) | otherUserId: \(otherUserId)")
-                            
-                            let otherUser = (try? await self.userRepo.fetchUserSummary(id: otherUserId))
-                            ?? UserSummaryModel(id: otherUserId, displayName: "User", email: "", avatarUrl: nil, bio: "", rating: 0, totalRatings: 0, completedTasks: 0, specialties: [])
-                            
-                            DebugLogger.log("🔄 otherUser: \(otherUser)")
-                            
-                            let taskTitle = (try? await self.taskRepo.getTaskDetails(id: id))?.title ?? "Task"
-                            
-                            let unreadCounts = data["unreadCounts"] as? [String: Int] ?? [:]
-                            let unreadCount = unreadCounts[currentUserId] ?? 0
-                            
-                            conversations.append(
-                                Conversation(
-                                    id: id,
-                                    taskTitle: taskTitle,
-                                    otherUser: otherUser,
-                                    unreadCount: unreadCount
-                                )
-                            )
+                            // Drop this result if a newer snapshot has already
+                            // started (and possibly finished) resolving.
+                        guard generationBox.isCurrent(myGeneration) else {
+                            DebugLogger.log("⏭️ observeConversations dropping stale snapshot (generation \(myGeneration))")
+                            return
                         }
+                        
                         DebugLogger.log("✅ observeConversations yielding \(conversations.count) conversations")
                         continuation.yield(conversations)
                     }
@@ -117,9 +112,58 @@ final class ChatRepository: ChatRepositoryProtocol {
         }
     }
     
+        /// Resolves all chat documents into `Conversation`s concurrently.
+    private func resolveConversations(
+        documents: [QueryDocumentSnapshot],
+        currentUserId: String
+    ) async -> [Conversation] {
+        await withTaskGroup(of: (Int, Conversation).self) { group in
+            for (index, doc) in documents.enumerated() {
+                group.addTask {
+                    let data = doc.data()
+                    let id = doc.documentID
+                    let requesterId = data["requesterId"] as? String ?? ""
+                    let executorId = data["executorId"] as? String ?? ""
+                    let otherUserId = (currentUserId == requesterId) ? executorId : requesterId
+                    
+                    async let otherUserFetch = (try? await self.userRepo.fetchUserSummary(id: otherUserId))
+                    ?? UserSummaryModel(id: otherUserId, displayName: "User", email: "", avatarUrl: nil, bio: "", rating: 0, totalRatings: 0, completedTasks: 0, specialties: [])
+                    
+                    async let taskTitleFetch = (try? await self.taskRepo.getTaskDetails(id: id))?.title ?? "Task"
+                    
+                    let otherUser = await otherUserFetch
+                    let taskTitle = await taskTitleFetch
+                    
+                    let unreadCounts = data["unreadCounts"] as? [String: Int] ?? [:]
+                    let unreadCount = unreadCounts[currentUserId] ?? 0
+                    
+                    let conversation = Conversation(
+                        id: id,
+                        taskTitle: taskTitle,
+                        otherUser: otherUser,
+                        unreadCount: unreadCount
+                    )
+                    return (index, conversation)
+                }
+            }
+            
+                // Collect and restore original document order (TaskGroup
+                // completion order is not guaranteed to match input order).
+            var results: [(Int, Conversation)] = []
+            for await result in group {
+                results.append(result)
+            }
+            return results.sorted { $0.0 < $1.0 }.map(\.1)
+        }
+    }
+    
+        /// Observes messages for a task's chat. Same parallel-resolve +
+        /// stale-snapshot-drop strategy as `observeConversations`.
     func observeMessages(taskId: String, currentUserId: String) -> AsyncStream<[ChatMessage]> {
         DebugLogger.log("👂 observeMessages STARTED listening for taskId: \(taskId) | currentUserId: \(currentUserId)")
         return AsyncStream { continuation in
+            let generationBox = SnapshotGenerationBox()
+            
             let listener = db.collection("chats")
                 .document(taskId)
                 .collection("messages")
@@ -137,31 +181,19 @@ final class ChatRepository: ChatRepositoryProtocol {
                         return
                     }
                     
+                    let myGeneration = generationBox.next()
+                    
                     Task {
-                        var messages: [ChatMessage] = []
-                        for doc in documents {
-                            let data = doc.data()
-                            let messageId = doc.documentID
-                            let text = data["text"] as? String ?? ""
-                            let senderId = data["senderId"] as? String ?? ""
-                            let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
-                            let isCurrentUser = (senderId == currentUserId)
-                            let reactions = data["reactions"] as? [String: String] ?? [:]
-                            
-                            let senderUser = (try? await self.userRepo.fetchUserSummary(id: senderId))
-                            ?? UserSummaryModel(id: senderId, displayName: "User", email: "", avatarUrl: nil, bio: "", rating: 0, totalRatings: 0, completedTasks: 0, specialties: [])
-                            
-                            messages.append(
-                                ChatMessage(
-                                    id: messageId,
-                                    text: text,
-                                    time: timestamp.formatted(date: .omitted, time: .shortened),
-                                    sender: senderUser,
-                                    isCurrentUser: isCurrentUser,
-                                    reactions: reactions
-                                )
-                            )
+                        let messages = await self.resolveMessages(
+                            documents: documents,
+                            currentUserId: currentUserId
+                        )
+                        
+                        guard generationBox.isCurrent(myGeneration) else {
+                            DebugLogger.log("⏭️ observeMessages dropping stale snapshot for taskId: \(taskId) (generation \(myGeneration))")
+                            return
                         }
+                        
                         DebugLogger.log("✅ observeMessages yielding \(messages.count) messages for taskId: \(taskId)")
                         continuation.yield(messages)
                     }
@@ -171,6 +203,48 @@ final class ChatRepository: ChatRepositoryProtocol {
                 DebugLogger.log("🛑 observeMessages listener terminated for taskId: \(taskId)")
                 listener.remove()
             }
+        }
+    }
+    
+        /// Resolves all message documents into `ChatMessage`s concurrently.
+    private func resolveMessages(
+        documents: [QueryDocumentSnapshot],
+        currentUserId: String
+    ) async -> [ChatMessage] {
+        await withTaskGroup(of: (Int, ChatMessage).self) { group in
+            for (index, doc) in documents.enumerated() {
+                group.addTask {
+                    let data = doc.data()
+                    let messageId = doc.documentID
+                    let text = data["text"] as? String ?? ""
+                    let senderId = data["senderId"] as? String ?? ""
+                    let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
+                    let isCurrentUser = (senderId == currentUserId)
+                    let reactions = data["reactions"] as? [String: String] ?? [:]
+                    
+                    let senderUser = (try? await self.userRepo.fetchUserSummary(id: senderId))
+                    ?? UserSummaryModel(id: senderId, displayName: "User", email: "", avatarUrl: nil, bio: "", rating: 0, totalRatings: 0, completedTasks: 0, specialties: [])
+                    
+                    let message = ChatMessage(
+                        id: messageId,
+                        text: text,
+                        time: timestamp.formatted(date: .omitted, time: .shortened),
+                        sender: senderUser,
+                        isCurrentUser: isCurrentUser,
+                        reactions: reactions
+                    )
+                    return (index, message)
+                }
+            }
+            
+                // Collect and restore original document order (chronological,
+                // since the query is ordered by `timestamp` ascending) — TaskGroup
+                // completion order is not guaranteed to match input order.
+            var results: [(Int, ChatMessage)] = []
+            for await result in group {
+                results.append(result)
+            }
+            return results.sorted { $0.0 < $1.0 }.map(\.1)
         }
     }
     
@@ -270,5 +344,35 @@ final class ChatRepository: ChatRepositoryProtocol {
             DebugLogger.log("❌ setReaction FAILED | taskId: \(taskId) | messageId: \(messageId) | error: \(error)")
             throw error
         }
+    }
+}
+
+    // MARK: - Snapshot Generation Tracking
+
+    /// Thread-safe monotonic counter used to detect and drop stale,
+    /// out-of-order snapshot resolutions. Firestore's `addSnapshotListener`
+    /// callback can fire again before a previous callback's async resolution
+    /// work has finished; without this, a slower-resolving older snapshot
+    /// could yield after a faster-resolving newer one and show stale data.
+private final class SnapshotGenerationBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var latest = 0
+    
+        /// Call synchronously inside the snapshot callback (before hopping into
+        /// a `Task`) to claim this snapshot's generation number.
+    func next() -> Int {
+        lock.lock()
+        defer { lock.unlock() }
+        latest += 1
+        return latest
+    }
+    
+        /// Call after async resolution work completes. Returns `false` if a
+        /// newer generation has been claimed in the meantime, meaning this
+        /// result is stale and should be discarded.
+    func isCurrent(_ generation: Int) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return generation == latest
     }
 }

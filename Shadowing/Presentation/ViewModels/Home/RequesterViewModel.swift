@@ -49,18 +49,18 @@ final class RequesterViewModel {
         pendingRatingTasks.first
     }
     
+    private let authRepo: AuthRepositoryProtocol
+    private let userRepo: UserRepositoryProtocol
     private let taskRepo: TaskRepositoryProtocol
     private let chatRepo: ChatRepositoryProtocol
-    private let userRepo: UserRepositoryProtocol
     private let notificationRepo: NotificationRepositoryProtocol
-    private let authRepo: AuthRepositoryProtocol
     
     init(
+        authRepo: AuthRepositoryProtocol,
+        userRepo: UserRepositoryProtocol,
         taskRepo: TaskRepositoryProtocol,
         chatRepo: ChatRepositoryProtocol,
-        userRepo: UserRepositoryProtocol,
-        notificationRepo: NotificationRepositoryProtocol,
-        authRepo: AuthRepositoryProtocol
+        notificationRepo: NotificationRepositoryProtocol
     ) {
         self.taskRepo = taskRepo
         self.chatRepo = chatRepo
@@ -109,6 +109,14 @@ final class RequesterViewModel {
         selectedTaskForApplicants = nil
     }
     
+        /// Confirms task completion on the server, then best-effort tears down
+        /// the associated chat. The optimistic local removal is only rolled
+        /// back if the *confirmation itself* fails — once the server has
+        /// confirmed the task, that's the source of truth, and a failure to
+        /// delete the (now-irrelevant) chat must never resurrect the task in
+        /// the requester's published list. This mirrors how
+        /// `ExecutorViewModel.withdrawFromTask` treats `deleteChat` as
+        /// fire-and-forget after its own server call has already succeeded.
     func confirmTaskCompletion(_ task: TaskModel) async {
             // Optimistic update: Remove immediately from published list
         guard let index = requesterPublishedTasks.firstIndex(where: { $0.id == task.id }) else { return }
@@ -116,12 +124,22 @@ final class RequesterViewModel {
         
         do {
             let result = try await taskRepo.confirmTask(id: task.id)
-            try await chatRepo.deleteChat(taskId: task.id)
+            
+                // Confirmation succeeded server-side — this is now the source of
+                // truth. Chat teardown is best-effort cleanup and must not undo
+                // the optimistic removal above if it fails.
+            do {
+                try await chatRepo.deleteChat(taskId: task.id)
+            } catch {
+                DebugLogger.log("⚠️ deleteChat failed after confirmTask succeeded | taskId: \(task.id) | error: \(error)")
+            }
+            
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await notifyExecutorOfConfirmation(for: task)
             await checkPendingRatings()
         } catch {
-                // Rollback in case of failure
+                // Only roll back when confirmTask itself failed — the task was
+                // never actually completed server-side.
             requesterPublishedTasks.insert(removedTask, at: index)
             AlertCenter.shared.showError(error.localizedDescription)
         }

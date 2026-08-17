@@ -48,8 +48,7 @@ struct ApplicantsSheet: View {
     private var content: some View {
         if vm.isLoadingApplicants {
             LoadingState.loading(
-                title: "Loading",
-                subtitle: "Fetching applicants."
+                title: "Loading Applicants",
             ).view
             
         } else if vm.selectedTaskApplicants.isEmpty {

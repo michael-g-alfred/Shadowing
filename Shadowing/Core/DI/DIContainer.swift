@@ -28,16 +28,20 @@ final class DIContainer {
     private lazy var networkService: MGNetworkServiceProtocol = MGNetworkService()
     
     @ObservationIgnored
-    private lazy var keychainService: KeychainService = KeychainService.shared
+    private lazy var keychainService: KeychainService = .shared
     
     @ObservationIgnored
     lazy var locationService: LocationServiceProtocol = LocationService()
+    
+    @ObservationIgnored
+    private(set) lazy var notificationService: NotificationServiceProtocol = NotificationService()
     
     @ObservationIgnored
     lazy var languageManager: LanguageManager = .shared
     
     @ObservationIgnored
     lazy var appearanceManager: AppearanceManager = .shared
+    
     
         // MARK: - Repositories
     
@@ -71,8 +75,6 @@ final class DIContainer {
     @ObservationIgnored
     private(set) lazy var notificationRepository: NotificationRepositoryProtocol = NotificationRepository()
     
-    @ObservationIgnored
-    private(set) lazy var notificationService: NotificationServiceProtocol = NotificationService()
     
         // MARK: - Shared ViewModels
     
@@ -84,19 +86,19 @@ final class DIContainer {
     
     @ObservationIgnored
     lazy var requesterViewModel = RequesterViewModel(
+        authRepo: authRepository,
+        userRepo: userRepository,
         taskRepo: taskRepository,
         chatRepo: chatRepository,
-        userRepo: userRepository,
         notificationRepo: notificationRepository,
-        authRepo: authRepository
     )
     
     @ObservationIgnored
     lazy var executorViewModel = ExecutorViewModel(
+        authRepo: authRepository,
         taskRepo: taskRepository,
         chatRepo: chatRepository,
-        notificationRepo: notificationRepository,
-        authRepo: authRepository
+        notificationRepo: notificationRepository
     )
     
     @ObservationIgnored

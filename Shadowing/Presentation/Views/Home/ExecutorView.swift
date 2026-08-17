@@ -21,9 +21,6 @@ struct ExecutorView: View {
             ExecutorTabHeader(vm: vm)
             ExecutorTabContent(container: container, selectedTab: vm.selectedTab)
         }
-        .task {
-            await vm.checkPendingRatings()
-        }
         .sheet(isPresented: $vm.showAppliedSheet) {
             AppliedSheet(vm: vm)
                 .appSheetStyle()

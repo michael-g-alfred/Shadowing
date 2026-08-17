@@ -92,10 +92,10 @@ final class ExecutorViewModel {
     var selectedChatTaskId: String?
     
     init(
+        authRepo: AuthRepositoryProtocol,
         taskRepo: TaskRepositoryProtocol,
         chatRepo: ChatRepositoryProtocol,
-        notificationRepo: NotificationRepositoryProtocol,
-        authRepo: AuthRepositoryProtocol
+        notificationRepo: NotificationRepositoryProtocol
     ) {
         self.taskRepo = taskRepo
         self.chatRepo = chatRepo

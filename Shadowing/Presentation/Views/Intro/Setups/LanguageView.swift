@@ -1,10 +1,10 @@
 import SwiftUI
 
-// MARK: - Container
+    // MARK: - Container
 
 struct LanguageSetupView: View {
     @Bindable var vm: SettingsViewModel
-
+    
     var body: some View {
         ScreenContainer {
             VStack(spacing: Spacing.xxl) {
@@ -13,8 +13,6 @@ struct LanguageSetupView: View {
                 Spacer()
             }
         }
-        .environment(\.layoutDirection, vm.currentLanguage.layoutDirection)
-        .environment(\.locale, vm.currentLanguage.locale)
         .task {
             vm.startGreetingLoop()
         }
@@ -24,37 +22,35 @@ struct LanguageSetupView: View {
     }
 }
 
-// MARK: - Header
+    // MARK: - Header
 
 private struct LanguageSetupHeader: View {
     let vm: SettingsViewModel
-
+    
     var body: some View {
         SetupHeaderView(
             icon: "globe",
-            title: vm.greetings[vm.currentGreetingIndex],
-            subtitle: vm.currentLanguage == .arabic
-                ? "اختر لغتك المفضلـة للمتابعة"
-                : "Choose your preferred language to continue"
+            title: vm.currentGreeting,
+            subtitle: vm.currentGreetingSubtitle
         )
-        .id(vm.currentGreetingIndex)
+        .id(vm.isLanguageSelectedByUser ? vm.currentLanguage.rawValue : "\(vm.currentGreetingIndex)")
         .transition(.opacity.combined(with: .scale(scale: 0.95)))
         .padding(.top, Spacing.xl)
     }
 }
 
-// MARK: - Options
+    // MARK: - Options
 
 private struct LanguageOptionsList: View {
     let vm: SettingsViewModel
-
+    
     var body: some View {
         VStack(spacing: Spacing.sm) {
             ForEach(AppLanguage.allCases) { language in
                 SetupOptionCard(
                     icon: language == .arabic ? "text.justify.right" : "text.justify.left",
                     title: language.title,
-                    isSelected: vm.currentLanguage == language
+                    isSelected: vm.isLanguageSelectedByUser && vm.currentLanguage == language
                 ) {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                         vm.setLanguage(language)
@@ -64,19 +60,4 @@ private struct LanguageOptionsList: View {
         }
         .padding(.horizontal)
     }
-}
-
-// MARK: - Previews
-
-#Preview("Language Setup - Light") {
-    LanguageSetupView(
-        vm: SettingsViewModel(locationService: LocationService(), languageManager: .shared, appearanceManager: .shared)
-    )
-}
-
-#Preview("Language Setup - Dark") {
-    LanguageSetupView(
-        vm: SettingsViewModel(locationService: LocationService(), languageManager: .shared, appearanceManager: .shared)
-    )
-    .preferredColorScheme(.dark)
 }

@@ -101,7 +101,7 @@ private struct ProfileContentView: View {
     var body: some View {
         DataStateView(
             state: state,
-            loadingState: .loading(title: "Loading profile", subtitle: "Please wait a moment..."),
+            loadingState: .loading(title: "Loading profile"),
             emptyState: .noProfile,
             retryAction: { await vm.loadProfile() }
         ) { user in
@@ -231,7 +231,7 @@ private struct ProfileLoadedView: View {
     
     private func suspensionSection(statusLabel: String, statusColor: Color) -> some View {
         Section {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
                 Label(statusLabel, systemImage: "exclamationmark.triangle.fill")
                     .font(.subheadline).bold()
                 Text("You can't apply to new tasks or post new ones right now.")
@@ -247,7 +247,7 @@ private struct ProfileLoadedView: View {
     
     private func accountSection(user: UserModel, statusLabel: String, statusColor: Color) -> some View {
         Section("Account") {
-            InfoRow(title: "Account Status", systemImage: "checkmark.shield") {
+            InfoRow(title: "Account Status", systemImage: "checkmark.shield.fill") {
                 Text(statusLabel)
                     .bold()
                     .foregroundStyle(statusColor)
@@ -255,13 +255,13 @@ private struct ProfileLoadedView: View {
             
             InfoRow(
                 title: "Email",
-                systemImage: "envelope",
+                systemImage: "envelope.fill",
                 value: user.email.isEmpty ? "—" : user.email
             )
             
             InfoRow(
                 title: "Phone Number",
-                systemImage: "phone",
+                systemImage: "phone.fill",
                 value: phoneDisplayValue(for: user)
             )
             
@@ -283,7 +283,7 @@ private struct ProfileLoadedView: View {
             
             InfoRow(
                 title: "Rating",
-                systemImage: "star",
+                systemImage: "star.fill",
                 localizedValue: user.totalRatings > 0 ? "\(user.rating, specifier: "%.1f")" : "-"
             )
             
@@ -336,7 +336,7 @@ private struct ProfileIdRow: View {
     let vm: ProfileViewModel
     
     var body: some View {
-        InfoRow(title: "Reference Code", systemImage: "person.badge.key") {
+        InfoRow(title: "Reference Code", systemImage: "person.badge.key.fill") {
             Text(user.id.isEmpty ? "—" : vm.displayedId(for: user.id))
                 .font(.caption2)
                 .contentTransition(.numericText())

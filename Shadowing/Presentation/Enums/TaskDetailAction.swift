@@ -1,5 +1,10 @@
 import SwiftUI
 
+enum TaskSwipeEdge {
+    case leading
+    case trailing
+}
+
 enum TaskDetailAction: Identifiable {
     case applicants
     case confirmCompletion
@@ -19,7 +24,7 @@ enum TaskDetailAction: Identifiable {
             case .confirmCompletion: return "Confirm Completion"
             case .chats: return "Chats"
             case .delete: return "Delete"
-            case .cancel: return "Cancel Task"
+            case .cancel: return "Cancel"
             case .publish: return "Publish"
             case .accept: return "Accept"
             case .withdraw: return "Withdraw"
@@ -41,7 +46,6 @@ enum TaskDetailAction: Identifiable {
         }
     }
     
-        /// Same tint used for this action in the list's swipe actions.
     var color: Color {
         switch self {
             case .applicants: return .orange
@@ -63,4 +67,70 @@ enum TaskDetailAction: Identifiable {
             default: return nil
         }
     }
+    
+    var swipeEdge: TaskSwipeEdge {
+        switch self {
+            case .applicants, .confirmCompletion, .chats, .markDone:
+                return .leading
+            case .delete, .cancel, .publish, .accept, .withdraw:
+                return .trailing
+        }
+    }
+    
+        // MARK: - Availability by role & status
+    
+    static func requesterActions(for task: TaskModel) -> [TaskDetailAction] {
+        var actions: [TaskDetailAction] = []
+        
+        if task.status == TaskStatus.published.rawValue || task.status == TaskStatus.pending.rawValue {
+            actions.append(.applicants)
+        }
+        if task.status == TaskStatus.pendingCompleted.rawValue {
+            actions.append(.confirmCompletion)
+        }
+        if task.status == TaskStatus.inProgress.rawValue || task.status == TaskStatus.pendingCompleted.rawValue {
+            actions.append(.chats)
+        }
+        if task.status == TaskStatus.published.rawValue || task.status == TaskStatus.pending.rawValue {
+            actions.append(.cancel)
+        }
+        if task.status == TaskStatus.cancelled.rawValue {
+            actions.append(.publish)
+        }
+        if task.status == TaskStatus.published.rawValue
+            || task.status == TaskStatus.pending.rawValue
+            || task.status == TaskStatus.cancelled.rawValue {
+            actions.append(.delete)
+        }
+        return actions
+    }
+
+
+    static func executorActions(for task: TaskModel) -> [TaskDetailAction] {
+        var actions: [TaskDetailAction] = []
+        
+        if task.status == TaskStatus.published.rawValue || task.status == TaskStatus.pending.rawValue {
+            if task.isApplicant {
+                actions.append(.withdraw)
+            } else {
+                actions.append(.accept)
+            }
+        }
+        if task.status == TaskStatus.inProgress.rawValue {
+            actions.append(.markDone)
+            actions.append(.chats)
+            actions.append(.withdraw)
+        }
+        if task.status == TaskStatus.pendingCompleted.rawValue {
+            actions.append(.chats)
+        }
+        return actions
+    }
+}
+
+extension Array where Element == TaskDetailAction {
+        /// Actions from this list that render as leading swipe actions.
+    var leading: [TaskDetailAction] { filter { $0.swipeEdge == .leading } }
+        /// Actions from this list that render as trailing swipe actions.
+    var trailing: [TaskDetailAction] { filter { $0.swipeEdge == .trailing } }
 }

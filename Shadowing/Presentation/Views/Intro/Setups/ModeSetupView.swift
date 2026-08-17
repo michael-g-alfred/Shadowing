@@ -1,10 +1,10 @@
 import SwiftUI
 
-// MARK: - Container
+    // MARK: - Container
 
 struct ModeSetupView: View {
     @Bindable var vm: SettingsViewModel
-
+    
     var body: some View {
         ScreenContainer {
             VStack(spacing: Spacing.xxl) {
@@ -13,32 +13,29 @@ struct ModeSetupView: View {
                 Spacer()
             }
         }
-        .environment(\.layoutDirection, vm.currentLanguage.layoutDirection)
-        .environment(\.locale, vm.currentLanguage.locale)
-        .preferredColorScheme(vm.currentMode.colorScheme)
     }
 }
 
-// MARK: - Header
+    // MARK: - Header
 
 private struct ModeSetupHeader: View {
     let vm: SettingsViewModel
-
+    
     var body: some View {
         SetupHeaderView(
             icon: vm.currentMode.icon,
-            title: vm.currentLanguage == .arabic ? "اختار مظهر التطبيق" : "Choose your appearance",
-            subtitle: vm.currentLanguage == .arabic ? "اختار الوضع اللي مريحلك" : "Pick the look that feels right"
+            title: vm.currentLanguage.appearanceTitle,
+            subtitle: vm.currentLanguage.appearanceMessage
         )
         .padding(.top, Spacing.xl)
     }
 }
 
-// MARK: - Options
+    // MARK: - Options
 
 private struct ModeOptionsList: View {
     let vm: SettingsViewModel
-
+    
     var body: some View {
         VStack(spacing: Spacing.sm) {
             ForEach(AppColorScheme.allCases) { mode in
@@ -55,19 +52,4 @@ private struct ModeOptionsList: View {
         }
         .padding(.horizontal)
     }
-}
-
-// MARK: - Previews
-
-#Preview("Mode Setup - Light") {
-    ModeSetupView(
-        vm: SettingsViewModel(locationService: LocationService(), languageManager: .shared, appearanceManager: .shared)
-    )
-}
-
-#Preview("Mode Setup - Dark") {
-    ModeSetupView(
-        vm: SettingsViewModel(locationService: LocationService(), languageManager: .shared, appearanceManager: .shared)
-    )
-    .preferredColorScheme(.dark)
 }

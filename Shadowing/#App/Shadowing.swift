@@ -30,7 +30,7 @@ struct Shadowing: App {
                         _ = await (location, notification, executorRatings, requesterRatings)
                     }
                 }
-                .task(id: container.languageManager.currentLanguage) {
+                .task(id: container.languageManager.currentLanguage.id) {
                     await container.lookupStore.loadLookup()
                 }
                 .environment(\.layoutDirection, container.languageManager.currentLanguage.layoutDirection)

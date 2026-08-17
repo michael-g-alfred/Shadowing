@@ -72,28 +72,49 @@ final class SettingsViewModel {
         languageManager.currentLanguage
     }
     
-    func setLanguage(_ language: AppLanguage) {
-        languageManager.setLanguage(language)
-    }
-    
-        // Greeting loop used by LanguageSetupView (moved over from LanguageViewModel)
-    private(set) var greetings: [String] = [
-        "Welcome",
-        "أهلاً بيك",
-    ]
-    
+    private(set) var isLanguageSelectedByUser: Bool = false
     private(set) var currentGreetingIndex: Int = 0
     private var greetingTask: Task<Void, Never>?
     
-    func startGreetingLoop() {
+    private var availableLanguages: [AppLanguage] {
+        AppLanguage.allCases
+    }
+    
+    func setLanguage(_ language: AppLanguage) {
+        isLanguageSelectedByUser = true
         stopGreetingLoop()
+        languageManager.setLanguage(language)
+    }
+    
+    var currentGreeting: String {
+        if isLanguageSelectedByUser {
+            return currentLanguage.greetingTitle
+        }
+        guard availableLanguages.indices.contains(currentGreetingIndex) else { return "" }
+        return availableLanguages[currentGreetingIndex].greetingTitle
+    }
+    
+    var currentGreetingSubtitle: String {
+        if isLanguageSelectedByUser {
+            return currentLanguage.greetingMessage
+        }
+        guard availableLanguages.indices.contains(currentGreetingIndex) else { return "" }
+        return availableLanguages[currentGreetingIndex].greetingMessage
+    }
+    
+    func startGreetingLoop() {
+            // لو المستخدم اختار لغة خلاص، مش هنشغّل اللوب ثاني
+        guard !isLanguageSelectedByUser else { return }
+        stopGreetingLoop()
+        guard availableLanguages.count > 1 else { return }
+        
         greetingTask = Task { [weak self] in
-            guard let self else { return }
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1.6))
-                guard !Task.isCancelled else { break }
+                guard !Task.isCancelled, let self else { break }
+                
                 withAnimation(.easeInOut) {
-                    self.currentGreetingIndex = (self.currentGreetingIndex + 1) % self.greetings.count
+                    self.currentGreetingIndex = (self.currentGreetingIndex + 1) % self.availableLanguages.count
                 }
             }
         }

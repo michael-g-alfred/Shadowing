@@ -71,7 +71,7 @@ enum EmptyState: CaseIterable {
             case .noNotifications:
                 return "You'll see updates about your tasks here."
             case .noProfile:
-                return "You have no profile yet."
+                return "You have no profile yet. Please sign in again."
             case .noRatings:
                 return "This user hasn't received any ratings yet."
             case .noTaskSelection:

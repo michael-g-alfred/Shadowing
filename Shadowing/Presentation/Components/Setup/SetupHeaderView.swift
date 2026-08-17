@@ -14,12 +14,16 @@ struct SetupHeaderView: View {
                 Text(title)
                     .font(.system(.title, design: .rounded, weight: .bold))
                     .multilineTextAlignment(.center)
+                    .contentTransition(.opacity)
+                    .id(title) // forces the transition to re-trigger on each greeting change
                 
                 if let subtitle {
                     Text(subtitle)
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
+                        .contentTransition(.opacity)
+                        .id(subtitle)
                 }
             }
         }

@@ -59,7 +59,6 @@ struct TaskDetailsView: View {
                     }
                 } label: {
                     Label(action.title, systemImage: action.systemImage)
-                        .foregroundStyle(action.color)
                 }
                 .tint(action.color)
             }
@@ -72,7 +71,7 @@ struct TaskDetailsView: View {
     @ViewBuilder
     private var content: some View {
         if vm.isLoading {
-            LoadingState.loading(title: "Loading", subtitle: "Fetching task details").view
+            LoadingState.loading(title: "Loading task details").view
         } else if let error = vm.errorMessage {
             LoadingState.error(message: error).view
         } else if let task = vm.task {
@@ -182,7 +181,7 @@ struct TaskDetailsView: View {
         Section("Location") {
             InfoRow(
                 title: "Address",
-                systemImage: "map",
+                systemImage: "map.fill",
                 value: task.address
             )
         }
@@ -196,13 +195,13 @@ struct TaskDetailsView: View {
         return Section("Task Info") {
             InfoRow(
                 title: "Escrow",
-                systemImage: "lock.shield",
+                systemImage: "lock.shield.fill",
                 value: escrow?.label ?? task.escrowStatus
             )
             
             InfoRow(
                 title: "Applicants",
-                systemImage: "person.3",
+                systemImage: "person.3.fill",
                 localizedValue: "\(task.applicantsCount)"
             )
         }
@@ -251,7 +250,7 @@ struct TaskDetailsView: View {
         
         InfoRow(
             title: "Rating",
-            systemImage: "star",
+            systemImage: "star.fill",
             localizedValue: user.totalRatings > 0
             ? "\(user.rating, specifier: "%.1f")"
             : "-"
@@ -269,7 +268,7 @@ struct TaskDetailsView: View {
             
             InfoRow(
                 title: "Updated",
-                systemImage: "clock.arrow.circlepath",
+                systemImage: "clock.badge.fill",
                 value: task.updatedAt.formatted(date: .abbreviated, time: .shortened)
             )
         }
@@ -279,7 +278,7 @@ struct TaskDetailsView: View {
         // MARK: Id
     private func idSection(for task: TaskModel) -> some View {
         Section("Reference Code") {
-            InfoRow(title: "Reference Code", systemImage: "number.circle") {
+            InfoRow(title: "Reference Code", systemImage: "number.circle.fill") {
                 Text(task.id.isEmpty ? "—" : displayedId(for: task.id))
                     .font(.caption)
                     .contentTransition(.numericText())

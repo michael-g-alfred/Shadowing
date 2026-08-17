@@ -13,7 +13,6 @@ struct MapView: View {
     @State private var vm: MapViewModel
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var navigationPath = NavigationPath()
-    @State private var locationManager = CLLocationManager()
 
         // MARK: - Init
     init(vm: MapViewModel, makeTaskDetails: @escaping (String) -> AnyView) {
@@ -70,7 +69,12 @@ struct MapView: View {
                 MapCompass()
             }
             .onAppear {
-                locationManager.requestWhenInUseAuthorization()
+                    // Use the shared, app-wide location service (already wired up
+                    // with a proper CLLocationManagerDelegate in DIContainer) instead
+                    // of spinning up a second, delegate-less CLLocationManager here.
+                    // A second instance would trigger a duplicate permission prompt
+                    // and never actually receive authorization-change callbacks.
+                container.locationService.requestLocation()
             }
         }
     }

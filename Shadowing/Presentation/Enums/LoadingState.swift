@@ -3,8 +3,8 @@ import SwiftUI
 enum LoadingState {
     case initializing
     case loading(
-        title: LocalizedStringResource = "Fetching your data",
-        subtitle: LocalizedStringResource = "Loading..."
+        title: LocalizedStringResource = "Loading...",
+        subtitle: LocalizedStringResource = "Please wait a moment..."
     )
     case error(message: String)
     

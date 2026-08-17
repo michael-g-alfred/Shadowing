@@ -15,12 +15,14 @@
 		BE5E82FC2FFCF4AC00DE012B /* MGOnboardingKit in Frameworks */ = {isa = PBXBuildFile; productRef = BE5E82FB2FFCF4AC00DE012B /* MGOnboardingKit */; };
 		BE5E82FF2FFCF4CD00DE012B /* MGNetworkingKit in Frameworks */ = {isa = PBXBuildFile; productRef = BE5E82FE2FFCF4CD00DE012B /* MGNetworkingKit */; };
 		BE9AEE7B301C17770018FDB2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BE9AEE7A301C17770018FDB2 /* GoogleService-Info.plist */; };
+		BEB8684630324AAC00D64EFA /* shadowing.icon in Resources */ = {isa = PBXBuildFile; fileRef = BEB8684530324AAC00D64EFA /* shadowing.icon */; };
 		BEDF5B962FFED85C00015FE5 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BEDF5B952FFED85C00015FE5 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		BE5E81FD2FFCF43100DE012B /* Shadowing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shadowing.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE9AEE7A301C17770018FDB2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		BEB8684530324AAC00D64EFA /* shadowing.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = shadowing.icon; sourceTree = "<group>"; };
 		BEDF5B952FFED85C00015FE5 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -78,6 +80,7 @@
 				BE5E81FE2FFCF43100DE012B /* Products */,
 				BE27FCDB301BB2C3009CDA02 /* Frameworks */,
 				BE9AEE7A301C17770018FDB2 /* GoogleService-Info.plist */,
+				BEB8684530324AAC00D64EFA /* shadowing.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -143,6 +146,7 @@
 				en,
 				Base,
 				ar,
+				fr,
 			);
 			mainGroup = BE5E81F42FFCF43000DE012B;
 			minimizedProjectReferenceProxies = 1;
@@ -166,6 +170,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BEB8684630324AAC00D64EFA /* shadowing.icon in Resources */,
 				BEDF5B962FFED85C00015FE5 /* Localizable.xcstrings in Resources */,
 				BE9AEE7B301C17770018FDB2 /* GoogleService-Info.plist in Resources */,
 			);
@@ -310,8 +315,9 @@
 		BE5E82092FFCF43100DE012B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = shadowing;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VR7J47FG2Q;
@@ -324,6 +330,7 @@
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Shadowing/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_NSAppDataUsageDescription = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera so you can take a photo for your profile picture.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We use your location to provide location-based services even when the app is running in the background.";
@@ -362,8 +369,9 @@
 		BE5E820A2FFCF43100DE012B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = shadowing;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VR7J47FG2Q;
@@ -376,6 +384,7 @@
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Shadowing/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_NSAppDataUsageDescription = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera so you can take a photo for your profile picture.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We use your location to provide location-based services even when the app is running in the background.";

@@ -57,7 +57,7 @@ private struct RatingsContentView: View {
     var body: some View {
         DataStateView(
             state: state,
-            loadingState: .loading(title: "Loading ratings", subtitle: "Please wait a moment..."),
+            loadingState: .loading(title: "Loading ratings"),
             emptyState: .noRatings
         ) { ratings in
             RatingsLoadedView(ratings: ratings, vm: vm)
