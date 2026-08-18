@@ -15,7 +15,7 @@ final class LookupRepository: LookupRepositoryProtocol {
         return response.data
     }
     
-    func fetchLookup<T: Codable>(_ type: LookupType, as: T.Type) async throws -> T {
+    func fetchLookup<T: Codable & Sendable>(_ type: LookupType, as: T.Type) async throws -> T {
         let config = APIConfig.lookups(type: type.rawValue)
         let response: APIResponseDTO<T> = try await network.request(config)
         return response.data

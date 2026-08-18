@@ -106,7 +106,6 @@ final class ChatRepository: ChatRepositoryProtocol {
                 }
             
             continuation.onTermination = { _ in
-                DebugLogger.log("🛑 observeConversations listener terminated")
                 listener.remove()
             }
         }
@@ -200,7 +199,6 @@ final class ChatRepository: ChatRepositoryProtocol {
                 }
             
             continuation.onTermination = { _ in
-                DebugLogger.log("🛑 observeMessages listener terminated for taskId: \(taskId)")
                 listener.remove()
             }
         }

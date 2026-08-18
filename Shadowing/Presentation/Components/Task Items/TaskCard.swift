@@ -1,6 +1,10 @@
 import SwiftUI
 import CoreLocation
 
+private struct SelectedUser: Identifiable {
+    let id: String
+}
+
 struct TaskCard: View {
     
         // MARK: - Environment
@@ -13,7 +17,7 @@ struct TaskCard: View {
     
         // MARK: - State
     @State private var appeared = false
-    @State private var selectedUserId: String?
+    @State private var selectedUser: SelectedUser?
     
         // MARK: - Lookup-resolved values
     private var priorityLookup: PriorityLookup? {
@@ -39,7 +43,8 @@ struct TaskCard: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 HStack(alignment: .top, spacing: Spacing.sm) {
                     Button {
-                        selectedUserId = task.requester.id
+                            // تعيين الكائن يطلق فتح الـ Sheet فوراً وبشكل مضمون
+                        selectedUser = SelectedUser(id: task.requester.id)
                     } label: {
                         AvatarView(profile: task.requester, nameLayout: .horizontal, subtitle: task.createdAt.toRelativeString())
                     }
@@ -129,11 +134,8 @@ struct TaskCard: View {
         .onAppear {
             appeared = true
         }
-        .sheet(item: Binding(
-            get: { selectedUserId },
-            set: { selectedUserId = $0 }
-        )) { userId in
-            container.makeUserView(userId: userId)
+        .sheet(item: $selectedUser) { user in
+            container.makeUserView(userId: user.id)
                 .appSheetStyle()
         }
     }
@@ -141,7 +143,6 @@ struct TaskCard: View {
         // MARK: - Private Views
     @ViewBuilder
     private var badgesRow: some View {
-        
         if let priorityLookup {
             PriorityBadge(priority: priorityLookup)
         }

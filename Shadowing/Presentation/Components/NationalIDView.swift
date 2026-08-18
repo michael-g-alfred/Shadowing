@@ -23,7 +23,7 @@ struct NationalIDView: View {
                     text: $nationalID,
                     keyboardType: .numberPad,
                     isFocused: focusedField == .nationalID,
-                    textFilter: Self.digitsOnly
+                    textFilter: digitsOnly
                 )
                 .focused($focusedField, equals: .nationalID)
                 .environment(\.layoutDirection, .leftToRight)
@@ -63,7 +63,7 @@ struct NationalIDView: View {
         }
     }
     
-    private static func digitsOnly(_ value: String) -> String {
+    private func digitsOnly(_ value: String) -> String {
         let formatter = NumberFormatter()
         formatter.locale = Locale(identifier: "en")
         let englishDigits = value

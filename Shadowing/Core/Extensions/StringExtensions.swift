@@ -1,21 +1,23 @@
 import Foundation
 
 extension String {
-        /// Parses an ISO8601 timestamp string (as returned by the API) into a Date.
-        /// Handles both with and without fractional seconds.
+    
+    private static let isoFormatterWithFractional: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+    
+    private static let isoFormatterWithoutFractional: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+    
     func toDate() -> Date? {
-        let withFractional = ISO8601DateFormatter()
-        withFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = withFractional.date(from: self) {
+        if let date = Self.isoFormatterWithFractional.date(from: self) {
             return date
         }
-        
-        let withoutFractional = ISO8601DateFormatter()
-        withoutFractional.formatOptions = [.withInternetDateTime]
-        return withoutFractional.date(from: self)
+        return Self.isoFormatterWithoutFractional.date(from: self)
     }
-}
-
-extension String: @retroactive Identifiable {
-    public var id: String { self }
 }

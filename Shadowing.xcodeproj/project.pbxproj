@@ -331,7 +331,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Shadowing/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
-				INFOPLIST_KEY_NSAppDataUsageDescription = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera so you can take a photo for your profile picture.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We use your location to provide location-based services even when the app is running in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show nearby services and provide a better experience.";
@@ -385,7 +384,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Shadowing/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
-				INFOPLIST_KEY_NSAppDataUsageDescription = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera so you can take a photo for your profile picture.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We use your location to provide location-based services even when the app is running in the background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show nearby services and provide a better experience.";
