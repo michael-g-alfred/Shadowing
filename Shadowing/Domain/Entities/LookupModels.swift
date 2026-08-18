@@ -4,6 +4,15 @@ extension Locale {
     var isArabic: Bool {
         LanguageManager.shared.currentLanguage == .arabic
     }
+    var isFrench: Bool {
+        LanguageManager.shared.currentLanguage == .french
+    }
+}
+
+private func pickLabel(locale: Locale, ar: String, en: String, fr: String) -> String {
+    if locale.isArabic { return ar }
+    if locale.isFrench { return fr }
+    return en
 }
 
     // MARK: - 1. Role Lookup
@@ -12,11 +21,13 @@ struct RoleLookupDTO: Codable {
     let name: String?
     let labelAr: String?
     let labelEn: String?
+    let labelFr: String?
     
     enum CodingKeys: String, CodingKey {
         case id, name
         case labelAr = "label_ar"
         case labelEn = "label_en"
+        case labelFr = "label_fr"
     }
 }
 
@@ -28,12 +39,13 @@ struct RoleLookup: Identifiable, Hashable {
 
 extension RoleLookupDTO {
     func toDomain(locale: Locale) -> RoleLookup {
-        let ar = labelAr ?? labelEn ?? ""
-        let en = labelEn ?? labelAr ?? ""
+        let en = labelEn ?? labelAr ?? labelFr ?? ""
+        let ar = labelAr ?? en
+        let fr = labelFr ?? en
         return RoleLookup(
             id: id ?? 0,
             name: name ?? "",
-            label: locale.isArabic ? ar : en
+            label: pickLabel(locale: locale, ar: ar, en: en, fr: fr)
         )
     }
 }
@@ -44,11 +56,13 @@ struct AccountStatusLookupDTO: Codable {
     let name: String?
     let labelAr: String?
     let labelEn: String?
+    let labelFr: String?
     
     enum CodingKeys: String, CodingKey {
         case id, name
         case labelAr = "label_ar"
         case labelEn = "label_en"
+        case labelFr = "label_fr"
     }
 }
 
@@ -69,12 +83,13 @@ struct AccountStatusLookup: Identifiable, Hashable {
 
 extension AccountStatusLookupDTO {
     func toDomain(locale: Locale) -> AccountStatusLookup {
-        let ar = labelAr ?? labelEn ?? ""
-        let en = labelEn ?? labelAr ?? ""
+        let en = labelEn ?? labelAr ?? labelFr ?? ""
+        let ar = labelAr ?? en
+        let fr = labelFr ?? en
         return AccountStatusLookup(
             id: id ?? 0,
             name: name ?? "",
-            label: locale.isArabic ? ar : en
+            label: pickLabel(locale: locale, ar: ar, en: en, fr: fr)
         )
     }
 }
@@ -85,11 +100,13 @@ struct CountryLookupDTO: Codable {
     let code: String?
     let labelAr: String?
     let labelEn: String?
+    let labelFr: String?
     
     enum CodingKeys: String, CodingKey {
         case id, code
         case labelAr = "label_ar"
         case labelEn = "label_en"
+        case labelFr = "label_fr"
     }
 }
 
@@ -101,12 +118,13 @@ struct CountryLookup: Identifiable, Hashable {
 
 extension CountryLookupDTO {
     func toDomain(locale: Locale) -> CountryLookup {
-        let ar = labelAr ?? labelEn ?? ""
-        let en = labelEn ?? labelAr ?? ""
+        let en = labelEn ?? labelAr ?? labelFr ?? ""
+        let ar = labelAr ?? en
+        let fr = labelFr ?? en
         return CountryLookup(
             id: id ?? 0,
             code: code ?? "",
-            label: locale.isArabic ? ar : en
+            label: pickLabel(locale: locale, ar: ar, en: en, fr: fr)
         )
     }
 }
@@ -117,12 +135,14 @@ struct GovernorateLookupDTO: Codable {
     let countryId: Int?
     let labelAr: String?
     let labelEn: String?
+    let labelFr: String?
     
     enum CodingKeys: String, CodingKey {
         case id
         case countryId = "country_id"
         case labelAr = "label_ar"
         case labelEn = "label_en"
+        case labelFr = "label_fr"
     }
 }
 
@@ -134,12 +154,13 @@ struct GovernorateLookup: Identifiable, Hashable {
 
 extension GovernorateLookupDTO {
     func toDomain(locale: Locale) -> GovernorateLookup {
-        let ar = labelAr ?? labelEn ?? ""
-        let en = labelEn ?? labelAr ?? ""
+        let en = labelEn ?? labelAr ?? labelFr ?? ""
+        let ar = labelAr ?? en
+        let fr = labelFr ?? en
         return GovernorateLookup(
             id: id ?? 0,
             countryId: countryId ?? 0,
-            label: locale.isArabic ? ar : en
+            label: pickLabel(locale: locale, ar: ar, en: en, fr: fr)
         )
     }
 }
@@ -150,12 +171,14 @@ struct CurrencyLookupDTO: Codable {
     let code: String?
     let labelAr: String?
     let labelEn: String?
+    let labelFr: String?
     let symbol: String?
     
     enum CodingKeys: String, CodingKey {
         case id, code, symbol
         case labelAr = "label_ar"
         case labelEn = "label_en"
+        case labelFr = "label_fr"
     }
 }
 
@@ -168,12 +191,13 @@ struct CurrencyLookup: Identifiable, Hashable {
 
 extension CurrencyLookupDTO {
     func toDomain(locale: Locale) -> CurrencyLookup {
-        let ar = labelAr ?? labelEn ?? ""
-        let en = labelEn ?? labelAr ?? ""
+        let en = labelEn ?? labelAr ?? labelFr ?? ""
+        let ar = labelAr ?? en
+        let fr = labelFr ?? en
         return CurrencyLookup(
             id: id ?? 0,
             code: code ?? "",
-            label: locale.isArabic ? ar : en,
+            label: pickLabel(locale: locale, ar: ar, en: en, fr: fr),
             symbol: symbol ?? ""
         )
     }
@@ -217,6 +241,7 @@ struct PriorityLookupDTO: Codable {
     let name: String?
     let labelAr: String?
     let labelEn: String?
+    let labelFr: String?
     let color: String?
     let icon: String?
     
@@ -224,6 +249,7 @@ struct PriorityLookupDTO: Codable {
         case id, name, color, icon
         case labelAr = "label_ar"
         case labelEn = "label_en"
+        case labelFr = "label_fr"
     }
 }
 
@@ -237,9 +263,10 @@ struct PriorityLookup: Identifiable, Hashable {
 
 extension PriorityLookupDTO {
     func toDomain(locale: Locale) -> PriorityLookup {
-        let ar = labelAr ?? labelEn ?? ""
-        let en = labelEn ?? labelAr ?? ""
-        let selectedLabel = locale.isArabic ? ar : en
+        let en = labelEn ?? labelAr ?? labelFr ?? ""
+        let ar = labelAr ?? en
+        let fr = labelFr ?? en
+        let selectedLabel = pickLabel(locale: locale, ar: ar, en: en, fr: fr)
         
         return PriorityLookup(
             id: id ?? 0,
@@ -257,12 +284,14 @@ struct StatusLookupDTO: Codable {
     let name: String?
     let labelAr: String?
     let labelEn: String?
+    let labelFr: String?
     let color: String?
     
     enum CodingKeys: String, CodingKey {
         case id, name, color
         case labelAr = "label_ar"
         case labelEn = "label_en"
+        case labelFr = "label_fr"
     }
 }
 
@@ -275,12 +304,13 @@ struct StatusLookup: Identifiable, Hashable {
 
 extension StatusLookupDTO {
     func toDomain(locale: Locale) -> StatusLookup {
-        let ar = labelAr ?? labelEn ?? ""
-        let en = labelEn ?? labelAr ?? ""
+        let en = labelEn ?? labelAr ?? labelFr ?? ""
+        let ar = labelAr ?? en
+        let fr = labelFr ?? en
         return StatusLookup(
             id: id ?? 0,
             name: name ?? "",
-            label: locale.isArabic ? ar : en,
+            label: pickLabel(locale: locale, ar: ar, en: en, fr: fr),
             color: color ?? "#000000"
         )
     }
@@ -292,12 +322,14 @@ struct TaskServiceLookupDTO: Codable {
     let name: String?
     let labelAr: String?
     let labelEn: String?
+    let labelFr: String?
     let icon: String?
     
     enum CodingKeys: String, CodingKey {
         case id, name, icon
         case labelAr = "label_ar"
         case labelEn = "label_en"
+        case labelFr = "label_fr"
     }
 }
 
@@ -310,12 +342,13 @@ struct TaskServiceLookup: Identifiable, Hashable {
 
 extension TaskServiceLookupDTO {
     func toDomain(locale: Locale) -> TaskServiceLookup {
-        let ar = labelAr ?? labelEn ?? ""
-        let en = labelEn ?? labelAr ?? ""
+        let en = labelEn ?? labelAr ?? labelFr ?? ""
+        let ar = labelAr ?? en
+        let fr = labelFr ?? en
         return TaskServiceLookup(
             id: id ?? 0,
             name: name ?? "",
-            label: locale.isArabic ? ar : en,
+            label: pickLabel(locale: locale, ar: ar, en: en, fr: fr),
             icon: icon ?? ""
         )
     }
@@ -327,16 +360,20 @@ struct TimeOfDayLookupDTO: Codable {
     let name: String?
     let labelAr: String?
     let labelEn: String?
+    let labelFr: String?
     let subTitleAr: String?
     let subTitleEn: String?
+    let subTitleFr: String?
     let icon: String?
     
     enum CodingKeys: String, CodingKey {
         case id, name, icon
         case labelAr = "label_ar"
         case labelEn = "label_en"
+        case labelFr = "label_fr"
         case subTitleAr = "sub_title_ar"
         case subTitleEn = "sub_title_en"
+        case subTitleFr = "sub_title_fr"
     }
 }
 
@@ -350,16 +387,18 @@ struct TimeOfDayLookup: Identifiable, Hashable {
 
 extension TimeOfDayLookupDTO {
     func toDomain(locale: Locale) -> TimeOfDayLookup {
-        let labelArVal = labelAr ?? labelEn ?? ""
-        let labelEnVal = labelEn ?? labelAr ?? ""
-        let subArVal = subTitleAr ?? subTitleEn ?? ""
-        let subEnVal = subTitleEn ?? subTitleAr ?? ""
+        let labelEnVal = labelEn ?? labelAr ?? labelFr ?? ""
+        let labelArVal = labelAr ?? labelEnVal
+        let labelFrVal = labelFr ?? labelEnVal
+        let subEnVal = subTitleEn ?? subTitleAr ?? subTitleFr ?? ""
+        let subArVal = subTitleAr ?? subEnVal
+        let subFrVal = subTitleFr ?? subEnVal
         
         return TimeOfDayLookup(
             id: id ?? 0,
             name: name ?? "",
-            label: locale.isArabic ? labelArVal : labelEnVal,
-            subTitle: locale.isArabic ? subArVal : subEnVal,
+            label: pickLabel(locale: locale, ar: labelArVal, en: labelEnVal, fr: labelFrVal),
+            subTitle: pickLabel(locale: locale, ar: subArVal, en: subEnVal, fr: subFrVal),
             icon: icon ?? ""
         )
     }
@@ -371,11 +410,13 @@ struct EscrowStatusLookupDTO: Codable {
     let name: String?
     let labelAr: String?
     let labelEn: String?
+    let labelFr: String?
     
     enum CodingKeys: String, CodingKey {
         case id, name
         case labelAr = "label_ar"
         case labelEn = "label_en"
+        case labelFr = "label_fr"
     }
 }
 
@@ -387,12 +428,13 @@ struct EscrowStatusLookup: Identifiable, Hashable {
 
 extension EscrowStatusLookupDTO {
     func toDomain(locale: Locale) -> EscrowStatusLookup {
-        let ar = labelAr ?? labelEn ?? ""
-        let en = labelEn ?? labelAr ?? ""
+        let en = labelEn ?? labelAr ?? labelFr ?? ""
+        let ar = labelAr ?? en
+        let fr = labelFr ?? en
         return EscrowStatusLookup(
             id: id ?? 0,
             name: name ?? "",
-            label: locale.isArabic ? ar : en
+            label: pickLabel(locale: locale, ar: ar, en: en, fr: fr)
         )
     }
 }
