@@ -28,7 +28,7 @@ final class UserRepository: UserRepositoryProtocol {
     func fetchUser(id: String) async throws -> UserModel {
         let accessToken = try await getValidToken()
         let config = APIConfig.user(id: id, accessToken: accessToken)
-        let response: APIResponseDTO<ProfileResponseDTO> = try await network.request(config)
+        let response: APIResponseDTO<UserResponseDTO> = try await network.request(config)
         let fetchedUser = response.data.user.toDomain()
         
         if currentUser == nil || currentUser?.id == id {
@@ -145,7 +145,7 @@ final class UserRepository: UserRepositoryProtocol {
     func updateProfile(userId: String, payload: EditProfilePayload) async throws -> (user: UserModel, message: String, type: String) {
         let accessToken = try await getValidToken()
         let config = try APIConfig.updateProfile(userId: userId, payload: payload, accessToken: accessToken)
-        let response: APIResponseDTO<ProfileResponseDTO> = try await network.request(config)
+        let response: APIResponseDTO<UserResponseDTO> = try await network.request(config)
         let updatedUser = response.data.user.toDomain()
         
         if currentUser?.id == userId {

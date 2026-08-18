@@ -1,6 +1,6 @@
 import Foundation
 
-struct ProfileResponseDTO: Codable {
+struct UserResponseDTO: Codable {
     let user: UserDTO
 }
 
