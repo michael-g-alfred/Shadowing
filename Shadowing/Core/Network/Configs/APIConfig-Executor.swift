@@ -40,7 +40,7 @@ extension APIConfig {
             method: .get,
             queryItems: Self.queryItems([
                 ("cursor", cursor),
-                ("limit", limit.map(String.init))
+                ("limit", limit.map { "\($0)" })
             ]),
             headers: Self.requestHeaders(accessToken: accessToken)
         )
@@ -57,7 +57,7 @@ extension APIConfig {
             method: .get,
             queryItems: Self.queryItems([
                 ("cursor", cursor),
-                ("limit", limit.map(String.init))
+                ("limit", limit.map { "\($0)" })
             ]),
             headers: Self.requestHeaders(accessToken: accessToken)
         )
@@ -74,7 +74,7 @@ extension APIConfig {
             method: .get,
             queryItems: Self.queryItems([
                 ("cursor", cursor),
-                ("limit", limit.map(String.init))
+                ("limit", limit.map { "\($0)" })
             ]),
             headers: Self.requestHeaders(accessToken: accessToken)
         )

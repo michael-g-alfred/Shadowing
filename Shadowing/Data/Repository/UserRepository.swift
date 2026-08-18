@@ -101,10 +101,6 @@ final class UserRepository: UserRepositoryProtocol {
     
         // MARK: - Specialty Suggestions
     
-        /// Top-rated users registered under a given specialty (task_services id).
-        /// Used to auto-suggest people to a requester right after they pick a
-        /// service type while creating a task — no search, no invite, just a
-        /// "here's who's around for this" preview.
     func fetchUsersBySpecialty(serviceId: Int, limit: Int? = nil) async throws -> [UserSummaryModel] {
         let accessToken = try await getValidToken()
         let config = APIConfig.usersBySpecialty(serviceId: serviceId, limit: limit, accessToken: accessToken)
@@ -137,11 +133,6 @@ final class UserRepository: UserRepositoryProtocol {
         )
     }
     
-        /// PATCH /users/:id — self-service profile edit (display name, bio,
-        /// location, phone, specialties). Updates `currentUser` in place when
-        /// editing your own profile, and invalidates the summary cache so any
-        /// other screens showing this user's summary (chat, task cards, etc.)
-        /// pick up the change on next fetch rather than showing stale data.
     func updateProfile(userId: String, payload: EditProfilePayload) async throws -> (user: UserModel, message: String, type: String) {
         let accessToken = try await getValidToken()
         let config = try APIConfig.updateProfile(userId: userId, payload: payload, accessToken: accessToken)
@@ -155,12 +146,4 @@ final class UserRepository: UserRepositoryProtocol {
         
         return (user: updatedUser, message: response.message, type: response.type)
     }
-}
-
-    // MARK: - DTO
-    // Move this to your DTOs file if you keep them separate from the repository -
-    // added here since UserSummaryResponseDTO / UserSummaryDTO's actual file
-    // wasn't part of what I could see.
-struct UsersBySpecialtyResponseDTO: Codable {
-    let users: [UserSummaryDTO]
 }

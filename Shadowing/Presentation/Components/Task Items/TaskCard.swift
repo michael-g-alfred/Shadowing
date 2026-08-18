@@ -40,66 +40,65 @@ struct TaskCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                HStack(alignment: .top, spacing: Spacing.sm) {
-                    Button {
-                            // تعيين الكائن يطلق فتح الـ Sheet فوراً وبشكل مضمون
-                        selectedUser = SelectedUser(id: task.requester.id)
-                    } label: {
-                        AvatarView(profile: task.requester, nameLayout: .horizontal, subtitle: task.createdAt.toRelativeString())
-                    }
-                    .buttonStyle(.plain)
-                    
-                    Spacer(minLength: Spacing.sm)
-                    
-                    VStack(alignment: .trailing, spacing: Spacing.xs) {
-                        BudgetBadge(task: task)
-                        if let serviceLookup {
-                            ServiceBadge(service: serviceLookup)
-                        }
+                // 1. Header (User Info + Price/Service)
+            HStack(alignment: .top, spacing: Spacing.sm) {
+                Button {
+                    selectedUser = SelectedUser(id: task.requester.id)
+                } label: {
+                    AvatarView(profile: task.requester, nameLayout: .horizontal, subtitle: task.createdAt.toRelativeString())
+                }
+                .buttonStyle(.plain)
+                .layoutPriority(0)
+                
+                Spacer(minLength: Spacing.xs)
+                
+                VStack(alignment: .trailing, spacing: Spacing.xs) {
+                    BudgetBadge(task: task)
+                    if let serviceLookup {
+                        ServiceBadge(service: serviceLookup)
                     }
                 }
+                .layoutPriority(1)
             }
             
+                // 2. Title & Description
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text(task.title)
                     .font(.headline).fontWeight(.bold).foregroundStyle(.primary)
-                    .lineLimit(1).multilineTextAlignment(.leading)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                
                 if !task.description.isEmpty {
                     Text(task.description)
                         .font(.subheadline).foregroundStyle(.secondary)
-                        .lineLimit(1).multilineTextAlignment(.leading)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
             }
             
             Divider()
             
+                // 3. Distance & Location
             HStack(alignment: .center, spacing: Spacing.sm) {
                 if let lat = task.latitude, let long = task.longitude {
                     DistanceBadge(taskLocation: CLLocation(latitude: lat, longitude: long))
                 }
                 LocationBadge(task: task)
+                    .lineLimit(1)
             }
             
+                // 4. Badges & Actions Bottom Row
             HStack(alignment: .center, spacing: Spacing.xs) {
                 
-                ViewThatFits(in: .horizontal) {
+                ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: Spacing.xs) {
-                        badgesRow
-                    }
-                    
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        HStack(spacing: Spacing.xs) {
-                            if let priorityLookup {
-                                PriorityBadge(priority: priorityLookup)
-                            }
-                            if let statusLookup {
-                                StatusBadge(status: statusLookup)
-                            }
+                        if let priorityLookup {
+                            PriorityBadge(priority: priorityLookup)
                         }
-                        HStack(spacing: Spacing.xs) {
-                            ApplicantsBadge(applicants: task.applicantsCount, color: .brown)
+                        if let statusLookup {
+                            StatusBadge(status: statusLookup)
                         }
+                        ApplicantsBadge(applicants: task.applicantsCount, color: .brown)
                     }
                 }
                 
@@ -113,6 +112,7 @@ struct TaskCard: View {
                         favoriteBadge(action: onToggleFavorite)
                     }
                 }
+                .layoutPriority(1)
             }
         }
         .padding(Spacing.md)
@@ -141,23 +141,12 @@ struct TaskCard: View {
     }
     
         // MARK: - Private Views
-    @ViewBuilder
-    private var badgesRow: some View {
-        if let priorityLookup {
-            PriorityBadge(priority: priorityLookup)
-        }
-        if let statusLookup {
-            StatusBadge(status: statusLookup)
-        }
-        ApplicantsBadge(applicants: task.applicantsCount, color: .brown)
-    }
-    
     private func favoriteBadge(action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: task.isFavourite ? "star.fill" : "star")
                 .imageScale(.medium)
                 .foregroundStyle(darkMode ? .rating : Color.black.opacity(0.75))
-                .frame(width: 32, height: 32)
+                .frame(width: Spacing.xxl, height: Spacing.xxl)
                 .appGlassCapsule(
                     overlayColor: darkMode ? .rating.opacity(0.1) : .rating.opacity(0.5),
                     strokeColor: darkMode ? .rating.opacity(0.1) : Color.black.opacity(0.15)
