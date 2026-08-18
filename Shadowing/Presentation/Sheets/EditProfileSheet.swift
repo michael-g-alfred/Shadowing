@@ -209,7 +209,7 @@ private struct PhoneEditField: View {
     var focusedField: FocusState<EditProfileField?>.Binding
     
     var body: some View {
-        HStack(spacing: Spacing.sm) {
+        VStack(alignment: .leading,spacing: Spacing.sm) {
             AppPickerField(
                 icon: "flag",
                 placeholder: "Code",

@@ -9,7 +9,7 @@ final class LanguageManager {
 
     private let storageKey = "appLanguage"
 
-    private(set) var currentLanguage: AppLanguage = .english
+    private(set) var currentLanguage: AppLanguage = .arabic
 
     private init() {
         setAppInitLanguage()
@@ -22,10 +22,6 @@ final class LanguageManager {
             ? .forceRightToLeft
             : .forceLeftToRight
         UIView.appearance().semanticContentAttribute = semanticContent
-    }
-
-    func toggleLanguage() {
-        setLanguage(currentLanguage == .english ? .arabic : .english)
     }
 
     private func setAppInitLanguage() {

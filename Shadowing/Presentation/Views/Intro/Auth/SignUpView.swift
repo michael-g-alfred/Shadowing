@@ -146,7 +146,7 @@ private struct PhoneNumberField: View {
     var focusedField: FocusState<SignUpField?>.Binding
     
     var body: some View {
-        HStack(spacing: Spacing.sm) {
+        VStack(alignment: .leading, spacing: Spacing.lg) {
             AppPickerField(
                 icon: "flag",
                 placeholder: "Code",

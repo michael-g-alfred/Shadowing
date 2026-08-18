@@ -91,7 +91,7 @@ struct SettingsSheet: View {
                     Text(language.title).tag(language)
                 }
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
         }
     }
 }

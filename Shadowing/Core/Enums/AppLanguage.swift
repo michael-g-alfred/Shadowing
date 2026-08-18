@@ -8,11 +8,11 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     
     var id: String { rawValue }
     
-    var title: String {
+    var title: LocalizedStringResource {
         switch self {
-            case .arabic:  return "العربية"
+            case .arabic:  return "Arabic"
             case .english: return "English"
-            case .french:  return "Français"
+            case .french:  return "French"
         }
     }
     

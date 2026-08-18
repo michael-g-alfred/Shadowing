@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SetupOptionCard: View {
     let icon: String
-    let title: String
+    let title: LocalizedStringResource
     let isSelected: Bool
     let action: () -> Void
     

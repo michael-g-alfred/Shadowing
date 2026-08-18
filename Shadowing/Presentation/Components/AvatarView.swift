@@ -85,34 +85,24 @@ struct AvatarView<Accessory: View>: View {
                                     .resizable()
                                     .scaledToFill()
                             case .failure, .empty:
-                                initialsOrPlaceholder
+                                placeholder
                             @unknown default:
-                                initialsOrPlaceholder
+                                placeholder
                         }
                     }
                     .clipShape(Circle())
                 } else {
-                    initialsOrPlaceholder
+                    placeholder
                 }
             }
         }
         .frame(width: size, height: size)
     }
     
-    private var initialsOrPlaceholder: some View {
-        Group {
-            if let profile {
-                Text(profile.displayName.prefix(1).uppercased())
-                    .font(.system(size: size * 0.4))
-                    .bold()
-                    .foregroundStyle(avatarForeground)
-                    .lineLimit(1)
-            } else {
-                Image(systemName: "person.fill")
-                    .font(.system(size: size * 0.4))
-                    .foregroundStyle(avatarForeground)
-            }
-        }
+    private var placeholder: some View {
+        Image(systemName: "person.fill")
+            .font(.system(size: size * 0.4))
+            .foregroundStyle(avatarForeground)
     }
     
     private func nameBlock(alignment: HorizontalAlignment) -> some View {
