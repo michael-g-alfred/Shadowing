@@ -118,8 +118,8 @@ final class RatingSheetViewModel {
         try? await notificationRepo.send(
             to: target.userId,
             type: .ratingReceived,
-            title: "New rating",
-            body: "\(raterName) rated you \(rating) star\(rating == 1 ? "" : "s") for \"\(taskTitle)\"",
+            subjectText: "New rating",
+            messageText: "\(raterName) rated you \(rating) star\(rating == 1 ? "" : "s") for \"\(taskTitle)\"",
             taskId: taskId
         )
     }

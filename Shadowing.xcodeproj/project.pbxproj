@@ -13,8 +13,8 @@
 		BE3FEF96300AB4D5007E9747 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = BE3FEF95300AB4D5007E9747 /* FirebaseCore */; };
 		BE3FEF98300AB4D5007E9747 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = BE3FEF97300AB4D5007E9747 /* FirebaseFirestore */; };
 		BE5E82FC2FFCF4AC00DE012B /* MGOnboardingKit in Frameworks */ = {isa = PBXBuildFile; productRef = BE5E82FB2FFCF4AC00DE012B /* MGOnboardingKit */; };
-		BE5E82FF2FFCF4CD00DE012B /* MGNetworkingKit in Frameworks */ = {isa = PBXBuildFile; productRef = BE5E82FE2FFCF4CD00DE012B /* MGNetworkingKit */; };
 		BE9AEE7B301C17770018FDB2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BE9AEE7A301C17770018FDB2 /* GoogleService-Info.plist */; };
+		BE9D03E83037B42100439572 /* MGNetworkingKit in Frameworks */ = {isa = PBXBuildFile; productRef = BE9D03E73037B42100439572 /* MGNetworkingKit */; };
 		BEB8684630324AAC00D64EFA /* shadowing.icon in Resources */ = {isa = PBXBuildFile; fileRef = BEB8684530324AAC00D64EFA /* shadowing.icon */; };
 		BEDF5B962FFED85C00015FE5 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BEDF5B952FFED85C00015FE5 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
@@ -53,12 +53,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				BE27FCDF301BB2C3009CDA02 /* FirebaseDatabase in Frameworks */,
+				BE9D03E83037B42100439572 /* MGNetworkingKit in Frameworks */,
 				BE5E82FC2FFCF4AC00DE012B /* MGOnboardingKit in Frameworks */,
 				BE27FCDD301BB2C3009CDA02 /* FirebaseAuth in Frameworks */,
 				BE3FEF98300AB4D5007E9747 /* FirebaseFirestore in Frameworks */,
 				BE27FCE1301BB402009CDA02 /* FirebaseStorage in Frameworks */,
 				BE3FEF96300AB4D5007E9747 /* FirebaseCore in Frameworks */,
-				BE5E82FF2FFCF4CD00DE012B /* MGNetworkingKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -113,12 +113,12 @@
 			name = Shadowing;
 			packageProductDependencies = (
 				BE5E82FB2FFCF4AC00DE012B /* MGOnboardingKit */,
-				BE5E82FE2FFCF4CD00DE012B /* MGNetworkingKit */,
 				BE3FEF95300AB4D5007E9747 /* FirebaseCore */,
 				BE3FEF97300AB4D5007E9747 /* FirebaseFirestore */,
 				BE27FCDC301BB2C3009CDA02 /* FirebaseAuth */,
 				BE27FCDE301BB2C3009CDA02 /* FirebaseDatabase */,
 				BE27FCE0301BB402009CDA02 /* FirebaseStorage */,
+				BE9D03E73037B42100439572 /* MGNetworkingKit */,
 			);
 			productName = Shadowing;
 			productReference = BE5E81FD2FFCF43100DE012B /* Shadowing.app */;
@@ -152,8 +152,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				BE5E82FA2FFCF4AC00DE012B /* XCRemoteSwiftPackageReference "MGOnboardingKit" */,
-				BE5E82FD2FFCF4CD00DE012B /* XCRemoteSwiftPackageReference "MGNetworkingKit" */,
 				BE3FEF94300AB4D5007E9747 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				BE9D03E63037B42100439572 /* XCRemoteSwiftPackageReference "MGNetworkingKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BE5E81FE2FFCF43100DE012B /* Products */;
@@ -458,7 +458,7 @@
 				kind = branch;
 			};
 		};
-		BE5E82FD2FFCF4CD00DE012B /* XCRemoteSwiftPackageReference "MGNetworkingKit" */ = {
+		BE9D03E63037B42100439572 /* XCRemoteSwiftPackageReference "MGNetworkingKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/michael-g-alfred/MGNetworkingKit.git";
 			requirement = {
@@ -499,9 +499,9 @@
 			package = BE5E82FA2FFCF4AC00DE012B /* XCRemoteSwiftPackageReference "MGOnboardingKit" */;
 			productName = MGOnboardingKit;
 		};
-		BE5E82FE2FFCF4CD00DE012B /* MGNetworkingKit */ = {
+		BE9D03E73037B42100439572 /* MGNetworkingKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BE5E82FD2FFCF4CD00DE012B /* XCRemoteSwiftPackageReference "MGNetworkingKit" */;
+			package = BE9D03E63037B42100439572 /* XCRemoteSwiftPackageReference "MGNetworkingKit" */;
 			productName = MGNetworkingKit;
 		};
 /* End XCSwiftPackageProductDependency section */

@@ -5,10 +5,12 @@ struct AppGlassCapsule: ViewModifier {
         // MARK: - Environment
     @Environment(\.colorScheme) private var colorScheme
     
+        // MARK: - Properties
     var fill: AnyShapeStyle = AnyShapeStyle(.thinMaterial)
     var overlayColor: Color = .accentColor.opacity(0.15)
     var strokeColor: Color = Color(.separator).opacity(0.2)
     
+        // MARK: - Body
     @ViewBuilder
     func body(content: Content) -> some View {
         let baseContent = content

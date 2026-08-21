@@ -399,13 +399,13 @@ final class ChatRepository: ChatRepositoryProtocol {
         taskId: String,
         messageText: String
     ) async {
-        let senderName = (try? await userRepo.fetchUserSummary(id: senderId))?.displayName ?? "New message"
+        let senderName = (try? await userRepo.fetchUserSummary(id: senderId))?.displayName ?? String(localized: "notification.newMessage.fallbackTitle")
         do {
             try await notificationRepo.send(
                 to: recipientId,
                 type: .newMessage,
-                title: senderName,
-                body: messageText,
+                subjectText: senderName,
+                messageText: messageText,
                 taskId: taskId
             )
             DebugLogger.log("✅ createNewMessageNotification succeeded | recipientId: \(recipientId) | taskId: \(taskId)")

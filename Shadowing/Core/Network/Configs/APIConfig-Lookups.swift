@@ -5,6 +5,9 @@ extension APIConfig {
     
         // MARK: - Lookups
     
+    /// Builds the request that fetches every lookup list (countries, specialties, etc.) at once.
+    ///
+    /// - Returns: A configured, unauthenticated `GET` request.
     static func lookups() -> MGRequestConfig {
         MGRequestConfig(
             baseURL: APIEndpoints.baseURL,
@@ -14,6 +17,10 @@ extension APIConfig {
         )
     }
     
+    /// Builds the request that fetches a single lookup list by type.
+    ///
+    /// - Parameter type: The lookup type to fetch, e.g. `"countries"` or `"specialties"`.
+    /// - Returns: A configured, unauthenticated `GET` request.
     static func lookups(type: String) -> MGRequestConfig {
         MGRequestConfig(
             baseURL: APIEndpoints.baseURL,

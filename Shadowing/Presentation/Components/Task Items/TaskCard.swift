@@ -144,7 +144,7 @@ struct TaskCard: View {
     private func favoriteBadge(action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: task.isFavourite ? "star.fill" : "star")
-                .imageScale(.medium)
+                .imageScale(.small)
                 .foregroundStyle(darkMode ? .rating : Color.black.opacity(0.75))
                 .frame(width: Spacing.xxl, height: Spacing.xxl)
                 .appGlassCapsule(

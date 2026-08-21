@@ -80,8 +80,8 @@ final class NotificationViewModel {
             for notification in newOnes {
                 Task { [weak self] in
                     try? await self?.notificationService.scheduleLocalNotification(
-                        title: notification.title,
-                        body: notification.body,
+                        title: String(localized: notification.title),
+                        body: String(localized: notification.body),
                         sound: true,
                         delay: 0.1
                     )

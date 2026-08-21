@@ -198,7 +198,7 @@ struct TaskDetailsView: View {
                 if let scheduledAt = task.scheduledAt {
                     InfoRow(
                         title: "Scheduled",
-                        systemImage: "clock.badge",
+                        systemImage: "calendar.badge.clock",
                         value: scheduledAt.formatted(.dateTime.day().month().year().hour().minute().locale(locale))
                     )
                 }

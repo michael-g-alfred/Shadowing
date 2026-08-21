@@ -5,6 +5,12 @@ extension APIConfig {
     
         // MARK: - Map
     
+    /// Builds the request that fetches tasks located within a map viewport.
+    ///
+    /// - Parameters:
+    ///   - bounds: The visible map bounds to search within.
+    ///   - accessToken: The requesting user's bearer token.
+    /// - Returns: A configured, authenticated `GET` request.
     static func mapTasks(
         bounds: MapBounds,
         accessToken: String

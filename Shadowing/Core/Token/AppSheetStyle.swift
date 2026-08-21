@@ -17,6 +17,7 @@ struct AppSheetStyle: ViewModifier {
         horizontalSizeClass == .regular ? .fullScreenCover : .sheet
     }
     
+        // MARK: - Body
     func body(content: Content) -> some View {
         content
             .presentationDetents(detents)

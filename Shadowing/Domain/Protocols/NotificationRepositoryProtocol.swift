@@ -10,7 +10,15 @@ protocol NotificationRepositoryProtocol {
         /// callers' perspective — failures should be swallowed with `try?` at the
         /// call site rather than surfaced as a user-facing error, since a failed
         /// notification shouldn't roll back the action that triggered it.
-    func send(to userId: String, type: NotificationType, title: String, body: String, taskId: String?) async throws
+        ///
+        /// `title`/`body` aren't passed in directly — `NotificationModel` derives
+        /// them as localized text from `type`, so every device shows them in its
+        /// own language. Instead, pass whatever dynamic text that template needs:
+        /// - `subjectText`: a task's title for task-scoped types, or the sender's
+        ///   display name for `.newMessage`.
+        /// - `messageText`: only for `.newMessage`, the literal message body
+        ///   (not localized — it's chat content, not template text).
+    func send(to userId: String, type: NotificationType, subjectText: String?, messageText: String?, taskId: String?) async throws
     
     func markAsRead(userId: String, notificationId: String) async throws
     func markAllAsRead(userId: String) async throws

@@ -21,30 +21,6 @@ struct ExecutorView: View {
             ExecutorTabHeader(vm: vm)
             ExecutorTabContent(container: container, selectedTab: vm.selectedTab)
         }
-        .sheet(isPresented: $vm.showAppliedSheet) {
-            AppliedSheet(vm: vm)
-                .appSheetStyle()
-        }
-        .sheet(isPresented: Binding(
-            get: { vm.selectedChatTaskId != nil },
-            set: { if !$0 { vm.selectedChatTaskId = nil } }
-        )) {
-            if let taskId = vm.selectedChatTaskId {
-                container.makeDirectChatDetailView(taskId: taskId)
-                    .appSheetStyle()
-            }
-        }
-        .alert("Confirm Task Application", isPresented: $vm.showFeeConfirmationAlert) {
-            Button("Cancel", role: .cancel) {
-                vm.cancelApply()
-            }
-            
-            Button("Confirm", role: .confirm) {
-                Task { await vm.confirmApply() }
-            }
-        } message: {
-            Text(vm.feeConfirmationMessage)
-        }
     }
 }
 

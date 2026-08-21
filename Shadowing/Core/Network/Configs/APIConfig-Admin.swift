@@ -5,5 +5,6 @@ extension APIConfig {
     
         // MARK: - Admin
     
-
+        // No admin endpoints defined yet.
+    
 }

@@ -45,23 +45,36 @@ final class AddTaskSheetViewModel {
     private(set) var isLoadingSpecialists: Bool = false
     private var specialistsGeneration = 0
     
+        /// Specialists picked on the invite screen. Kept here (rather than only
+        /// inside `SpecialistsSelectionViewModel`) because the task doesn't
+        /// exist yet at selection time — the actual invitation notifications
+        /// (which need the created task's id so tapping one opens that task)
+        /// are sent from `submitTask()` once the post succeeds.
+    var selectedSpecialistIDs: Set<String> = []
+    
     var onTaskAdded: (() async -> Void)?
     
     private let taskRepo: TaskRepositoryProtocol
     private let userRepo: UserRepositoryProtocol
     private let locationService: LocationServiceProtocol
+    private let notificationRepo: NotificationRepositoryProtocol
+    private let authRepo: AuthRepositoryProtocol
     let lookupStore: LookupStore
     
     init(
+        authRepo: AuthRepositoryProtocol,
         taskRepo: TaskRepositoryProtocol,
         userRepo: UserRepositoryProtocol,
+        notificationRepo: NotificationRepositoryProtocol,
         locationService: LocationServiceProtocol,
         lookupStore: LookupStore,
         onTaskAdded: (() async -> Void)? = nil
     ) {
+        self.authRepo = authRepo
         self.taskRepo = taskRepo
         self.userRepo = userRepo
         self.locationService = locationService
+        self.notificationRepo = notificationRepo
         self.lookupStore = lookupStore
         self.onTaskAdded = onTaskAdded
     }
@@ -113,7 +126,19 @@ final class AddTaskSheetViewModel {
     }
     
     func makeSpecialistsSelectionViewModel() -> SpecialistsSelectionViewModel {
-        SpecialistsSelectionViewModel(specialists: suggestedSpecialists, userRepo: userRepo)
+        SpecialistsSelectionViewModel(
+            specialists: suggestedSpecialists,
+            userRepo: userRepo,
+            initialSelectedIDs: selectedSpecialistIDs
+        )
+    }
+    
+        /// Called by the invite screen when the user confirms their picks
+        /// (see `AddTaskToolbar`'s `.onDismiss` wiring in the View). Just
+        /// stores the picks — the actual notifications go out after the task
+        /// is successfully posted, so they can carry a real `taskId`.
+    func updateSelectedSpecialists(_ ids: Set<String>) {
+        selectedSpecialistIDs = ids
     }
     
         // MARK: - Submission
@@ -171,6 +196,9 @@ final class AddTaskSheetViewModel {
             
             didPostSuccessfully = true
             AlertCenter.shared.show(responseType: result.type, message: result.message)
+            
+            await sendSpecialistInvites(taskId: result.task.id)
+            
             reset()
             
             if let onTaskAdded {
@@ -180,6 +208,41 @@ final class AddTaskSheetViewModel {
         } catch {
             errorMessage = error.localizedDescription
             AlertCenter.shared.showError(error.localizedDescription)
+        }
+    }
+    
+        /// Sends a `taskInvitation` notification (carrying the real `taskId`)
+        /// to every specialist picked on the invite screen, so tapping the
+        /// notification can deep-link straight into this task.
+        ///
+        /// The title/body shown on-device are localized — `NotificationModel`
+        /// derives them from the type plus `taskTitle` (passed here as
+        /// `subjectText`), so this only needs to supply the raw task title,
+        /// not any composed English text.
+        ///
+        /// Per `NotificationRepositoryProtocol`, sends are fire-and-forget —
+        /// a failure for one specialist shouldn't block the others or the
+        /// (already-succeeded) task post, so each call is wrapped in `try?`.
+        ///
+        /// - Parameter taskId: The just-created task's id.
+    private func sendSpecialistInvites(taskId: String) async {
+        guard !selectedSpecialistIDs.isEmpty else { return }
+        
+        let invitedSpecialists = suggestedSpecialists.filter { selectedSpecialistIDs.contains($0.id) }
+        let taskTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        await withTaskGroup(of: Void.self) { group in
+            for specialist in invitedSpecialists {
+                group.addTask { [notificationRepo] in
+                    try? await notificationRepo.send(
+                        to: specialist.id,
+                        type: .taskInvitation,
+                        subjectText: taskTitle,
+                        messageText: nil,
+                        taskId: taskId
+                    )
+                }
+            }
         }
     }
     
@@ -201,6 +264,7 @@ final class AddTaskSheetViewModel {
         preferredTimeOfDay = nil
         
         suggestedSpecialists = []
+        selectedSpecialistIDs = []
         didAttemptSubmit = false
         showErrorsAlert = false
     }
@@ -280,20 +344,16 @@ struct TaskValidationResult {
 final class SpecialistsSelectionViewModel {
     
     let specialists: [UserSummaryModel]
-    var selectedIDs: Set<UserSummaryModel.ID> = []
+    var selectedIDs: Set<UserSummaryModel.ID>
     
     private let userRepo: UserRepositoryProtocol
     
-    init(specialists: [UserSummaryModel], userRepo: UserRepositoryProtocol) {
+    init(specialists: [UserSummaryModel], userRepo: UserRepositoryProtocol, initialSelectedIDs: Set<String> = []) {
         self.specialists = specialists
         self.userRepo = userRepo
+        self.selectedIDs = initialSelectedIDs
     }
     
     var hasSelection: Bool { !selectedIDs.isEmpty }
     var selectionCount: Int { selectedIDs.count }
-    
-    func inviteSelectedSpecialists() {
-            // selectedIDs contains the selected specialists
-        print("Invite selected specialists: \(selectedIDs)")
-    }
 }

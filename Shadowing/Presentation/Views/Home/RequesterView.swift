@@ -25,23 +25,6 @@ struct RequesterView: View {
         .toolbar {
             RequesterToolbar(vm: vm, locationService: container.locationService)
         }
-        .sheet(isPresented: $vm.showAddTaskSheet) {
-            container.makeAddTaskSheet()
-                .appSheetStyle(interactiveDismissDisabled: true)
-        }
-        .sheet(isPresented: $vm.showApplicantsSheet) {
-            container.makeApplicantsSheet()
-                .appSheetStyle()
-        }
-        .sheet(isPresented: Binding(
-            get: { vm.selectedChatTaskId != nil },
-            set: { if !$0 { vm.selectedChatTaskId = nil } }
-        )) {
-            if let taskId = vm.selectedChatTaskId {
-                container.makeDirectChatDetailView(taskId: taskId)
-                    .appSheetStyle()
-            }
-        }
     }
 }
 

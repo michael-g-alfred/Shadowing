@@ -150,7 +150,10 @@ private struct SpecialistsEntryPointButton: View {
     
     var body: some View {
         NavigationLink {
-            SpecialistsSelectionView(vm: vm.makeSpecialistsSelectionViewModel())
+            SpecialistsSelectionView(
+                vm: vm.makeSpecialistsSelectionViewModel(),
+                onConfirm: { vm.updateSelectedSpecialists($0) }
+            )
         } label: {
             HStack {
                 Image(systemName: "person.fill")
@@ -218,7 +221,7 @@ private struct PreferredTimeOfDaySection: View {
             get: { vm.isPreferredTimeOfDay },
             set: { _ in vm.preferredTimeOfDayToggle() }
         )) {
-            Label("I need a certain time of day", systemImage: "clock.badge.checkmark")
+            Label("I need a certain time of day", systemImage: "clock.badge.checkmark.fill")
         }
         
         if vm.isPreferredTimeOfDay {
@@ -278,9 +281,11 @@ private struct SpecialistsSelectionView: View {
     
         // MARK: Environment
     @Environment(DIContainer.self) private var container
+    @Environment(\.dismiss) private var dismiss
     
         // MARK: State
     @State var vm: SpecialistsSelectionViewModel
+    let onConfirm: (Set<String>) -> Void
     
         // MARK: Body
     var body: some View {
@@ -293,7 +298,7 @@ private struct SpecialistsSelectionView: View {
         }
         .navigationTitle("Available Specialists")
         .toolbar {
-            SpecialistsSelectionToolbar(vm: vm)
+            SpecialistsSelectionToolbar(vm: vm, onConfirm: onConfirm, dismiss: dismiss)
         }
     }
 }
@@ -322,6 +327,8 @@ private struct SpecialistRow: View {
 
 private struct SpecialistsSelectionToolbar: ToolbarContent {
     let vm: SpecialistsSelectionViewModel
+    let onConfirm: (Set<String>) -> Void
+    let dismiss: DismissAction
     
     var body: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
@@ -331,7 +338,8 @@ private struct SpecialistsSelectionToolbar: ToolbarContent {
         if vm.hasSelection {
             ToolbarItem(placement: .bottomBar) {
                 Button {
-                    vm.inviteSelectedSpecialists()
+                    onConfirm(vm.selectedIDs)
+                    dismiss()
                 } label: {
                     Text("Invite (\(vm.selectionCount))")
                         .frame(maxWidth: .infinity)

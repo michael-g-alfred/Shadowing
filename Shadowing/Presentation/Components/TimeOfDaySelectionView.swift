@@ -40,7 +40,7 @@ private struct TimeOfDayCard: View {
                     AppIcon(
                         icon: time.icon,
                         size: 44,
-                        iconSize: 20,
+                        iconSize: 28,
                         color: isSelected ? .white : .accent
                     )
                     

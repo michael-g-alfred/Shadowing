@@ -146,10 +146,15 @@ final class ExecutorViewModel {
         isApplying = true
         defer { isApplying = false }
         
-            // Optimistic local state update: mark as applicant immediately
-        guard let index = executorAvailableTasks.firstIndex(where: { $0.id == task.id }) else { return }
-        let previousTask = executorAvailableTasks[index]
-        executorAvailableTasks[index].isApplicant = true
+            // Optimistic local state update — only applies if the task happens to be
+            // in the available-tasks list. When reached via TaskDetailsView from a
+            // notification, the list may not be loaded at all — that's fine, the API
+            // call below still runs regardless.
+        let index = executorAvailableTasks.firstIndex(where: { $0.id == task.id })
+        let previousTask = index.map { executorAvailableTasks[$0] }
+        if let index {
+            executorAvailableTasks[index].isApplicant = true
+        }
         
         showAppliedSheet = false
         selectedTaskForApply = nil
@@ -160,8 +165,8 @@ final class ExecutorViewModel {
             await notifyRequesterOfApplication(for: task)
         } catch {
                 // Rollback on error
-            if let rollbackIndex = executorAvailableTasks.firstIndex(where: { $0.id == task.id }) {
-                executorAvailableTasks[rollbackIndex] = previousTask
+            if let index, let previousTask {
+                executorAvailableTasks[index] = previousTask
             }
             AlertCenter.shared.showError(error.localizedDescription)
         }
@@ -436,8 +441,8 @@ final class ExecutorViewModel {
         try? await notificationRepo.send(
             to: task.requester.id,
             type: .taskApplied,
-            title: "New applicant",
-            body: "\(currentUserDisplayName) applied to your task \"\(task.title)\"",
+            subjectText: "New applicant",
+            messageText: "\(currentUserDisplayName) applied to your task \"\(task.title)\"",
             taskId: task.id
         )
     }
@@ -446,8 +451,8 @@ final class ExecutorViewModel {
         try? await notificationRepo.send(
             to: task.requester.id,
             type: .taskWithdrawn,
-            title: "Executor withdrew",
-            body: "\(currentUserDisplayName) withdrew from your task \"\(task.title)\"",
+            subjectText: "Executor withdrew",
+            messageText: "\(currentUserDisplayName) withdrew from your task \"\(task.title)\"",
             taskId: task.id
         )
     }
@@ -456,8 +461,8 @@ final class ExecutorViewModel {
         try? await notificationRepo.send(
             to: task.requester.id,
             type: .taskCompleted,
-            title: "Task marked as done",
-            body: "\(currentUserDisplayName) marked \"\(task.title)\" as done — please confirm completion",
+            subjectText: "Task marked as done",
+            messageText: "\(currentUserDisplayName) marked \"\(task.title)\" as done — please confirm completion",
             taskId: task.id
         )
     }

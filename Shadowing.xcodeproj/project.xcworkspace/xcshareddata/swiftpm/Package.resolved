@@ -1,5 +1,5 @@
 {
-  "originHash" : "f480bb4e86cef05bd2a35aaa64a52f9f0ad3aaf985070dc7e5427e367265cdbe",
+  "originHash" : "20c357717dce2841c3808f197325b20e6f85d1a10bcf1c5b8d2af7887f813e52",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -106,7 +106,7 @@
       "location" : "https://github.com/michael-g-alfred/MGNetworkingKit.git",
       "state" : {
         "branch" : "main",
-        "revision" : "b049905249bdcecc0bb75ded8dc439112b819855"
+        "revision" : "c557f5ed2cd2dcaaacfefb14140e82f9c02c2ad9"
       }
     },
     {

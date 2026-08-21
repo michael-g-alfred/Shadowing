@@ -361,8 +361,8 @@ final class RequesterViewModel {
         try? await notificationRepo.send(
             to: applicant.id,
             type: .taskAccepted,
-            title: "You're assigned!",
-            body: "\(currentUserDisplayName) assigned you to \"\(task.title)\"",
+            subjectText: "You're assigned!",
+            messageText: "\(currentUserDisplayName) assigned you to \"\(task.title)\"",
             taskId: task.id
         )
     }
@@ -372,8 +372,8 @@ final class RequesterViewModel {
         try? await notificationRepo.send(
             to: executorId,
             type: .taskConfirmed,
-            title: "Task confirmed!",
-            body: "\(currentUserDisplayName) confirmed completion of \"\(task.title)\"",
+            subjectText: "Task confirmed!",
+            messageText: "\(currentUserDisplayName) confirmed completion of \"\(task.title)\"",
             taskId: task.id
         )
     }
@@ -382,8 +382,8 @@ final class RequesterViewModel {
         try? await notificationRepo.send(
             to: applicant.id,
             type: .taskDeclined,
-            title: "Application declined",
-            body: "\(currentUserDisplayName) declined your application for \"\(task.title)\"",
+            subjectText: "Application declined",
+            messageText: "\(currentUserDisplayName) declined your application for \"\(task.title)\"",
             taskId: task.id
         )
     }
@@ -395,8 +395,8 @@ final class RequesterViewModel {
         try? await notificationRepo.send(
             to: executorId,
             type: .taskCancelled,
-            title: "Task cancelled",
-            body: "\(currentUserDisplayName) cancelled \"\(task.title)\"",
+            subjectText: "Task cancelled",
+            messageText: "\(currentUserDisplayName) cancelled \"\(task.title)\"",
             taskId: task.id
         )
     }

@@ -58,8 +58,6 @@ final class NotificationRepository: NotificationRepositoryProtocol {
                         let userId = data["userId"] as? String,
                         let typeRaw = data["type"] as? String,
                         let type = NotificationType(rawValue: typeRaw),
-                        let title = data["title"] as? String,
-                        let body = data["body"] as? String,
                         let isRead = data["isRead"] as? Bool,
                         let timestamp = data["createdAt"] as? Timestamp
                     else { return nil }
@@ -68,8 +66,8 @@ final class NotificationRepository: NotificationRepositoryProtocol {
                         id: doc.documentID,
                         userId: userId,
                         type: type,
-                        title: title,
-                        body: body,
+                        subjectText: data["subjectText"] as? String,
+                        messageText: data["messageText"] as? String,
                         taskId: data["taskId"] as? String,
                         isRead: isRead,
                         createdAt: timestamp.dateValue()
@@ -90,21 +88,29 @@ final class NotificationRepository: NotificationRepositoryProtocol {
     ///
     /// - Parameters:
     ///   - userId: The recipient's user ID.
-    ///   - type: The notification's ``NotificationType``.
-    ///   - title: The notification's title text.
-    ///   - body: The notification's body text.
+    ///   - type: The notification's ``NotificationType`` — drives the
+    ///     localized title/body shown on-device, via `NotificationModel`.
+    ///   - subjectText: A task's title (for task-scoped types) or the
+    ///     sender's display name (for `.newMessage`), interpolated into the
+    ///     localized template.
+    ///   - messageText: Only used for `.newMessage` — the literal message
+    ///     body, stored as-is rather than localized.
     ///   - taskId: An optional related task ID, if this notification is
     ///     task-scoped (e.g. a chat message notification).
     /// - Throws: A Firestore error if the write fails.
-    func send(to userId: String, type: NotificationType, title: String, body: String, taskId: String? = nil) async throws {
+    func send(to userId: String, type: NotificationType, subjectText: String? = nil, messageText: String? = nil, taskId: String? = nil) async throws {
         var data: [String: Any] = [
             "userId": userId,
             "type": type.rawValue,
-            "title": title,
-            "body": body,
             "isRead": false,
             "createdAt": FieldValue.serverTimestamp()
         ]
+        if let subjectText {
+            data["subjectText"] = subjectText
+        }
+        if let messageText {
+            data["messageText"] = messageText
+        }
         if let taskId {
             data["taskId"] = taskId
         }
