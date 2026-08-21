@@ -24,6 +24,22 @@ struct TaskDetailsView: View {
         _vm = State(initialValue: vm)
     }
     
+        // MARK: - Ratings Sheet Binding
+    
+        /// Derives an `isPresented` binding from `vm.selectedUserForRatings`
+        /// so the shared `ratingsSheet` modifier can drive presentation
+        /// without needing to know about `TaskDetailsViewModel` directly.
+    private var isRatingsSheetPresented: Binding<Bool> {
+        Binding(
+            get: { vm.selectedUserForRatings != nil },
+            set: { isPresented in
+                if !isPresented {
+                    vm.selectedUserForRatings = nil
+                }
+            }
+        )
+    }
+    
         // MARK: - Body
     var body: some View {
         ZStack {
@@ -38,10 +54,11 @@ struct TaskDetailsView: View {
                 }
             }
         }
-        .sheet(item: $vm.selectedUserForRatings) { user in
-            container.makeRatingsView(userId: user.id, userName: user.displayName)
-                .appSheetStyle()
-        }
+        .ratingsSheet(
+            userId: vm.selectedUserForRatings?.id,
+            userName: vm.selectedUserForRatings?.displayName,
+            isPresented: isRatingsSheetPresented
+        )
     }
     
         // MARK: - Actions Menu

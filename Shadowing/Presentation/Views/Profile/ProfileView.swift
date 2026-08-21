@@ -58,12 +58,11 @@ struct ProfileView: View {
                     onError: { message in vm.handleFilePickerError(message) }
                 )
             }
-            .sheet(isPresented: Bindable(vm).isRatingsPresented) {
-                if let user = vm.user {
-                    container.makeRatingsView(userId: user.id, userName: user.displayName)
-                        .appSheetStyle()
-                }
-            }
+            .ratingsSheet(
+                userId: vm.user?.id,
+                userName: vm.user?.displayName,
+                isPresented: Bindable(vm).isRatingsPresented
+            )
             .sheet(isPresented: Bindable(vm).isSettingsPresented) {
                 container.makeSettingsSheet()
                     .appSheetStyle()

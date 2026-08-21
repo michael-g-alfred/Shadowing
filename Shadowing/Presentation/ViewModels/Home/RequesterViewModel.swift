@@ -3,6 +3,7 @@ import Foundation
 @MainActor
 @Observable
 final class RequesterViewModel {
+    
     var selectedTab: RequesterTab = .publishedTasks
     var isLoading = false
     var errorMessage: String?
@@ -16,21 +17,21 @@ final class RequesterViewModel {
     private var publishedTasksCursor: String?
     private var publishedTasksHasMore = true
     private var publishedTasksGeneration = 0
+    
     private var completedTasksCursor: String?
     private var completedTasksHasMore = true
     private var completedTasksGeneration = 0
     
-    var showAddTaskSheet: Bool = false
+    var showAddTaskSheet = false
     
-    var showApplicantsSheet: Bool = false
+    var showApplicantsSheet = false
     var selectedTaskApplicants: [ApplicantModel] = []
     var isLoadingApplicants = false
     var selectedTaskForApplicants: TaskModel?
     var isAssigningExecutor = false
     
-        /// Set on a successful assign; ApplicantsSheet shows this as a local
-        /// alert (so it can appear above the sheet) and dismisses the sheet
-        /// itself only when the user taps OK.
+        /// Set on a successful assign.
+        /// ApplicantsSheet shows this as a local alert.
     var assignResult: (message: String, type: String)?
     
     var selectedTaskId: String?
@@ -40,20 +41,28 @@ final class RequesterViewModel {
     var selectedChatTaskId: String?
     
         // MARK: - Rating Queue
-        /// Completed tasks that this requester still needs to rate the executor for.
-        /// Driven by `status == .completed && !isRatedByRequester`, NOT by confirmTaskCompletion directly.
+    
+        /// Completed tasks that this requester still needs to rate
+        /// the executor for.
+        ///
+        /// Driven by the server-side unrated-task query and NOT by
+        /// confirmTaskCompletion directly.
     private(set) var pendingRatingTasks: [TaskModel] = []
     
-        /// The task currently presented in the rating sheet. Drives `.sheet(item:)`.
+        /// The task currently presented in the rating sheet.
     var currentRatingTask: TaskModel? {
         pendingRatingTasks.first
     }
+    
+        // MARK: - Dependencies
     
     private let authRepo: AuthRepositoryProtocol
     private let userRepo: UserRepositoryProtocol
     private let taskRepo: TaskRepositoryProtocol
     private let chatRepo: ChatRepositoryProtocol
     private let notificationRepo: NotificationRepositoryProtocol
+    
+        // MARK: - Init
     
     init(
         authRepo: AuthRepositoryProtocol,
@@ -63,181 +72,388 @@ final class RequesterViewModel {
         notificationRepo: NotificationRepositoryProtocol
     ) {
         self.taskRepo = taskRepo
-        self.chatRepo = chatRepo
         self.userRepo = userRepo
+        self.chatRepo = chatRepo
         self.notificationRepo = notificationRepo
         self.authRepo = authRepo
     }
+    
+        // MARK: - Navigation
     
     func select(_ tab: RequesterTab) {
         selectedTab = tab
     }
     
+        // MARK: - Assign Executor
+    
     func assignExecutor(_ applicant: ApplicantModel) async {
-        guard let task = selectedTaskForApplicants else { return }
+        guard let task = selectedTaskForApplicants else {
+            return
+        }
+        
         isAssigningExecutor = true
-        defer { isAssigningExecutor = false }
+        defer {
+            isAssigningExecutor = false
+        }
         
         do {
-            let result = try await taskRepo.assignExecutor(taskId: task.id, executorId: applicant.id)
+            let result = try await taskRepo.assignExecutor(
+                taskId: task.id,
+                executorId: applicant.id
+            )
             
             let requesterId = task.requester.id
-            try await chatRepo.createChat(taskId: task.id, requesterId: requesterId, executorId: applicant.id)
             
-            await notifyExecutorOfAssignment(applicant, for: task)
+            try await chatRepo.createChat(
+                taskId: task.id,
+                requesterId: requesterId,
+                executorId: applicant.id
+            )
+            
+            await notifyExecutorOfAssignment(
+                applicant,
+                for: task
+            )
             
             assignResult = result
+            
         } catch {
-            AlertCenter.shared.showError(error.localizedDescription)
+            AlertCenter.shared.showError(
+                error.localizedDescription
+            )
         }
     }
     
-        /// Called when the user taps OK on the assign-success alert inside
-        /// ApplicantsSheet — closes the sheet only now, so the alert and the
-        /// sheet dismissal never race each other.
+        /// Called when the user taps OK on the assign-success alert.
     func dismissAssignSuccessAlert() {
-            // 1. Local state mutation: update task status to inProgress instead of fetching all tasks
+        
+            // Optimistic/local state update.
+            //
+            // This is only a UI synchronization step.
+            // The assign API has already succeeded.
         if let task = selectedTaskForApplicants,
-           let index = requesterPublishedTasks.firstIndex(where: { $0.id == task.id }) {
-            requesterPublishedTasks[index].status = TaskStatus.inProgress.rawValue
+           let index = requesterPublishedTasks.firstIndex(
+            where: { $0.id == task.id }
+           ) {
+            requesterPublishedTasks[index].status =
+            TaskStatus.inProgress.rawValue
         }
         
-            // 2. Clear state and dismiss sheet
         assignResult = nil
         showApplicantsSheet = false
         selectedTaskApplicants = []
         selectedTaskForApplicants = nil
     }
     
-        /// Confirms task completion on the server, then best-effort tears down
-        /// the associated chat. The optimistic local removal is only rolled
-        /// back if the *confirmation itself* fails — once the server has
-        /// confirmed the task, that's the source of truth, and a failure to
-        /// delete the (now-irrelevant) chat must never resurrect the task in
-        /// the requester's published list. This mirrors how
-        /// `ExecutorViewModel.withdrawFromTask` treats `deleteChat` as
-        /// fire-and-forget after its own server call has already succeeded.
+        // MARK: - Confirm Task Completion
+    
+        /// Confirms task completion on the server.
+        ///
+        /// IMPORTANT:
+        /// This action does NOT require the task to exist inside
+        /// `requesterPublishedTasks`.
+        ///
+        /// The list is used only for optimistic UI and rollback.
     func confirmTaskCompletion(_ task: TaskModel) async {
-            // Optimistic update: Remove immediately from published list
-        guard let index = requesterPublishedTasks.firstIndex(where: { $0.id == task.id }) else { return }
-        let removedTask = requesterPublishedTasks.remove(at: index)
+        
+            // Find the task only for local optimistic UI.
+        let index = requesterPublishedTasks.firstIndex {
+            $0.id == task.id
+        }
+        
+            // Save the previous value only if the task exists.
+        let previousTask = index.map {
+            requesterPublishedTasks[$0]
+        }
+        
+            // Optimistic UI update.
+            //
+            // Remove it if it happens to be in the published list.
+        if let index {
+            requesterPublishedTasks.remove(at: index)
+        }
         
         do {
-            let result = try await taskRepo.confirmTask(id: task.id)
+                // API ALWAYS runs.
+            let result = try await taskRepo.confirmTask(
+                id: task.id
+            )
             
-                // Confirmation succeeded server-side — this is now the source of
-                // truth. Chat teardown is best-effort cleanup and must not undo
-                // the optimistic removal above if it fails.
+                // Server confirmation succeeded.
+                //
+                // Chat deletion is only cleanup. It must never
+                // cause the confirmed task to be restored.
             do {
-                try await chatRepo.deleteChat(taskId: task.id)
+                try await chatRepo.deleteChat(
+                    taskId: task.id
+                )
             } catch {
-                DebugLogger.log("⚠️ deleteChat failed after confirmTask succeeded | taskId: \(task.id) | error: \(error)")
+                DebugLogger.log(
+                    "⚠️ deleteChat failed after confirmTask succeeded | taskId: \(task.id) | error: \(error)"
+                )
             }
             
-            AlertCenter.shared.show(responseType: result.type, message: result.message)
-            await notifyExecutorOfConfirmation(for: task)
+            AlertCenter.shared.show(
+                responseType: result.type,
+                message: result.message
+            )
+            
+            await notifyExecutorOfConfirmation(
+                for: task
+            )
+            
             await checkPendingRatings()
+            
         } catch {
-                // Only roll back when confirmTask itself failed — the task was
-                // never actually completed server-side.
-            requesterPublishedTasks.insert(removedTask, at: index)
-            AlertCenter.shared.showError(error.localizedDescription)
+                // Rollback only if the task existed in the list.
+            if let index,
+               let previousTask {
+                requesterPublishedTasks.insert(
+                    previousTask,
+                    at: min(index, requesterPublishedTasks.count)
+                )
+            }
+            
+            AlertCenter.shared.showError(
+                error.localizedDescription
+            )
         }
     }
     
+        // MARK: - Delete Task
+    
+        /// Deletes a task.
+        ///
+        /// The API does NOT depend on the task being present
+        /// in `requesterPublishedTasks`.
     func deleteTask(_ task: TaskModel) async {
-            // Optimistic update: Remove task directly
-        guard let index = requesterPublishedTasks.firstIndex(where: { $0.id == task.id }) else { return }
-        let removedTask = requesterPublishedTasks.remove(at: index)
+        
+            // Find task only for optimistic UI.
+        let index = requesterPublishedTasks.firstIndex {
+            $0.id == task.id
+        }
+        
+        let removedTask = index.map {
+            requesterPublishedTasks[$0]
+        }
+        
+            // Optimistic removal if the task exists locally.
+        if let index {
+            requesterPublishedTasks.remove(at: index)
+        }
         
         do {
-            let result = try await taskRepo.deleteTask(id: task.id)
-            AlertCenter.shared.show(responseType: result.type, message: result.message)
+                // API ALWAYS runs.
+            let result = try await taskRepo.deleteTask(
+                id: task.id
+            )
+            
+            AlertCenter.shared.show(
+                responseType: result.type,
+                message: result.message
+            )
+            
         } catch {
-                // Rollback in case of failure
-            requesterPublishedTasks.insert(removedTask, at: index)
-            AlertCenter.shared.showError(error.localizedDescription)
+                // Rollback only if the task existed locally.
+            if let index,
+               let removedTask {
+                requesterPublishedTasks.insert(
+                    removedTask,
+                    at: min(index, requesterPublishedTasks.count)
+                )
+            }
+            
+            AlertCenter.shared.showError(
+                error.localizedDescription
+            )
         }
     }
     
+        // MARK: - Cancel Task
+    
+        /// Cancels a task.
+        ///
+        /// The API does NOT depend on the task being present
+        /// in `requesterPublishedTasks`.
     func cancelTask(_ task: TaskModel) async {
-        guard let index = requesterPublishedTasks.firstIndex(where: { $0.id == task.id }) else { return }
-        let previousTask = requesterPublishedTasks[index]
         
-            // 1. Optimistic local state mutation
-        requesterPublishedTasks[index].status = TaskStatus.cancelled.rawValue
+            // Find task only for optimistic UI.
+        let index = requesterPublishedTasks.firstIndex {
+            $0.id == task.id
+        }
+        
+        let previousTask = index.map {
+            requesterPublishedTasks[$0]
+        }
+        
+            // Optimistic update only if task exists locally.
+        if let index {
+            requesterPublishedTasks[index].status =
+            TaskStatus.cancelled.rawValue
+        }
         
         do {
-            let result = try await taskRepo.cancelTask(id: task.id)
-            AlertCenter.shared.show(responseType: result.type, message: result.message)
-            await notifyExecutorOfCancellation(for: task)
+                // API ALWAYS runs.
+            let result = try await taskRepo.cancelTask(
+                id: task.id
+            )
+            
+            AlertCenter.shared.show(
+                responseType: result.type,
+                message: result.message
+            )
+            
+            await notifyExecutorOfCancellation(
+                for: task
+            )
+            
         } catch {
-                // 2. Rollback on failure
-            requesterPublishedTasks[index] = previousTask
-            AlertCenter.shared.showError(error.localizedDescription)
+                // Rollback only if task existed locally.
+            if let index,
+               let previousTask {
+                requesterPublishedTasks[index] = previousTask
+            }
+            
+            AlertCenter.shared.showError(
+                error.localizedDescription
+            )
         }
     }
     
+        // MARK: - Publish Task
+    
+        /// Publishes a task.
+        ///
+        /// The API does NOT depend on the task being present
+        /// in `requesterPublishedTasks`.
     func publishTask(_ task: TaskModel) async {
-        guard let index = requesterPublishedTasks.firstIndex(where: { $0.id == task.id }) else { return }
-        let previousTask = requesterPublishedTasks[index]
         
-            // 1. Optimistic local state mutation
-        requesterPublishedTasks[index].status = TaskStatus.published.rawValue
+            // Find task only for optimistic UI.
+        let index = requesterPublishedTasks.firstIndex {
+            $0.id == task.id
+        }
+        
+        let previousTask = index.map {
+            requesterPublishedTasks[$0]
+        }
+        
+            // Optimistic update only if task exists locally.
+        if let index {
+            requesterPublishedTasks[index].status =
+            TaskStatus.published.rawValue
+        }
         
         do {
-            let result = try await taskRepo.publishTask(id: task.id)
-            AlertCenter.shared.show(responseType: result.type, message: result.message)
+                // API ALWAYS runs.
+            let result = try await taskRepo.publishTask(
+                id: task.id
+            )
+            
+            AlertCenter.shared.show(
+                responseType: result.type,
+                message: result.message
+            )
+            
         } catch {
-                // 2. Rollback on failure
-            requesterPublishedTasks[index] = previousTask
-            AlertCenter.shared.showError(error.localizedDescription)
+                // Rollback only if task existed locally.
+            if let index,
+               let previousTask {
+                requesterPublishedTasks[index] = previousTask
+            }
+            
+            AlertCenter.shared.showError(
+                error.localizedDescription
+            )
         }
     }
+    
+        // MARK: - Applicants
     
     func showApplicants(for task: TaskModel) async {
         selectedTaskForApplicants = task
         isLoadingApplicants = true
         showApplicantsSheet = true
-        defer { isLoadingApplicants = false }
+        
+        defer {
+            isLoadingApplicants = false
+        }
         
         do {
-            selectedTaskApplicants = try await taskRepo.getApplicants(taskId: task.id)
+            selectedTaskApplicants = try await taskRepo.getApplicants(
+                taskId: task.id
+            )
         } catch {
             errorMessage = error.localizedDescription
         }
     }
     
     func declineApplicant(_ applicant: ApplicantModel) async {
-        guard let task = selectedTaskForApplicants else { return }
+        guard let task = selectedTaskForApplicants else {
+            return
+        }
         
-            // Optimistic removal of applicant from local state
+            // Save local state for rollback.
         let previousApplicants = selectedTaskApplicants
-        selectedTaskApplicants.removeAll { $0.id == applicant.id }
+        
+            // Optimistic removal.
+        selectedTaskApplicants.removeAll {
+            $0.id == applicant.id
+        }
         
         do {
-            let result = try await taskRepo.declineApplicant(taskId: task.id, applicantId: applicant.id)
-            AlertCenter.shared.show(responseType: result.type, message: result.message)
-            await notifyApplicantOfDecline(applicant, for: task)
+                // API is independent of the local applicant list.
+            let result = try await taskRepo.declineApplicant(
+                taskId: task.id,
+                applicantId: applicant.id
+            )
+            
+            AlertCenter.shared.show(
+                responseType: result.type,
+                message: result.message
+            )
+            
+            await notifyApplicantOfDecline(
+                applicant,
+                for: task
+            )
+            
         } catch {
+                // Rollback.
             selectedTaskApplicants = previousApplicants
-            AlertCenter.shared.showError(error.localizedDescription)
+            
+            AlertCenter.shared.showError(
+                error.localizedDescription
+            )
         }
     }
     
-    func setStatusFilter(_ filter: RequesterStatusFilter) {
+        // MARK: - Filters
+    
+    func setStatusFilter(
+        _ filter: RequesterStatusFilter
+    ) {
         statusFilter = filter
-        Task { await loadPublishedTasks() }
+        
+        Task {
+            await loadPublishedTasks()
+        }
     }
+    
+        // MARK: - Published Tasks
     
     func loadPublishedTasks() async {
         isLoading = true
         errorMessage = nil
+        
         publishedTasksCursor = nil
         publishedTasksHasMore = true
         publishedTasksGeneration += 1
+        
         let myGeneration = publishedTasksGeneration
-        defer { isLoading = false }
+        
+        defer {
+            isLoading = false
+        }
         
         do {
             let result = try await taskRepo.getRequesterPublishedTasks(
@@ -245,21 +461,35 @@ final class RequesterViewModel {
                 limit: nil,
                 status: statusFilter.apiValue
             )
-            guard myGeneration == publishedTasksGeneration else { return }
+            
+            guard myGeneration == publishedTasksGeneration else {
+                return
+            }
+            
             requesterPublishedTasks = result.tasks
             publishedTasksHasMore = result.hasMore
             publishedTasksCursor = result.cursor
+            
         } catch {
             errorMessage = error.localizedDescription
         }
     }
     
     func loadMorePublishedTasksIfNeeded() async {
-        guard shouldLoadMore(hasMore: publishedTasksHasMore, isLoadingMore: isLoadingMorePublishedTasks),
-              !isLoading else { return }
+        guard shouldLoadMore(
+            hasMore: publishedTasksHasMore,
+            isLoadingMore: isLoadingMorePublishedTasks
+        ), !isLoading else {
+            return
+        }
+        
         isLoadingMorePublishedTasks = true
+        
         let myGeneration = publishedTasksGeneration
-        defer { isLoadingMorePublishedTasks = false }
+        
+        defer {
+            isLoadingMorePublishedTasks = false
+        }
         
         do {
             let result = try await taskRepo.getRequesterPublishedTasks(
@@ -267,51 +497,95 @@ final class RequesterViewModel {
                 limit: nil,
                 status: statusFilter.apiValue
             )
-            guard myGeneration == publishedTasksGeneration else { return }
-            requesterPublishedTasks.append(contentsOf: result.tasks)
+            
+            guard myGeneration == publishedTasksGeneration else {
+                return
+            }
+            
+            requesterPublishedTasks.append(
+                contentsOf: result.tasks
+            )
+            
             publishedTasksHasMore = result.hasMore
             publishedTasksCursor = result.cursor
+            
         } catch {
             errorMessage = error.localizedDescription
         }
     }
+    
+        // MARK: - Completed Tasks
     
     func loadCompletedTasks() async {
         isLoading = true
         errorMessage = nil
+        
         completedTasksCursor = nil
         completedTasksHasMore = true
         completedTasksGeneration += 1
+        
         let myGeneration = completedTasksGeneration
-        defer { isLoading = false }
+        
+        defer {
+            isLoading = false
+        }
         
         do {
-            let result = try await taskRepo.getRequesterCompletedTasks(cursor: nil, limit: nil)
-            guard myGeneration == completedTasksGeneration else { return }
+            let result = try await taskRepo.getRequesterCompletedTasks(
+                cursor: nil,
+                limit: nil
+            )
+            
+            guard myGeneration == completedTasksGeneration else {
+                return
+            }
+            
             requesterCompletedTasks = result.tasks
             completedTasksHasMore = result.hasMore
             completedTasksCursor = result.cursor
+            
         } catch {
             errorMessage = error.localizedDescription
         }
         
-            // Piggyback the pending-rating check whenever completed tasks are (re)loaded.
+            // Piggyback pending-rating check whenever completed
+            // tasks are loaded or reloaded.
         await checkPendingRatings()
     }
     
     func loadMoreCompletedTasksIfNeeded() async {
-        guard shouldLoadMore(hasMore: completedTasksHasMore, isLoadingMore: isLoadingMoreCompletedTasks),
-              !isLoading else { return }
+        guard shouldLoadMore(
+            hasMore: completedTasksHasMore,
+            isLoadingMore: isLoadingMoreCompletedTasks
+        ), !isLoading else {
+            return
+        }
+        
         isLoadingMoreCompletedTasks = true
+        
         let myGeneration = completedTasksGeneration
-        defer { isLoadingMoreCompletedTasks = false }
+        
+        defer {
+            isLoadingMoreCompletedTasks = false
+        }
         
         do {
-            let result = try await taskRepo.getRequesterCompletedTasks(cursor: completedTasksCursor, limit: nil)
-            guard myGeneration == completedTasksGeneration else { return }
-            requesterCompletedTasks.append(contentsOf: result.tasks)
+            let result = try await taskRepo.getRequesterCompletedTasks(
+                cursor: completedTasksCursor,
+                limit: nil
+            )
+            
+            guard myGeneration == completedTasksGeneration else {
+                return
+            }
+            
+            requesterCompletedTasks.append(
+                contentsOf: result.tasks
+            )
+            
             completedTasksHasMore = result.hasMore
             completedTasksCursor = result.cursor
+            
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -319,45 +593,69 @@ final class RequesterViewModel {
     
         // MARK: - Rating Queue
     
-        /// Call this on tab appear / app launch to pick up any completed tasks
-        /// that are still missing this requester's rating of the executor.
+        /// Picks up completed tasks that are still missing
+        /// the requester's rating of the executor.
     func checkPendingRatings() async {
         do {
-            let result = try await taskRepo.getUnratedRequesterTasks(cursor: nil, limit: nil)
+            let result = try await taskRepo.getUnratedRequesterTasks(
+                cursor: nil,
+                limit: nil
+            )
+            
             let unrated = result.tasks
             
-            for task in unrated where !pendingRatingTasks.contains(where: { $0.id == task.id }) {
+            for task in unrated
+            where !pendingRatingTasks.contains(where: {
+                $0.id == task.id
+            }) {
                 pendingRatingTasks.append(task)
             }
-            let unratedIds = Set(unrated.map(\.id))
-            pendingRatingTasks.removeAll { !unratedIds.contains($0.id) }
+            
+            let unratedIds = Set(
+                unrated.map(\.id)
+            )
+            
+            pendingRatingTasks.removeAll {
+                !unratedIds.contains($0.id)
+            }
+            
         } catch {
-                // Silent failure — background catch-up check, not user-initiated.
+                // Silent failure.
+                // Background catch-up check.
         }
     }
     
-        /// Called when the rating sheet for this task is dismissed (submitted or not).
-    func ratingSheetDismissed(for taskId: String, wasSubmitted: Bool) {
+        /// Called when the rating sheet is dismissed.
+    func ratingSheetDismissed(
+        for taskId: String,
+        wasSubmitted: Bool
+    ) {
         if wasSubmitted {
-            pendingRatingTasks.removeAll { $0.id == taskId }
+            pendingRatingTasks.removeAll {
+                $0.id == taskId
+            }
         }
     }
     
         // MARK: - Chat
     
     func openChat(for taskId: String) {
-        self.selectedChatTaskId = taskId
+        selectedChatTaskId = taskId
     }
     
         // MARK: - Notifications
-        /// Fire-and-forget: a failed notification send should never block or
-        /// roll back the task action that triggered it, so failures are swallowed.
+    
+        /// Notification failures never block or roll back
+        /// the task action that triggered them.
     
     private var currentUserDisplayName: String {
         authRepo.currentUser?.displayName ?? "Someone"
     }
     
-    private func notifyExecutorOfAssignment(_ applicant: ApplicantModel, for task: TaskModel) async {
+    private func notifyExecutorOfAssignment(
+        _ applicant: ApplicantModel,
+        for task: TaskModel
+    ) async {
         try? await notificationRepo.send(
             to: applicant.id,
             type: .taskAccepted,
@@ -367,8 +665,13 @@ final class RequesterViewModel {
         )
     }
     
-    private func notifyExecutorOfConfirmation(for task: TaskModel) async {
-        guard let executorId = task.executor?.id else { return }
+    private func notifyExecutorOfConfirmation(
+        for task: TaskModel
+    ) async {
+        guard let executorId = task.executor?.id else {
+            return
+        }
+        
         try? await notificationRepo.send(
             to: executorId,
             type: .taskConfirmed,
@@ -378,7 +681,10 @@ final class RequesterViewModel {
         )
     }
     
-    private func notifyApplicantOfDecline(_ applicant: ApplicantModel, for task: TaskModel) async {
+    private func notifyApplicantOfDecline(
+        _ applicant: ApplicantModel,
+        for task: TaskModel
+    ) async {
         try? await notificationRepo.send(
             to: applicant.id,
             type: .taskDeclined,
@@ -388,10 +694,14 @@ final class RequesterViewModel {
         )
     }
     
-        /// Only relevant if the task already had an executor assigned when it was
-        /// cancelled — a task cancelled while still unassigned has no one to notify.
-    private func notifyExecutorOfCancellation(for task: TaskModel) async {
-        guard let executorId = task.executor?.id else { return }
+        /// Only relevant if the task already had an executor assigned.
+    private func notifyExecutorOfCancellation(
+        for task: TaskModel
+    ) async {
+        guard let executorId = task.executor?.id else {
+            return
+        }
+        
         try? await notificationRepo.send(
             to: executorId,
             type: .taskCancelled,
@@ -403,8 +713,10 @@ final class RequesterViewModel {
     
         // MARK: - Helpers
     
-        /// Triggers when the visible row is within the last 5 items of the current list.
-    private func shouldLoadMore(hasMore: Bool, isLoadingMore: Bool) -> Bool {
-        return hasMore && !isLoadingMore
+    private func shouldLoadMore(
+        hasMore: Bool,
+        isLoadingMore: Bool
+    ) -> Bool {
+        hasMore && !isLoadingMore
     }
 }
