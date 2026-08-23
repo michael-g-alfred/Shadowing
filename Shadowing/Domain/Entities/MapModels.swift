@@ -8,7 +8,9 @@ struct MapBounds: Equatable, Codable {
     let maxLng: Double
 }
 
-struct MapTasksPage: Codable {
-    let tasks: [TaskDTO]
+/// Domain result of a map-viewport task query. Tasks are already mapped to
+/// domain models and pre-filtered to those with a valid coordinate.
+struct MapTasksPage {
+    let tasks: [TaskModel]
     let truncated: Bool
 }

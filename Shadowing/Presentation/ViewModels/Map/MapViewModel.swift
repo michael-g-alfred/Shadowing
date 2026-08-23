@@ -12,11 +12,17 @@ final class MapViewModel {
     var selectedTask: TaskModel?
     
     private let taskRepo: TaskRepositoryProtocol
-    private var debounceTask: Task<Void, Never>?
+    private let lookupStore: LookupStore
+    private nonisolated(unsafe) var debounceTask: Task<Void, Never>?
     private var lastBounds: MapBounds?
-    
-    init(taskRepo: TaskRepositoryProtocol) {
+
+    init(taskRepo: TaskRepositoryProtocol, lookupStore: LookupStore) {
         self.taskRepo = taskRepo
+        self.lookupStore = lookupStore
+    }
+
+    deinit {
+        debounceTask?.cancel()
     }
     
     func regionDidChange(_ region: MKCoordinateRegion) {
@@ -30,26 +36,40 @@ final class MapViewModel {
         lastBounds = bounds
         
         debounceTask?.cancel()
-        debounceTask = Task {
+        debounceTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(400))
             guard !Task.isCancelled else { return }
-            await fetch(bounds)
+            await self?.fetch(bounds)
         }
     }
-    
+
     private func fetch(_ bounds: MapBounds) async {
         isLoading = true
         errorMessage = nil
         do {
+            // The repository already maps to domain and filters out
+            // coordinate-less tasks, so this can be assigned directly.
             let page = try await taskRepo.getMapTasks(bounds: bounds)
-            tasks = page.tasks.map({$0.toDomain()})
+            tasks = page.tasks
             isTruncated = page.truncated
         } catch {
             errorMessage = error.localizedDescription
         }
         isLoading = false
     }
-    
+
     func selectTask(_ task: TaskModel) { selectedTask = task }
     func clearSelection() { selectedTask = nil }
+
+        // MARK: - Pin Presentation
+
+        /// SF Symbol name for a task's service type (falls back to a generic pin).
+    func serviceIconName(for task: TaskModel) -> String {
+        lookupStore.service(named: task.serviceType)?.icon ?? "mappin"
+    }
+
+        /// Lookup color name for a task's priority (falls back to gray).
+    func priorityColorName(for task: TaskModel) -> String {
+        lookupStore.priority(named: task.priority)?.color ?? "gray"
+    }
 }

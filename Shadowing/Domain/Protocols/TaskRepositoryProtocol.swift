@@ -27,14 +27,14 @@ protocol TaskRepositoryProtocol {
     
     func getRequesterPublishedTasks(cursor: String?, limit: Int?, status: String?) async throws -> PaginatedTasksResult
     func getRequesterCompletedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
-    func getUnratedRequesterTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
+    func getPendingRatingsForRequester(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
     
         // MARK: - Executor
     
     func getExecutorAvailableTasks(cursor: String?, limit: Int?, favoritesOnly: Bool) async throws -> PaginatedTasksResult
     func getExecutorAssignedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
     func getExecutorCompletedTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
-    func getUnratedExecutorTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
+    func getPendingRatingsForExecutor(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult
     
         // MARK: - Requester Actions
     
@@ -48,7 +48,7 @@ protocol TaskRepositoryProtocol {
     
         // MARK: - Payments
     
-    func retryPayment(taskId: String) async throws -> URL
+    func startPayment(taskId: String) async throws -> URL
     
         // MARK: - Executor Actions
     

@@ -72,7 +72,7 @@ final class ProfileViewModel {
         }
     }
     
-    func signout() async -> Bool {
+    func signOut() async -> Bool {
         isLoading = true
         defer { isLoading = false }
         do {

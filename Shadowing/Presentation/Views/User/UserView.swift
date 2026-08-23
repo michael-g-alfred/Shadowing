@@ -98,22 +98,24 @@ private struct UserLoadedView: View {
             }
             
             if let bio = user.bio, !bio.isEmpty {
-                Section("About") {
+                Section {
                     Text(bio).bold()
-                        .font(.subheadline)
+                } header: {
+                    Label("About", systemImage: "person.text.rectangle")
                 }
                 .listRowBackground(listRowColor)
             }
             
             if !user.specialties.isEmpty {
-                Section("Specialties") {
+                Section {
                     SpecialtiesFlow(specialties: user.specialties)
+                } header: {
+                    Label("Specialties", systemImage: "medal.star")
                 }
-                .listRowInsets(.all, 0)
-                .listRowBackground(Color.clear)
+                .listRowBackground(listRowColor)
             }
             
-            Section("Stats") {
+            Section {
                 InfoRow(
                     title: "Completed Tasks",
                     systemImage: "checklist",
@@ -135,6 +137,8 @@ private struct UserLoadedView: View {
                     systemImage: "star",
                     localizedValue: user.totalRatings > 0 ? "\(user.rating, specifier: "%.1f")" : "-"
                 )
+            } header: {
+                Label("Stats", systemImage: "chart.line.uptrend.xyaxis")
             }
             .listRowBackground(listRowColor)
         }

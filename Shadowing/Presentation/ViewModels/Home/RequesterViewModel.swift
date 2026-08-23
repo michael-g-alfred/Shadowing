@@ -156,22 +156,7 @@ final class RequesterViewModel {
         /// The list is used only for optimistic UI and rollback.
     func confirmTaskCompletion(_ task: TaskModel) async {
         
-            // Find the task only for local optimistic UI.
-        let index = requesterPublishedTasks.firstIndex {
-            $0.id == task.id
-        }
-        
-            // Save the previous value only if the task exists.
-        let previousTask = index.map {
-            requesterPublishedTasks[$0]
-        }
-        
-            // Optimistic UI update.
-            //
-            // Remove it if it happens to be in the published list.
-        if let index {
-            requesterPublishedTasks.remove(at: index)
-        }
+        let removal = requesterPublishedTasks.removeTask(id: task.id)
         
         do {
                 // API ALWAYS runs.
@@ -205,14 +190,7 @@ final class RequesterViewModel {
             await checkPendingRatings()
             
         } catch {
-                // Rollback only if the task existed in the list.
-            if let index,
-               let previousTask {
-                requesterPublishedTasks.insert(
-                    previousTask,
-                    at: min(index, requesterPublishedTasks.count)
-                )
-            }
+            requesterPublishedTasks.rollbackRemoval(removal)
             
             AlertCenter.shared.showError(
                 error.localizedDescription
@@ -228,19 +206,7 @@ final class RequesterViewModel {
         /// in `requesterPublishedTasks`.
     func deleteTask(_ task: TaskModel) async {
         
-            // Find task only for optimistic UI.
-        let index = requesterPublishedTasks.firstIndex {
-            $0.id == task.id
-        }
-        
-        let removedTask = index.map {
-            requesterPublishedTasks[$0]
-        }
-        
-            // Optimistic removal if the task exists locally.
-        if let index {
-            requesterPublishedTasks.remove(at: index)
-        }
+        let removal = requesterPublishedTasks.removeTask(id: task.id)
         
         do {
                 // API ALWAYS runs.
@@ -254,14 +220,7 @@ final class RequesterViewModel {
             )
             
         } catch {
-                // Rollback only if the task existed locally.
-            if let index,
-               let removedTask {
-                requesterPublishedTasks.insert(
-                    removedTask,
-                    at: min(index, requesterPublishedTasks.count)
-                )
-            }
+            requesterPublishedTasks.rollbackRemoval(removal)
             
             AlertCenter.shared.showError(
                 error.localizedDescription
@@ -277,19 +236,8 @@ final class RequesterViewModel {
         /// in `requesterPublishedTasks`.
     func cancelTask(_ task: TaskModel) async {
         
-            // Find task only for optimistic UI.
-        let index = requesterPublishedTasks.firstIndex {
-            $0.id == task.id
-        }
-        
-        let previousTask = index.map {
-            requesterPublishedTasks[$0]
-        }
-        
-            // Optimistic update only if task exists locally.
-        if let index {
-            requesterPublishedTasks[index].status =
-            TaskStatus.cancelled.rawValue
+        let update = requesterPublishedTasks.updateTask(id: task.id) {
+            $0.status = TaskStatus.cancelled.rawValue
         }
         
         do {
@@ -308,11 +256,7 @@ final class RequesterViewModel {
             )
             
         } catch {
-                // Rollback only if task existed locally.
-            if let index,
-               let previousTask {
-                requesterPublishedTasks[index] = previousTask
-            }
+            requesterPublishedTasks.rollbackUpdate(update)
             
             AlertCenter.shared.showError(
                 error.localizedDescription
@@ -328,19 +272,8 @@ final class RequesterViewModel {
         /// in `requesterPublishedTasks`.
     func publishTask(_ task: TaskModel) async {
         
-            // Find task only for optimistic UI.
-        let index = requesterPublishedTasks.firstIndex {
-            $0.id == task.id
-        }
-        
-        let previousTask = index.map {
-            requesterPublishedTasks[$0]
-        }
-        
-            // Optimistic update only if task exists locally.
-        if let index {
-            requesterPublishedTasks[index].status =
-            TaskStatus.published.rawValue
+        let update = requesterPublishedTasks.updateTask(id: task.id) {
+            $0.status = TaskStatus.published.rawValue
         }
         
         do {
@@ -355,11 +288,7 @@ final class RequesterViewModel {
             )
             
         } catch {
-                // Rollback only if task existed locally.
-            if let index,
-               let previousTask {
-                requesterPublishedTasks[index] = previousTask
-            }
+            requesterPublishedTasks.rollbackUpdate(update)
             
             AlertCenter.shared.showError(
                 error.localizedDescription
@@ -597,7 +526,7 @@ final class RequesterViewModel {
         /// the requester's rating of the executor.
     func checkPendingRatings() async {
         do {
-            let result = try await taskRepo.getUnratedRequesterTasks(
+            let result = try await taskRepo.getPendingRatingsForRequester(
                 cursor: nil,
                 limit: nil
             )

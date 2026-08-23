@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
     /// Where tapping a notification should navigate. Wrapped in an enum
     /// (rather than two separate optionals) so at most one destination can
@@ -68,6 +69,14 @@ final class NotificationViewModel {
     func stopListening() {
         notificationRepo.stopListening()
     }
+
+    func clearSessionState() {
+        notifications = []
+        selectedDestination = nil
+        isLoading = false
+        knownNotificationIds = []
+        hasReceivedFirstSnapshot = false
+    }
     
     deinit {
         notificationRepo.stopListening()
@@ -80,15 +89,20 @@ final class NotificationViewModel {
         
         if hasReceivedFirstSnapshot {
                 // Anything unread whose ID we haven't seen before just arrived — alert for it.
-            let newOnes = incoming.filter { !knownNotificationIds.contains($0.id) && !$0.isRead }
-            for notification in newOnes {
-                Task { [weak self] in
-                    try? await self?.notificationService.scheduleLocalNotification(
-                        title: String(localized: notification.title),
-                        body: String(localized: notification.body),
-                        sound: true,
-                        delay: 0.1
-                    )
+                // Only fire a *local* banner when the app is backgrounded/inactive; while the app
+                // is active the backend push (and the on-screen list) already cover it, so a local
+                // notification would just double up.
+            if UIApplication.shared.applicationState != .active {
+                let newOnes = incoming.filter { !knownNotificationIds.contains($0.id) && !$0.isRead }
+                for notification in newOnes {
+                    Task { [weak self] in
+                        try? await self?.notificationService.scheduleLocalNotification(
+                            title: String(localized: notification.title),
+                            body: String(localized: notification.body),
+                            sound: true,
+                            delay: 0.1
+                        )
+                    }
                 }
             }
         } else {

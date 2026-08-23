@@ -41,6 +41,27 @@ final class DIContainer {
         rootID = UUID()
     }
 
+    /// Starts app-wide realtime work that should only run for an authenticated user.
+    func startAuthenticatedSession() async {
+        chatViewModel.listenToConversations()
+        notificationViewModel.startListening()
+
+        async let location = locationService.requestLocation()
+        async let notification = notificationService.requestAuthorization()
+        async let executorRatings: () = executorViewModel.checkPendingRatings()
+        async let requesterRatings: () = requesterViewModel.checkPendingRatings()
+        _ = await (location, notification, executorRatings, requesterRatings)
+    }
+
+    /// Stops auth-bound listeners and clears session-scoped presentation state.
+    func endAuthenticatedSession() {
+        chatViewModel.stopListeningToConversations()
+        chatViewModel.stopListeningToMessages()
+        chatViewModel.clearSessionState()
+        notificationViewModel.stopListening()
+        notificationViewModel.clearSessionState()
+    }
+
     // MARK: - Core Services
 
     /// The underlying HTTP networking client used by all repositories.
@@ -330,7 +351,7 @@ final class DIContainer {
 
     /// Creates a fresh view model for the map screen.
     func makeMapViewModel() -> MapViewModel {
-        MapViewModel(taskRepo: taskRepository)
+        MapViewModel(taskRepo: taskRepository, lookupStore: lookupStore)
     }
 
     // MARK: - Notifications

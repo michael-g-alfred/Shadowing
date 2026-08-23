@@ -31,10 +31,11 @@ struct TaskModel: Identifiable {
     let executor: UserSummaryModel?
     let applicantsCount: Int
     var isApplicant: Bool
-    var isFavourite: Bool
+    var isFavorite: Bool
     
-    var coordinate: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(latitude: latitude ?? 31.2565, longitude: longitude ?? 32.2841)
+    var coordinate: CLLocationCoordinate2D? {
+        guard let latitude, let longitude else { return nil }
+        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
     
         /// Whether the accepted budget differs from the task's original budget

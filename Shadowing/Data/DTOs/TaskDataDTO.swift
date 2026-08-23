@@ -83,7 +83,7 @@ extension TaskDTO {
             executor: executor?.toDomain(),
             applicantsCount: applicantsCount,
             isApplicant: isApplicant,
-            isFavourite: isFavorite
+            isFavorite: isFavorite
         )
     }
 }

@@ -84,14 +84,10 @@ final class TaskRepository: TaskRepositoryProtocol {
         defer { DebugLogger.log("🚀 🏁 TaskRepository -> getAllTasks - Ended") }
 
         let token = try await getValidToken()
-        let config = APIConfig.allTasks(accessToken: token)
+        let config = APIConfig.allTasks(cursor: cursor, limit: limit, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
-        return PaginatedTasksResult(
-            tasks: response.data.tasks.map({ $0.toDomain() }),
-            hasMore: response.data.hasMore,
-            cursor: response.data.cursor
-        )
+        return Self.makePaginatedResult(from: response.data)
     }
 
     /// Fetches the full details of a single task.
@@ -123,8 +119,14 @@ final class TaskRepository: TaskRepositoryProtocol {
 
         let token = try await getValidToken()
         let config = APIConfig.mapTasks(bounds: bounds, accessToken: token)
-        let response: APIResponseDTO<MapTasksPage> = try await network.request(config)
-        return MapTasksPage(tasks: response.data.tasks, truncated: response.data.truncated)
+        let response: APIResponseDTO<MapTasksPageDTO> = try await network.request(config)
+
+        // Map to domain and drop tasks without a coordinate here, in the
+        // repository, so the presentation layer never touches DTOs.
+        let tasks = response.data.tasks
+            .map { $0.toDomain() }
+            .filter { $0.coordinate != nil }
+        return MapTasksPage(tasks: tasks, truncated: response.data.truncated)
     }
 
     // MARK: - Requester
@@ -238,23 +240,15 @@ final class TaskRepository: TaskRepositoryProtocol {
     ///   - limit: Maximum number of tasks to return.
     /// - Returns: A ``PaginatedTasksResult``.
     /// - Throws: A networking error, or ``AuthError/noSession``.
-    func fetchPendingRatingsForRequester(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
-        DebugLogger.log("⭐ 🟢 TaskRepository -> fetchPendingRatingsForRequester - Started")
-        defer { DebugLogger.log("⭐ 🏁 TaskRepository -> fetchPendingRatingsForRequester - Ended") }
+    func getPendingRatingsForRequester(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
+        DebugLogger.log("⭐ 🟢 TaskRepository -> getPendingRatingsForRequester - Started")
+        defer { DebugLogger.log("⭐ 🏁 TaskRepository -> getPendingRatingsForRequester - Ended") }
 
         let token = try await getValidToken()
         let config = APIConfig.requesterUnratedTasks(cursor: cursor, limit: limit, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
         return Self.makePaginatedResult(from: response.data)
-    }
-
-    /// Deprecated name for ``fetchPendingRatingsForRequester(cursor:limit:)``.
-    /// Kept temporarily so existing call sites keep compiling while they're
-    /// migrated — remove once all callers are updated.
-    @available(*, deprecated, renamed: "fetchPendingRatingsForRequester(cursor:limit:)")
-    func getUnratedRequesterTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
-        try await fetchPendingRatingsForRequester(cursor: cursor, limit: limit)
     }
 
     // MARK: - Executor
@@ -323,23 +317,15 @@ final class TaskRepository: TaskRepositoryProtocol {
     ///   - limit: Maximum number of tasks to return.
     /// - Returns: A ``PaginatedTasksResult``.
     /// - Throws: A networking error, or ``AuthError/noSession``.
-    func fetchPendingRatingsForExecutor(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
-        DebugLogger.log("⭐ 🟢 TaskRepository -> fetchPendingRatingsForExecutor - Started")
-        defer { DebugLogger.log("⭐ 🏁 TaskRepository -> fetchPendingRatingsForExecutor - Ended") }
+    func getPendingRatingsForExecutor(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
+        DebugLogger.log("⭐ 🟢 TaskRepository -> getPendingRatingsForExecutor - Started")
+        defer { DebugLogger.log("⭐ 🏁 TaskRepository -> getPendingRatingsForExecutor - Ended") }
 
         let token = try await getValidToken()
         let config = APIConfig.executorUnratedTasks(cursor: cursor, limit: limit, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
         return Self.makePaginatedResult(from: response.data)
-    }
-
-    /// Deprecated name for ``fetchPendingRatingsForExecutor(cursor:limit:)``.
-    /// Kept temporarily so existing call sites keep compiling while they're
-    /// migrated — remove once all callers are updated.
-    @available(*, deprecated, renamed: "fetchPendingRatingsForExecutor(cursor:limit:)")
-    func getUnratedExecutorTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
-        try await fetchPendingRatingsForExecutor(cursor: cursor, limit: limit)
     }
 
     // MARK: - Requester Actions
@@ -450,16 +436,16 @@ final class TaskRepository: TaskRepositoryProtocol {
     /// - Throws: A networking error, ``AuthError/noSession``, or
     ///   ``PaymentError/invalidPaymentURL(received:)`` if the server returns
     ///   a `paymentUrl` string that doesn't parse as a `URL`.
-    func retryPayment(taskId: String) async throws -> URL {
-        DebugLogger.log("💳 🟢 TaskRepository -> retryPayment - Started")
-        defer { DebugLogger.log("💳 🏁 TaskRepository -> retryPayment - Ended") }
+    func startPayment(taskId: String) async throws -> URL {
+        DebugLogger.log("💳 🟢 TaskRepository -> startPayment - Started")
+        defer { DebugLogger.log("💳 🏁 TaskRepository -> startPayment - Ended") }
 
         let token = try await getValidToken()
         let config = APIConfig.initiatePayment(taskId: taskId, accessToken: token)
         let response: APIResponseDTO<PaymentResponseDTO> = try await network.request(config)
 
         guard let url = URL(string: response.data.paymentUrl) else {
-            DebugLogger.log("❌ retryPayment received an invalid paymentUrl: \(response.data.paymentUrl)")
+            DebugLogger.log("❌ startPayment received an invalid paymentUrl: \(response.data.paymentUrl)")
             throw PaymentError.invalidPaymentURL(received: response.data.paymentUrl)
         }
 

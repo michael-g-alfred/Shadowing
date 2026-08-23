@@ -27,14 +27,16 @@ struct MapView: View {
                 UserAnnotation()
 
                 ForEach(vm.tasks) { task in
-                    Annotation(task.title, coordinate: task.coordinate) {
-                        Button {
-                            withAnimation(.easeInOut) { vm.selectTask(task) }
-                        } label: {
-                            CustomMapPin(
-                                iconName: container.lookupStore.service(named: task.serviceType)?.icon ?? "mappin",
-                                priorityColor: priorityColor(for: task)
-                            )
+                    if let coordinate = task.coordinate {
+                        Annotation(task.title, coordinate: coordinate) {
+                            Button {
+                                withAnimation(.easeInOut) { vm.selectTask(task) }
+                            } label: {
+                                CustomMapPin(
+                                    iconName: vm.serviceIconName(for: task),
+                                    priorityColor: priorityColor(for: task)
+                                )
+                            }
                         }
                     }
                 }
@@ -81,8 +83,7 @@ struct MapView: View {
 
         // MARK: - Private Methods
     private func priorityColor(for task: TaskModel) -> Color {
-        let name = container.lookupStore.priority(named: task.priority)?.color ?? "gray"
-        return Color(lookupName: name)
+        Color(lookupName: vm.priorityColorName(for: task))
     }
 
     private func navigateToDetails(_ taskId: String) {
@@ -91,7 +92,8 @@ struct MapView: View {
     }
 
     private func openDirections(to task: TaskModel) {
-        let location = CLLocation(latitude: task.coordinate.latitude, longitude: task.coordinate.longitude)
+        guard let coordinate = task.coordinate else { return }
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         let mapItem = MKMapItem(location: location, address: .none)
         mapItem.name = task.title
         mapItem.openInMaps(launchOptions: [

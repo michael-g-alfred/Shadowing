@@ -25,23 +25,20 @@ struct Shadowing: App {
             container.makeRootView()
                 .task {
                     // Attempt to restore the current user's session from the backend.
-                    try? await container.authRepository.loadCurrentUser()
+                    // A failure here (expired token, network blip) is non-fatal — we log it
+                    // and fall through to the unauthenticated flow — but we no longer swallow
+                    // it silently, so a transient error is distinguishable in logs.
+                    do {
+                        try await container.authRepository.loadCurrentUser()
+                    } catch {
+                        DebugLogger.log("⚠️ Session restore failed: \(error)")
+                    }
 
                     if container.authRepository.isAdmin {
                         container.setAppState(.admin)
                     } else if container.authRepository.isAuthenticated {
                         container.setAppState(.main)
-                        container.chatViewModel.listenToConversations()
-                        container.notificationViewModel.startListening()
-
-                        // Run startup work concurrently: none of these tasks depend on one
-                        // another, so they're launched together and awaited as a group to
-                        // minimize the delay before the main UI is fully ready.
-                        async let location = container.locationService.requestLocation()
-                        async let notification = container.notificationService.requestAuthorization()
-                        async let executorRatings: () = container.executorViewModel.checkPendingRatings()
-                        async let requesterRatings: () = container.requesterViewModel.checkPendingRatings()
-                        _ = await (location, notification, executorRatings, requesterRatings)
+                        await container.startAuthenticatedSession()
                     }
                 }
                 .task(id: container.languageManager.currentLanguage.id) {

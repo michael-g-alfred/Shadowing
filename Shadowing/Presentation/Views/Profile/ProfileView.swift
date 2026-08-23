@@ -84,7 +84,8 @@ struct ProfileView: View {
     }
     
     private func signOut() async {
-        guard await vm.signout() else { return }
+        guard await vm.signOut() else { return }
+        container.endAuthenticatedSession()
         container.setAppState(.auth)
         container.relaunchRoot()
     }
@@ -198,18 +199,21 @@ private struct ProfileLoadedView: View {
             }
             
             if let bio = user.bio, !bio.isEmpty {
-                Section("About") {
+                Section {
                     Text(bio).bold()
+                } header: {
+                    Label("About", systemImage: "person.text.rectangle")
                 }
                 .listRowBackground(listRowColor)
             }
             
             if !user.specialties.isEmpty {
-                Section("Specialties") {
+                Section {
                     SpecialtiesFlow(specialties: user.specialties)
+                } header: {
+                    Label("Specialties", systemImage: "medal.star")
                 }
-                .listRowInsets(.all, 0)
-                .listRowBackground(Color.clear)
+                .listRowBackground(listRowColor)
             }
             
             accountSection(user: user, statusLabel: statusLabel, statusColor: statusColor)
@@ -232,21 +236,24 @@ private struct ProfileLoadedView: View {
     private func suspensionSection(statusLabel: String, statusColor: Color) -> some View {
         Section {
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Label(statusLabel, systemImage: "exclamationmark.triangle.fill")
-                    .font(.subheadline).bold()
                 Text("You can't apply to new tasks or post new ones right now.")
-                    .font(.footnote)
+                    .font(.subheadline).bold()
+                
+                Divider()
+                
                 if let countdown = vm.suspensionCountdownText {
                     Text(countdown)
                         .font(.footnote).bold()
                 }
             }
             .foregroundStyle(statusColor)
+        } header: {
+            Label("Warning", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
         }
     }
     
     private func accountSection(user: UserModel, statusLabel: String, statusColor: Color) -> some View {
-        Section("Account") {
+        Section {
             InfoRow(title: "Account Status", systemImage: "checkmark.shield.fill") {
                 Text(statusLabel)
                     .bold()
@@ -296,6 +303,8 @@ private struct ProfileLoadedView: View {
             }
             
             ProfileIdRow(user: user, vm: vm)
+        } header: {
+            Label("Account", systemImage: "person")
         }
         .listRowBackground(listRowColor)
     }

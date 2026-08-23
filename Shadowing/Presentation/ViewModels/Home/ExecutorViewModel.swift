@@ -179,24 +179,10 @@ final class ExecutorViewModel {
         isApplying = true
         defer { isApplying = false }
         
-            // The task may have come directly from TaskDetailsView,
-            // a notification, deep link, etc.
-            //
-            // Therefore, never return just because the task is not
-            // inside executorAvailableTasks.
-        let index = executorAvailableTasks.firstIndex {
-            $0.id == task.id
+        let availableUpdate = executorAvailableTasks.updateTask(id: task.id) {
+            $0.isApplicant = true
         }
-        
-        let previousTask = index.map {
-            executorAvailableTasks[$0]
-        }
-        
-            // Optimistic UI update only if the task exists in the list.
-        if let index {
-            executorAvailableTasks[index].isApplicant = true
-        }
-        
+
         showAppliedSheet = false
         selectedTaskForApply = nil
         
@@ -216,18 +202,14 @@ final class ExecutorViewModel {
             )
             
         } catch {
-                // Rollback only if the task existed in the list.
-            if let index,
-               let previousTask {
-                executorAvailableTasks[index] = previousTask
-            }
-            
+            executorAvailableTasks.rollbackUpdate(availableUpdate)
+
             AlertCenter.shared.showError(
                 error.localizedDescription
             )
         }
     }
-    
+
         /// Withdraws from a task.
         ///
         /// IMPORTANT:
@@ -240,24 +222,17 @@ final class ExecutorViewModel {
             task.status == TaskStatus.inProgress.rawValue
         )
         
-            // Save current local state only when needed for rollback.
-        let previousAssignedTasks = executorAssignedTasks
-        
-        let availableIndex = executorAvailableTasks.firstIndex {
-            $0.id == task.id
-        }
-        
-        let previousAvailableTask = availableIndex.map {
-            executorAvailableTasks[$0]
-        }
-        
-            // Optimistic UI update.
+        let assignedRemoval: (index: Int, task: TaskModel)?
+        let availableUpdate: (index: Int, task: TaskModel)?
+
         if wasInProgress {
-            executorAssignedTasks.removeAll {
-                $0.id == task.id
+            assignedRemoval = executorAssignedTasks.removeTask(id: task.id)
+            availableUpdate = nil
+        } else {
+            assignedRemoval = nil
+            availableUpdate = executorAvailableTasks.updateTask(id: task.id) {
+                $0.isApplicant = false
             }
-        } else if let availableIndex {
-            executorAvailableTasks[availableIndex].isApplicant = false
         }
         
         do {
@@ -288,21 +263,15 @@ final class ExecutorViewModel {
             }
             
         } catch {
-                // Rollback only local UI state.
-            if wasInProgress {
-                executorAssignedTasks = previousAssignedTasks
-                
-            } else if let availableIndex,
-                      let previousAvailableTask {
-                executorAvailableTasks[availableIndex] = previousAvailableTask
-            }
-            
+            executorAssignedTasks.rollbackRemoval(assignedRemoval)
+            executorAvailableTasks.rollbackUpdate(availableUpdate)
+
             AlertCenter.shared.showError(
                 error.localizedDescription
             )
         }
     }
-    
+
         /// Marks a task as done.
         ///
         /// IMPORTANT:
@@ -316,19 +285,8 @@ final class ExecutorViewModel {
         /// - Any other screen
     func markTaskDone(_ task: TaskModel) async {
         
-            // Find the task only for optimistic UI.
-        let index = executorAssignedTasks.firstIndex {
-            $0.id == task.id
-        }
-        
-        let previousTask = index.map {
-            executorAssignedTasks[$0]
-        }
-        
-            // Optimistic update only if the task exists in the list.
-        if let index {
-            executorAssignedTasks[index].status =
-            TaskStatus.pendingCompleted.rawValue
+        let assignedUpdate = executorAssignedTasks.updateTask(id: task.id) {
+            $0.status = TaskStatus.pendingCompleted.rawValue
         }
         
         do {
@@ -348,18 +306,14 @@ final class ExecutorViewModel {
             )
             
         } catch {
-                // Rollback only if the task existed in the list.
-            if let index,
-               let previousTask {
-                executorAssignedTasks[index] = previousTask
-            }
-            
+            executorAssignedTasks.rollbackUpdate(assignedUpdate)
+
             AlertCenter.shared.showError(
                 error.localizedDescription
             )
         }
     }
-    
+
         // MARK: - Favorites
     
         /// Toggles favorite state.
@@ -367,10 +321,10 @@ final class ExecutorViewModel {
         /// The API action does NOT depend on the task being present
         /// in `executorAvailableTasks`.
     func toggleFavorite(_ task: TaskModel) async {
-        let newValue = !task.isFavourite
-        
+        let newValue = !task.isFavorite
+
             // Local optimistic update if the task exists in the list.
-        setFavourite(
+        setFavorite(
             newValue,
             forTaskId: task.id
         )
@@ -406,25 +360,23 @@ final class ExecutorViewModel {
             
         } catch {
                 // Rollback local state.
-            setFavourite(
+            setFavorite(
                 !newValue,
                 forTaskId: task.id
             )
-            
+
             AlertCenter.shared.showError(
                 error.localizedDescription
             )
         }
     }
-    
-    private func setFavourite(
-        _ isFavourite: Bool,
+
+    private func setFavorite(
+        _ isFavorite: Bool,
         forTaskId taskId: String
     ) {
-        if let index = executorAvailableTasks.firstIndex(
-            where: { $0.id == taskId }
-        ) {
-            executorAvailableTasks[index].isFavourite = isFavourite
+        _ = executorAvailableTasks.updateTask(id: taskId) {
+            $0.isFavorite = isFavorite
         }
     }
     
@@ -432,7 +384,7 @@ final class ExecutorViewModel {
     
     func checkPendingRatings() async {
         do {
-            let result = try await taskRepo.getUnratedExecutorTasks(
+            let result = try await taskRepo.getPendingRatingsForExecutor(
                 cursor: nil,
                 limit: nil
             )

@@ -8,7 +8,7 @@ import FirebaseFirestore
 /// Firestore shape:
 /// ```
 /// users/{userId}/notifications/{notificationId}
-///   userId, type, title, body, taskId?, isRead, createdAt
+///   userId, type, subjectText?, messageText?, taskId?, isRead, createdAt
 /// ```
 final class NotificationRepository: NotificationRepositoryProtocol {
 
@@ -60,7 +60,12 @@ final class NotificationRepository: NotificationRepositoryProtocol {
                         let type = NotificationType(rawValue: typeRaw),
                         let isRead = data["isRead"] as? Bool,
                         let timestamp = data["createdAt"] as? Timestamp
-                    else { return nil }
+                    else {
+                        // Surface schema drift (e.g. a renamed/missing field) instead of
+                        // silently returning an empty feed that looks like "no notifications".
+                        DebugLogger.log("⚠️ NotificationRepository dropped malformed notification doc: \(doc.documentID)")
+                        return nil
+                    }
 
                     return NotificationModel(
                         id: doc.documentID,
@@ -162,13 +167,7 @@ final class NotificationRepository: NotificationRepositoryProtocol {
     /// - Parameter userId: The user whose notifications to delete.
     /// - Throws: A Firestore error if the query or batch commit fails.
     func deleteAll(userId: String) async throws {
-        let snapshot = try await collection(for: userId).getDocuments()
-        guard !snapshot.documents.isEmpty else { return }
-        let batch = db.batch()
-        for doc in snapshot.documents {
-            batch.deleteDocument(doc.reference)
-        }
-        try await batch.commit()
+        try await deleteDocuments(matching: collection(for: userId))
     }
 
     /// Deletes a user's notifications tied to a specific task.
@@ -181,7 +180,18 @@ final class NotificationRepository: NotificationRepositoryProtocol {
     ///   - taskId: The task whose related notifications should be removed.
     /// - Throws: A Firestore error if the query or batch commit fails.
     func deleteNotifications(userId: String, taskId: String) async throws {
-        let snapshot = try await collection(for: userId).whereField("taskId", isEqualTo: taskId).getDocuments()
+        try await deleteDocuments(matching: collection(for: userId).whereField("taskId", isEqualTo: taskId))
+    }
+
+    /// Deletes every document returned by `query` in a single batch.
+    ///
+    /// No-ops if the query returns nothing.
+    ///
+    /// - Note: Firestore batches cap at 500 operations — fine for the
+    ///   100-notification listener limit today, but would need chunking if
+    ///   that limit ever grows past 500.
+    private func deleteDocuments(matching query: Query) async throws {
+        let snapshot = try await query.getDocuments()
         guard !snapshot.documents.isEmpty else { return }
         let batch = db.batch()
         for doc in snapshot.documents {

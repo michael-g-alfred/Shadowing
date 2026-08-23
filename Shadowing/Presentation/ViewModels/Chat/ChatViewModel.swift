@@ -72,13 +72,13 @@ final class ChatViewModel {
         /// Cancelling this task cancels consumption of the AsyncStream,
         /// which triggers the repository's `onTermination`,
         /// which removes the Firestore listener.
-    private var conversationsTask:
+    private nonisolated(unsafe) var conversationsTask:
     Task<Void, Never>?
     
         /// Owns the currently active message-list consuming task.
         ///
         /// Only one message listener can be active at a time.
-    private var messagesTask:
+    private nonisolated(unsafe) var messagesTask:
     Task<Void, Never>?
     
         /// The task ID whose messages are currently being observed.
@@ -94,6 +94,11 @@ final class ChatViewModel {
         self.authRepo = authRepo
         self.userRepo = userRepo
         self.chatRepo = chatRepo
+    }
+
+    deinit {
+        conversationsTask?.cancel()
+        messagesTask?.cancel()
     }
     
         // MARK: - Conversation Listening
@@ -138,8 +143,15 @@ final class ChatViewModel {
                 
                 self.rawConversations =
                 streamConversations
-                
+
                 self.isLoading = false
+            }
+
+                // The stream ended on its own (not via cancellation). Clear the
+                // handle so a later `listenToConversations()` can re-subscribe
+                // instead of no-op'ing on a dead listener.
+            if !Task.isCancelled {
+                self?.conversationsTask = nil
             }
         }
     }
@@ -206,9 +218,17 @@ final class ChatViewModel {
                 self.activeMessages =
                 streamMessages
             }
+
+                // The stream ended on its own (not via cancellation). Clear the
+                // handles so re-opening the same chat re-subscribes instead of
+                // being blocked by the "already observing this task" guard.
+            if !Task.isCancelled {
+                self?.currentObservedTaskId = nil
+                self?.messagesTask = nil
+            }
         }
     }
-    
+
         /// Stops the currently active message listener.
     func stopListeningToMessages() {
         messagesTask?.cancel()
@@ -216,6 +236,15 @@ final class ChatViewModel {
         
         currentObservedTaskId = nil
         activeMessages = []
+    }
+
+    func clearSessionState() {
+        rawConversations = []
+        activeMessages = []
+        isSending = false
+        isLoading = false
+        errorMessage = nil
+        currentObservedTaskId = nil
     }
     
         // MARK: - Sending Messages
