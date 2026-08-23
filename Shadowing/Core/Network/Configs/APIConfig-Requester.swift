@@ -19,16 +19,12 @@ extension APIConfig {
         status: String? = nil,
         accessToken: String
     ) -> MGRequestConfig {
-        MGRequestConfig(
-            baseURL: APIEndpoints.baseURL,
+        paginatedGetRequest(
             path: APIEndpoints.requesterPublishedTasksPath,
-            method: .get,
-            queryItems: Self.queryItems([
-                ("cursor", cursor),
-                ("limit", limit.map { "\($0)" }),
-                ("status", status)
-            ]),
-            headers: Self.requestHeaders(accessToken: accessToken)
+            cursor: cursor,
+            limit: limit,
+            additionalItems: [("status", status)],
+            accessToken: accessToken
         )
     }
     
@@ -44,15 +40,11 @@ extension APIConfig {
         limit: Int? = nil,
         accessToken: String
     ) -> MGRequestConfig {
-        MGRequestConfig(
-            baseURL: APIEndpoints.baseURL,
+        paginatedGetRequest(
             path: APIEndpoints.requesterCompletedTasksPath,
-            method: .get,
-            queryItems: Self.queryItems([
-                ("cursor", cursor),
-                ("limit", limit.map { "\($0)" })
-            ]),
-            headers: Self.requestHeaders(accessToken: accessToken)
+            cursor: cursor,
+            limit: limit,
+            accessToken: accessToken
         )
     }
     
@@ -68,15 +60,11 @@ extension APIConfig {
         limit: Int? = nil,
         accessToken: String
     ) -> MGRequestConfig {
-        MGRequestConfig(
-            baseURL: APIEndpoints.baseURL,
+        paginatedGetRequest(
             path: APIEndpoints.requesterUnratedTasksPath,
-            method: .get,
-            queryItems: Self.queryItems([
-                ("cursor", cursor),
-                ("limit", limit.map { "\($0)" })
-            ]),
-            headers: Self.requestHeaders(accessToken: accessToken)
+            cursor: cursor,
+            limit: limit,
+            accessToken: accessToken
         )
     }
     

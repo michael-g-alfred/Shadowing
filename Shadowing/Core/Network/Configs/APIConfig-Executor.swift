@@ -23,19 +23,16 @@ extension APIConfig {
         favoritesOnly: Bool = false,
         accessToken: String
     ) -> MGRequestConfig {
-        let items: [(name: String, value: String?)] = [
-            ("cursor", cursor),
-            ("limit", limit.map { "\($0)" }),
-            ("lat", lat.map { "\($0)" }),
-            ("lng", lng.map { "\($0)" }),
-            ("favoritesOnly", favoritesOnly ? "true" : nil)
-        ]
-        return MGRequestConfig(
-            baseURL: APIEndpoints.baseURL,
+        paginatedGetRequest(
             path: APIEndpoints.executorAvailableTasksPath,
-            method: .get,
-            queryItems: Self.queryItems(items),
-            headers: Self.requestHeaders(accessToken: accessToken)
+            cursor: cursor,
+            limit: limit,
+            additionalItems: [
+                ("lat", lat.map { "\($0)" }),
+                ("lng", lng.map { "\($0)" }),
+                ("favoritesOnly", favoritesOnly ? "true" : nil)
+            ],
+            accessToken: accessToken
         )
     }
     
@@ -51,15 +48,11 @@ extension APIConfig {
         limit: Int? = nil,
         accessToken: String
     ) -> MGRequestConfig {
-        MGRequestConfig(
-            baseURL: APIEndpoints.baseURL,
+        paginatedGetRequest(
             path: APIEndpoints.executorAssignedTasksPath,
-            method: .get,
-            queryItems: Self.queryItems([
-                ("cursor", cursor),
-                ("limit", limit.map { "\($0)" })
-            ]),
-            headers: Self.requestHeaders(accessToken: accessToken)
+            cursor: cursor,
+            limit: limit,
+            accessToken: accessToken
         )
     }
     
@@ -75,15 +68,11 @@ extension APIConfig {
         limit: Int? = nil,
         accessToken: String
     ) -> MGRequestConfig {
-        MGRequestConfig(
-            baseURL: APIEndpoints.baseURL,
+        paginatedGetRequest(
             path: APIEndpoints.executorCompletedTasksPath,
-            method: .get,
-            queryItems: Self.queryItems([
-                ("cursor", cursor),
-                ("limit", limit.map { "\($0)" })
-            ]),
-            headers: Self.requestHeaders(accessToken: accessToken)
+            cursor: cursor,
+            limit: limit,
+            accessToken: accessToken
         )
     }
     
@@ -99,15 +88,11 @@ extension APIConfig {
         limit: Int? = nil,
         accessToken: String
     ) -> MGRequestConfig {
-        MGRequestConfig(
-            baseURL: APIEndpoints.baseURL,
+        paginatedGetRequest(
             path: APIEndpoints.executorUnratedTasksPath,
-            method: .get,
-            queryItems: Self.queryItems([
-                ("cursor", cursor),
-                ("limit", limit.map { "\($0)" })
-            ]),
-            headers: Self.requestHeaders(accessToken: accessToken)
+            cursor: cursor,
+            limit: limit,
+            accessToken: accessToken
         )
     }
     

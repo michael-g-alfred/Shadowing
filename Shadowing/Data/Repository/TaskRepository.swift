@@ -42,6 +42,32 @@ final class TaskRepository: TaskRepositoryProtocol {
         return token
     }
 
+    // MARK: - Pagination Helper
+
+    /// Builds a ``PaginatedTasksResult`` from a raw task list response,
+    /// guarding against a malformed (empty but non-nil) cursor so pagination
+    /// doesn't spin on a broken "next page" pointer.
+    ///
+    /// - Parameter data: The raw, decoded task list response.
+    /// - Returns: A ``PaginatedTasksResult`` with `hasMore`/`cursor` coerced
+    ///   to a safe "end of pagination" state if the cursor looks invalid.
+    private static func makePaginatedResult(from data: TaskListResponseDTO) -> PaginatedTasksResult {
+        if let cursor = data.cursor, cursor.isEmpty {
+            DebugLogger.log("⚠️ TaskRepository -> empty cursor returned; treating as end of pagination")
+            return PaginatedTasksResult(
+                tasks: data.tasks.map { $0.toDomain() },
+                hasMore: false,
+                cursor: nil
+            )
+        }
+
+        return PaginatedTasksResult(
+            tasks: data.tasks.map { $0.toDomain() },
+            hasMore: data.hasMore,
+            cursor: data.cursor
+        )
+    }
+
     // MARK: - Shared
 
     /// Fetches a paginated list of all tasks.
@@ -182,11 +208,7 @@ final class TaskRepository: TaskRepositoryProtocol {
         let config = APIConfig.requesterPublishedTasks(cursor: cursor, limit: limit, status: status, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
-        return PaginatedTasksResult(
-            tasks: response.data.tasks.map { $0.toDomain() },
-            hasMore: response.data.hasMore,
-            cursor: response.data.cursor
-        )
+        return Self.makePaginatedResult(from: response.data)
     }
 
     /// Fetches the requester's completed tasks.
@@ -204,33 +226,35 @@ final class TaskRepository: TaskRepositoryProtocol {
         let config = APIConfig.requesterCompletedTasks(cursor: cursor, limit: limit, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
-        return PaginatedTasksResult(
-            tasks: response.data.tasks.map { $0.toDomain() },
-            hasMore: response.data.hasMore,
-            cursor: response.data.cursor
-        )
+        return Self.makePaginatedResult(from: response.data)
     }
 
-    /// Fetches the requester's completed tasks that have not yet been rated.
+    /// Fetches the requester's completed tasks that are still pending a
+    /// rating from the requester (i.e. the requester has not rated the
+    /// executor yet).
     ///
     /// - Parameters:
     ///   - cursor: An opaque pagination cursor, or `nil` for the first page.
     ///   - limit: Maximum number of tasks to return.
     /// - Returns: A ``PaginatedTasksResult``.
     /// - Throws: A networking error, or ``AuthError/noSession``.
-    func getUnratedRequesterTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
-        DebugLogger.log("⭐ 🟢 TaskRepository -> getUnratedRequesterTasks - Started")
-        defer { DebugLogger.log("⭐ 🏁 TaskRepository -> getUnratedRequesterTasks - Ended") }
+    func fetchPendingRatingsForRequester(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
+        DebugLogger.log("⭐ 🟢 TaskRepository -> fetchPendingRatingsForRequester - Started")
+        defer { DebugLogger.log("⭐ 🏁 TaskRepository -> fetchPendingRatingsForRequester - Ended") }
 
         let token = try await getValidToken()
         let config = APIConfig.requesterUnratedTasks(cursor: cursor, limit: limit, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
-        return PaginatedTasksResult(
-            tasks: response.data.tasks.map { $0.toDomain() },
-            hasMore: response.data.hasMore,
-            cursor: response.data.cursor
-        )
+        return Self.makePaginatedResult(from: response.data)
+    }
+
+    /// Deprecated name for ``fetchPendingRatingsForRequester(cursor:limit:)``.
+    /// Kept temporarily so existing call sites keep compiling while they're
+    /// migrated — remove once all callers are updated.
+    @available(*, deprecated, renamed: "fetchPendingRatingsForRequester(cursor:limit:)")
+    func getUnratedRequesterTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
+        try await fetchPendingRatingsForRequester(cursor: cursor, limit: limit)
     }
 
     // MARK: - Executor
@@ -251,11 +275,7 @@ final class TaskRepository: TaskRepositoryProtocol {
         let config = APIConfig.executorAvailableTasks(cursor: cursor, limit: limit, favoritesOnly: favoritesOnly, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
-        return PaginatedTasksResult(
-            tasks: response.data.tasks.map { $0.toDomain() },
-            hasMore: response.data.hasMore,
-            cursor: response.data.cursor
-        )
+        return Self.makePaginatedResult(from: response.data)
     }
 
     /// Fetches tasks currently assigned to the executor.
@@ -273,11 +293,7 @@ final class TaskRepository: TaskRepositoryProtocol {
         let config = APIConfig.executorAssignedTasks(cursor: cursor, limit: limit, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
-        return PaginatedTasksResult(
-            tasks: response.data.tasks.map { $0.toDomain() },
-            hasMore: response.data.hasMore,
-            cursor: response.data.cursor
-        )
+        return Self.makePaginatedResult(from: response.data)
     }
 
     /// Fetches tasks the executor has completed.
@@ -295,33 +311,35 @@ final class TaskRepository: TaskRepositoryProtocol {
         let config = APIConfig.executorCompletedTasks(cursor: cursor, limit: limit, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
-        return PaginatedTasksResult(
-            tasks: response.data.tasks.map { $0.toDomain() },
-            hasMore: response.data.hasMore,
-            cursor: response.data.cursor
-        )
+        return Self.makePaginatedResult(from: response.data)
     }
 
-    /// Fetches the executor's completed tasks that have not yet been rated.
+    /// Fetches the executor's completed tasks that are still pending a
+    /// rating from the executor (i.e. the executor has not rated the
+    /// requester yet).
     ///
     /// - Parameters:
     ///   - cursor: An opaque pagination cursor, or `nil` for the first page.
     ///   - limit: Maximum number of tasks to return.
     /// - Returns: A ``PaginatedTasksResult``.
     /// - Throws: A networking error, or ``AuthError/noSession``.
-    func getUnratedExecutorTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
-        DebugLogger.log("⭐ 🟢 TaskRepository -> getUnratedExecutorTasks - Started")
-        defer { DebugLogger.log("⭐ 🏁 TaskRepository -> getUnratedExecutorTasks - Ended") }
+    func fetchPendingRatingsForExecutor(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
+        DebugLogger.log("⭐ 🟢 TaskRepository -> fetchPendingRatingsForExecutor - Started")
+        defer { DebugLogger.log("⭐ 🏁 TaskRepository -> fetchPendingRatingsForExecutor - Ended") }
 
         let token = try await getValidToken()
         let config = APIConfig.executorUnratedTasks(cursor: cursor, limit: limit, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
-        return PaginatedTasksResult(
-            tasks: response.data.tasks.map { $0.toDomain() },
-            hasMore: response.data.hasMore,
-            cursor: response.data.cursor
-        )
+        return Self.makePaginatedResult(from: response.data)
+    }
+
+    /// Deprecated name for ``fetchPendingRatingsForExecutor(cursor:limit:)``.
+    /// Kept temporarily so existing call sites keep compiling while they're
+    /// migrated — remove once all callers are updated.
+    @available(*, deprecated, renamed: "fetchPendingRatingsForExecutor(cursor:limit:)")
+    func getUnratedExecutorTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
+        try await fetchPendingRatingsForExecutor(cursor: cursor, limit: limit)
     }
 
     // MARK: - Requester Actions
@@ -427,12 +445,11 @@ final class TaskRepository: TaskRepositoryProtocol {
 
     /// Initiates a new payment attempt for a task and returns the payment URL.
     ///
-    /// - Note: If the server's `paymentUrl` fails to parse as a `URL`, this
-    ///   currently falls back to `https://example.com` rather than throwing.
-    ///
     /// - Parameter taskId: The task's ID.
     /// - Returns: The payment `URL` to open (e.g. in a `WebView`).
-    /// - Throws: A networking error, or ``AuthError/noSession``.
+    /// - Throws: A networking error, ``AuthError/noSession``, or
+    ///   ``PaymentError/invalidPaymentURL(received:)`` if the server returns
+    ///   a `paymentUrl` string that doesn't parse as a `URL`.
     func retryPayment(taskId: String) async throws -> URL {
         DebugLogger.log("💳 🟢 TaskRepository -> retryPayment - Started")
         defer { DebugLogger.log("💳 🏁 TaskRepository -> retryPayment - Ended") }
@@ -442,7 +459,8 @@ final class TaskRepository: TaskRepositoryProtocol {
         let response: APIResponseDTO<PaymentResponseDTO> = try await network.request(config)
 
         guard let url = URL(string: response.data.paymentUrl) else {
-            return URL(string: "https://example.com")!
+            DebugLogger.log("❌ retryPayment received an invalid paymentUrl: \(response.data.paymentUrl)")
+            throw PaymentError.invalidPaymentURL(received: response.data.paymentUrl)
         }
 
         return url
@@ -599,5 +617,19 @@ final class TaskRepository: TaskRepositoryProtocol {
         let config = APIConfig.executorRateRequester(id: taskId, body: body, accessToken: token)
         let response: APIResponseDTO<EmptyDataDTO> = try await network.request(config)
         return (message: response.message, type: response.type)
+    }
+}
+
+/// Errors specific to task payment flows.
+enum PaymentError: LocalizedError {
+    /// The backend returned a `paymentUrl` string that could not be parsed
+    /// as a `URL`. Carries the raw, unparseable string for diagnostics.
+    case invalidPaymentURL(received: String)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidPaymentURL(let received):
+            return "The payment provider returned an invalid URL (\"\(received)\"). Please try again or contact support."
+        }
     }
 }
