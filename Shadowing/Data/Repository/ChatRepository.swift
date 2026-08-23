@@ -24,6 +24,27 @@ final class ChatRepository: ChatRepositoryProtocol {
     /// Firestore database handle.
     private let db = Firestore.firestore()
 
+    /// Builds an explicit "tombstone" summary for a participant/sender whose
+    /// real summary couldn't be fetched (deleted account, permission error,
+    /// transient network failure). Distinguishes this case from a normal
+    /// user named "User" so the UI/logs can tell the two apart if needed.
+    ///
+    /// - Parameter id: The user ID that failed to resolve.
+    /// - Returns: A placeholder ``UserSummaryModel`` for display purposes.
+    private static func tombstoneUserSummary(id: String) -> UserSummaryModel {
+        UserSummaryModel(
+            id: id,
+            displayName: String(localized: "chat.participant.unavailable", defaultValue: "Unavailable User"),
+            email: "",
+            avatarUrl: nil,
+            bio: "",
+            rating: 0,
+            totalRatings: 0,
+            completedTasks: 0,
+            specialties: []
+        )
+    }
+
     /// Used to resolve participant/sender summaries for conversations and messages.
     private let userRepo: UserRepositoryProtocol
 
@@ -66,9 +87,13 @@ final class ChatRepository: ChatRepositoryProtocol {
         do {
             try await db.collection("chats").document(taskId).setData(chatData, merge: true)
             DebugLogger.log("✅ createChat succeeded for taskId: \(taskId)")
+        } catch let firestoreError as NSError where firestoreError.domain == FirestoreErrorDomain
+            && firestoreError.code == FirestoreErrorCode.permissionDenied.rawValue {
+            DebugLogger.log("❌ createChat PERMISSION DENIED for taskId: \(taskId) | error: \(firestoreError)")
+            throw ChatError.permissionDenied
         } catch {
             DebugLogger.log("❌ createChat FAILED for taskId: \(taskId) | error: \(error)")
-            throw error
+            throw ChatError.firestoreError(underlying: error)
         }
     }
 
@@ -189,8 +214,14 @@ final class ChatRepository: ChatRepositoryProtocol {
                     let executorId = data["executorId"] as? String ?? ""
                     let otherUserId = (currentUserId == requesterId) ? executorId : requesterId
 
-                    async let otherUserFetch = (try? await self.userRepo.fetchUserSummary(id: otherUserId))
-                    ?? UserSummaryModel(id: otherUserId, displayName: "User", email: "", avatarUrl: nil, bio: "", rating: 0, totalRatings: 0, completedTasks: 0, specialties: [])
+                    async let otherUserFetch: UserSummaryModel = { () async -> UserSummaryModel in
+                        do {
+                            return try await self.userRepo.fetchUserSummary(id: otherUserId)
+                        } catch {
+                            DebugLogger.log("⚠️ resolveConversations failed to fetch participant \(otherUserId): \(error)")
+                            return Self.tombstoneUserSummary(id: otherUserId)
+                        }
+                    }()
 
                     async let taskTitleFetch = (try? await self.taskRepo.getTaskDetails(id: id))?.title ?? "Task"
 
@@ -302,8 +333,13 @@ final class ChatRepository: ChatRepositoryProtocol {
                     let isCurrentUser = (senderId == currentUserId)
                     let reactions = data["reactions"] as? [String: String] ?? [:]
 
-                    let senderUser = (try? await self.userRepo.fetchUserSummary(id: senderId))
-                    ?? UserSummaryModel(id: senderId, displayName: "User", email: "", avatarUrl: nil, bio: "", rating: 0, totalRatings: 0, completedTasks: 0, specialties: [])
+                    let senderUser: UserSummaryModel
+                    do {
+                        senderUser = try await self.userRepo.fetchUserSummary(id: senderId)
+                    } catch {
+                        DebugLogger.log("⚠️ resolveMessages failed to fetch sender \(senderId): \(error)")
+                        senderUser = Self.tombstoneUserSummary(id: senderId)
+                    }
 
                     let message = ChatMessage(
                         id: messageId,
@@ -471,6 +507,30 @@ final class ChatRepository: ChatRepositoryProtocol {
 /// previous callback's async resolution work has finished; without this, a
 /// slower-resolving older snapshot could yield after a faster-resolving
 /// newer one and show stale data.
+/// Errors specific to chat operations, so callers can distinguish
+/// permanent/permission failures from transient/networking ones instead of
+/// inspecting a generic Firestore `NSError`.
+enum ChatError: LocalizedError {
+    /// The current user does not have permission to perform this Firestore
+    /// operation (e.g. Firestore security rules rejected it).
+    case permissionDenied
+    /// The current user is not a participant of the chat they tried to access.
+    case notAParticipant
+    /// A Firestore error occurred that isn't specifically a permission issue.
+    case firestoreError(underlying: Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .permissionDenied:
+            return "You don't have permission to perform this action on this chat."
+        case .notAParticipant:
+            return "You're not a participant in this conversation."
+        case .firestoreError(let underlying):
+            return underlying.localizedDescription
+        }
+    }
+}
+
 private final class SnapshotGenerationBox: @unchecked Sendable {
 
     /// Lock guarding ``latest``.

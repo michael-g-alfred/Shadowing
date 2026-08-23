@@ -146,6 +146,11 @@ final class AuthRepository: AuthRepositoryProtocol {
 
         try? await network.requestWithoutResponse(config)
         clearSession()
+
+        // Decoupled signal so other repositories (e.g. UserRepository's
+        // summary cache) can invalidate any per-session cached data without
+        // AuthRepository needing a direct reference to them.
+        NotificationCenter.default.post(name: .authDidSignOut, object: nil)
     }
 
     // MARK: - Current User
@@ -272,4 +277,11 @@ final class AuthRepository: AuthRepositoryProtocol {
 private enum DefaultsKey {
     /// Key under which the JSON-encoded ``UserModel`` is cached.
     static let user = "saved_user"
+}
+
+extension Notification.Name {
+    /// Posted after ``AuthRepository/signOut()`` completes and local session
+    /// state has been cleared. Other repositories observe this to invalidate
+    /// their own per-session caches (see `UserRepository.summaryCache`).
+    static let authDidSignOut = Notification.Name("AuthRepository.authDidSignOut")
 }

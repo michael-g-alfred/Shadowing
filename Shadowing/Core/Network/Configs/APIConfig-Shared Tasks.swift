@@ -18,15 +18,11 @@ extension APIConfig {
         limit: Int? = nil,
         accessToken: String
     ) -> MGRequestConfig {
-        MGRequestConfig(
-            baseURL: APIEndpoints.baseURL,
+        paginatedGetRequest(
             path: APIEndpoints.allTasksPath,
-            method: .get,
-            queryItems: Self.queryItems([
-                ("cursor", cursor),
-                ("limit", limit.map { "\($0)" })
-            ]),
-            headers: Self.requestHeaders(accessToken: accessToken)
+            cursor: cursor,
+            limit: limit,
+            accessToken: accessToken
         )
     }
     

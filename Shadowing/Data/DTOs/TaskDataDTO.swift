@@ -41,7 +41,19 @@ struct TaskDTO: Codable {
     
     let applicantsCount: Int
     let isApplicant: Bool
-    let isFavourite: Bool
+    let isFavorite: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case id, title, description, budget, originalBudget, currency
+        case priority, serviceType, status, escrowStatus, preferredTimeOfDay
+        case address, latitude, longitude
+        case scheduledAt
+        case isRatedByRequester, isRatedByExecutor
+        case createdAt, updatedAt
+        case requester, executor
+        case applicantsCount, isApplicant
+        case isFavorite = "isFavourite" // backend uses UK spelling; keep Swift idiomatic
+    }
 }
 
 extension TaskDTO {
@@ -71,7 +83,7 @@ extension TaskDTO {
             executor: executor?.toDomain(),
             applicantsCount: applicantsCount,
             isApplicant: isApplicant,
-            isFavourite: isFavourite
+            isFavourite: isFavorite
         )
     }
 }
