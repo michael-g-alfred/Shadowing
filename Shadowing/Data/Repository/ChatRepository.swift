@@ -166,26 +166,43 @@ final class ChatRepository: ChatRepositoryProtocol {
             .document(taskId)
         
             // Read participants before deleting
-            // the chat document.
-        let chatSnapshot =
-        try? await chatRef.getDocument()
+            // the chat document. A genuine read failure
+            // (network/permissions) is logged rather than
+            // silently swallowed; a missing document is the
+            // only case we treat as "no participants".
+        var participants: [String] = []
+        do {
+            let chatSnapshot = try await chatRef.getDocument()
+            participants =
+            chatSnapshot
+                .data()?["participants"]
+            as? [String]
+            ?? []
+        } catch {
+            DebugLogger.log(
+                """
+                ⚠️ deleteChat failed to read chat document before deletion |
+                taskId: \(taskId) |
+                error: \(error)
+                """
+            )
+        }
         
-        let participants =
-        chatSnapshot?
-            .data()?["participants"]
-        as? [String]
-        ?? []
-        
-            // Delete all messages.
+            // Delete all messages in a single batch instead of
+            // sequential per-document deletes (faster, and avoids
+            // a partially-deleted thread if one delete fails midway).
+            // Firestore batches cap at 500 operations.
         let messagesSnapshot =
         try await chatRef
             .collection("messages")
             .getDocuments()
         
-        for document
-                in messagesSnapshot.documents {
-            
-            try await document.reference.delete()
+        for chunk in messagesSnapshot.documents.chunked(into: 500) {
+            let batch = db.batch()
+            for document in chunk {
+                batch.deleteDocument(document.reference)
+            }
+            try await batch.commit()
         }
         
             // Delete chat document.
@@ -319,10 +336,8 @@ final class ChatRepository: ChatRepositoryProtocol {
                     }
                 }
             
-            continuation.onTermination = {
-                [weak listener] _ in
-                
-                listener?.remove()
+            continuation.onTermination = { _ in
+                listener.remove()
                 
                 DebugLogger.log(
                     """
@@ -561,10 +576,8 @@ final class ChatRepository: ChatRepositoryProtocol {
                     }
                 }
             
-            continuation.onTermination = {
-                [weak listener] _ in
-                
-                listener?.remove()
+            continuation.onTermination = { _ in
+                listener.remove()
                 
                 DebugLogger.log(
                     """

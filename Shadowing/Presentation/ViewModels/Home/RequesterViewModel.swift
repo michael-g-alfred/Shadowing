@@ -434,8 +434,8 @@ final class RequesterViewModel {
     ) {
         statusFilter = filter
         
-        Task {
-            await loadPublishedTasks()
+        Task { [weak self] in
+            await self?.loadPublishedTasks()
         }
     }
     

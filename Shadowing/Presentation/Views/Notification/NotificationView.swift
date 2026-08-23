@@ -46,6 +46,9 @@ struct NotificationView: View {
         .task {
             vm.startListening()
         }
+        .onDisappear {
+            vm.stopListening()
+        }
     }
     
         // MARK: Private Helpers

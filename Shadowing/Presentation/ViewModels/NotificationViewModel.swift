@@ -69,6 +69,10 @@ final class NotificationViewModel {
         notificationRepo.stopListening()
     }
     
+    deinit {
+        notificationRepo.stopListening()
+    }
+    
         // MARK: - Incoming Notification Handling
     
     private func handleUpdate(_ incoming: [NotificationModel]) {

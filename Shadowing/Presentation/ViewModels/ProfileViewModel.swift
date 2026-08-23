@@ -17,8 +17,8 @@ final class ProfileViewModel {
     var selectedPhotoItem: PhotosPickerItem? {
         didSet {
             guard let selectedPhotoItem else { return }
-            Task {
-                await handlePhotoSelection(selectedPhotoItem)
+            Task { [weak self] in
+                await self?.handlePhotoSelection(selectedPhotoItem)
             }
         }
     }
@@ -112,15 +112,15 @@ final class ProfileViewModel {
     
         /// Called by CameraPicker's completion closure with the captured JPEG data.
     func handleCameraCapture(_ data: Data) {
-        Task {
-            await uploadAvatar(imageData: data)
+        Task { [weak self] in
+            await self?.uploadAvatar(imageData: data)
         }
     }
     
         /// Called by FilePicker's completion closure with the picked image's data.
     func handleFilePicked(_ data: Data) {
-        Task {
-            await uploadAvatar(imageData: data)
+        Task { [weak self] in
+            await self?.uploadAvatar(imageData: data)
         }
     }
     
