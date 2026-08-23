@@ -52,7 +52,7 @@ struct TaskDTO: Codable {
         case createdAt, updatedAt
         case requester, executor
         case applicantsCount, isApplicant
-        case isFavorite = "isFavourite" // backend uses UK spelling; keep Swift idiomatic
+        case isFavorite
     }
 }
 
