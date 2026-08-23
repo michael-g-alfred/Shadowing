@@ -75,7 +75,7 @@ struct ResponseAlertView: View {
             type: selectedType,
             message: "This is a demonstration message for the selected alert type."
         ) {
-            print("OK button tapped for \(selectedType.label)")
+            DebugLogger.log("OK button tapped for \(selectedType.label)")
         }
     }
 }

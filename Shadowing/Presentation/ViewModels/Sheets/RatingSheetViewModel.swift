@@ -98,13 +98,13 @@ final class RatingSheetViewModel {
             AlertCenter.shared.show(responseType: result.type, message: result.message)
             await notifyTargetOfRating()
         } catch {
-            print("⚠️ Rating submit failed — taskId: \(taskId), target: \(target), error: \(error)")
-            
+            DebugLogger.log("⚠️ Rating submit failed — taskId: \(taskId), target: \(target), error: \(error)")
+
             if case let .serverError(statusCode, data) = error as? MGNetworkingKit.NetworkError, let data {
                 let bodyString = String(data: data, encoding: .utf8) ?? "<non-utf8 body>"
-                print("⚠️ Server said (status \(statusCode)): \(bodyString)")
+                DebugLogger.log("⚠️ Server said (status \(statusCode)): \(bodyString)")
             }
-            
+
             AlertCenter.shared.showError(error.localizedDescription)
         }
     }

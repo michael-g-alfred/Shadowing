@@ -120,7 +120,7 @@ final class AddTaskSheetViewModel {
             suggestedSpecialists = result
         } catch {
             guard myGeneration == specialistsGeneration else { return }
-            print("⚠️ loadSuggestedSpecialists failed for serviceId \(selectedService.id): \(error)")
+            DebugLogger.log("⚠️ loadSuggestedSpecialists failed for serviceId \(selectedService.id): \(error)")
             suggestedSpecialists = []
         }
     }
