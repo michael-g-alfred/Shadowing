@@ -95,11 +95,12 @@ final class NotificationRepository: NotificationRepositoryProtocol {
     ///   - userId: The recipient's user ID.
     ///   - type: The notification's ``NotificationType`` — drives the
     ///     localized title/body shown on-device, via `NotificationModel`.
-    ///   - subjectText: A task's title (for task-scoped types) or the
-    ///     sender's display name (for `.newMessage`), interpolated into the
-    ///     localized template.
-    ///   - messageText: Only used for `.newMessage` — the literal message
-    ///     body, stored as-is rather than localized.
+    ///   - subjectText: The display name of the user who triggered the event
+    ///     (the "actor"). Interpolated into the recipient-localized template
+    ///     by `NotificationModel`. For `.newMessage` this is the sender's name.
+    ///   - messageText: The related task's title for task-scoped types (so the
+    ///     recipient's device can localize the surrounding template). For
+    ///     `.newMessage` this is the literal message body, shown as-is.
     ///   - taskId: An optional related task ID, if this notification is
     ///     task-scoped (e.g. a chat message notification).
     /// - Throws: A Firestore error if the write fails.

@@ -45,20 +45,6 @@ enum NotificationType: String, Codable {
         }
     }
     
-    func body(taskTitle: String) -> LocalizedStringResource {
-        switch self {
-            case .taskApplied: return "Someone applied to \"\(taskTitle)\""
-            case .taskAccepted: return "Your application for \"\(taskTitle)\" was accepted"
-            case .taskDeclined: return "Your application for \"\(taskTitle)\" was declined"
-            case .taskCompleted: return "\"\(taskTitle)\" has been marked as completed"
-            case .taskConfirmed: return "Completion of \"\(taskTitle)\" has been confirmed"
-            case .taskCancelled: return "\"\(taskTitle)\" has been cancelled"
-            case .taskWithdrawn: return "The executor withdrew from \"\(taskTitle)\""
-            case .ratingReceived: return "You received a new rating for \"\(taskTitle)\""
-            case .taskInvitation: return "You've been invited to \"\(taskTitle)\""
-            case .newMessage, .system: return ""
-        }
-    }
 }
 
 struct NotificationModel: Identifiable, Codable, Equatable {
@@ -92,21 +78,19 @@ struct NotificationModel: Identifiable, Codable, Equatable {
         self.createdAt = createdAt
     }
     
-    var taskTitle: String? {
-        type == .newMessage ? nil : subjectText
-    }
-    
+        /// The bold header line. For `.newMessage` it's the sender's name
+        /// (carried in `subjectText`); for every other type it's the fixed
+        /// localized category label (e.g. "New Applicant").
     var title: LocalizedStringResource {
         if type == .newMessage {
             return LocalizedStringResource(stringLiteral: subjectText ?? String(localized: type.title))
         }
         return type.title
     }
-    
+
+        /// The detail line — the full sentence composed by the sender and
+        /// stored in `messageText` (e.g. `Michael applied to your task "…"`).
     var body: LocalizedStringResource {
-        if type == .newMessage {
-            return LocalizedStringResource(stringLiteral: messageText ?? "")
-        }
-        return type.body(taskTitle: taskTitle ?? "")
+        LocalizedStringResource(stringLiteral: messageText ?? "")
     }
 }
