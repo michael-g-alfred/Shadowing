@@ -1,11 +1,3 @@
-//
-//  PendingRating.swift
-//  Shadowing
-//
-//  Created by Michael George on 21/08/2026.
-//
-
-
 import SwiftUI
 
     // MARK: - Pending Rating

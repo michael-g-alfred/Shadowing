@@ -1,139 +1,330 @@
 import Foundation
+import Observation
 
     // MARK: - Chat ViewModel
+
 @MainActor
 @Observable
 final class ChatViewModel {
-        // MARK: - Raw data from Firestore (do not read directly outside this file)
+    
+        // MARK: - Raw Data
+    
+        /// Raw conversations received from Firestore.
+        ///
+        /// This is the actual server state.
+        /// The computed `conversations` property below applies
+        /// the local read-state override for the currently-open chat.
     private var rawConversations: [Conversation] = []
     
-        // MARK: - Single source of truth for read/unread state
-        // The currently-open conversation is always treated as read locally,
-        // regardless of what Firestore's snapshot says at any given instant.
+        // MARK: - Derived Conversation State
+    
+        /// Single source of truth for read/unread state exposed to the UI.
+        ///
+        /// The currently-open conversation is always considered read locally,
+        /// even if the Firestore snapshot still contains an unread count.
     var conversations: [Conversation] {
-        guard let currentObservedTaskId else { return rawConversations }
-        return rawConversations.map { convo in
-            guard convo.id == currentObservedTaskId, convo.unreadCount != 0 else { return convo }
+        guard let currentObservedTaskId else {
+            return rawConversations
+        }
+        
+        return rawConversations.map { conversation in
+            guard conversation.id == currentObservedTaskId,
+                  conversation.unreadCount != 0
+            else {
+                return conversation
+            }
+            
             return Conversation(
-                id: convo.id,
-                taskTitle: convo.taskTitle,
-                otherUser: convo.otherUser,
+                id: conversation.id,
+                taskTitle: conversation.taskTitle,
+                otherUser: conversation.otherUser,
                 unreadCount: 0
             )
         }
     }
     
+        // MARK: - UI State
+    
     var activeMessages: [ChatMessage] = []
-    var isSending: Bool = false
-    var isLoading: Bool = true
+    
+    var isSending = false
+    
+    var isLoading = true
+    
     var errorMessage: String?
     
     var totalUnreadCount: Int {
-        conversations.reduce(0) { $0 + $1.unreadCount }
+        conversations.reduce(0) {
+            $0 + $1.unreadCount
+        }
     }
+    
+        // MARK: - Dependencies
     
     private let authRepo: AuthRepositoryProtocol
     private let userRepo: UserRepositoryProtocol
     private let chatRepo: ChatRepositoryProtocol
     
-        // MARK: - Listener task handles (prevents duplicate Firestore listeners)
-    private var conversationsTask: Task<Void, Never>?
-    private var messagesTask: Task<Void, Never>?
+        // MARK: - Listener Tasks
+    
+        /// Owns the conversation-list consuming task.
+        ///
+        /// Cancelling this task cancels consumption of the AsyncStream,
+        /// which triggers the repository's `onTermination`,
+        /// which removes the Firestore listener.
+    private var conversationsTask:
+    Task<Void, Never>?
+    
+        /// Owns the currently active message-list consuming task.
+        ///
+        /// Only one message listener can be active at a time.
+    private var messagesTask:
+    Task<Void, Never>?
+    
+        /// The task ID whose messages are currently being observed.
     private var currentObservedTaskId: String?
     
-    init(authRepo: AuthRepositoryProtocol, userRepo: UserRepositoryProtocol, chatRepo: ChatRepositoryProtocol) {
+        // MARK: - Initialization
+    
+    init(
+        authRepo: AuthRepositoryProtocol,
+        userRepo: UserRepositoryProtocol,
+        chatRepo: ChatRepositoryProtocol
+    ) {
         self.authRepo = authRepo
         self.userRepo = userRepo
         self.chatRepo = chatRepo
     }
     
+        // MARK: - Conversation Listening
+    
+        /// Starts observing the current user's conversations.
+        ///
+        /// Calling this method repeatedly while an existing listener is active
+        /// is safe; it will not create duplicate Firestore listeners.
     func listenToConversations() {
-            // Already listening — don't spin up a second Firestore listener
-        guard conversationsTask == nil else { return }
+        guard conversationsTask == nil else {
+            return
+        }
         
-        guard let currentUserId = authRepo.currentUser?.id else {
-            errorMessage = "Please login to continue"
+        guard let currentUserId =
+                authRepo.currentUser?.id
+        else {
+            errorMessage =
+            "Please login to continue"
+            
             isLoading = false
+            
             return
         }
         
         isLoading = true
         
+        let chatRepo = chatRepo
+        
         conversationsTask = Task { [weak self] in
-            guard let self else { return }
-            for await streamConversations in chatRepo.observeConversations(currentUserId: currentUserId) {
-                if Task.isCancelled { break }
-                self.rawConversations = streamConversations
+            for await streamConversations in
+                    chatRepo.observeConversations(
+                        currentUserId: currentUserId
+                    ) {
+                
+                guard !Task.isCancelled else {
+                    return
+                }
+                
+                guard let self else {
+                    return
+                }
+                
+                self.rawConversations =
+                streamConversations
+                
                 self.isLoading = false
             }
         }
     }
     
+        /// Cancels the conversation-list listener.
+        ///
+        /// Cancellation propagates to the AsyncStream consumer,
+        /// which causes the repository's `onTermination`
+        /// to remove the Firestore listener.
     func stopListeningToConversations() {
         conversationsTask?.cancel()
         conversationsTask = nil
     }
     
+        /// Restarts the conversation listener.
+        ///
+        /// Useful for pull-to-refresh when you want to explicitly
+        /// recreate the realtime subscription.
+    func restartConversationsListener() {
+        stopListeningToConversations()
+        listenToConversations()
+    }
+    
+        // MARK: - Message Listening
+    
+        /// Starts observing messages for a specific task.
+        ///
+        /// If the same task is already being observed, nothing happens.
+        /// If another task is being observed, its listener is cancelled first.
     func listenToMessages(taskId: String) {
-            // Already listening to this exact chat — no-op
-        if messagesTask != nil, currentObservedTaskId == taskId { return }
+        if messagesTask != nil,
+           currentObservedTaskId == taskId {
+            return
+        }
         
-        guard let currentUserId = authRepo.currentUser?.id else { return }
+        guard let currentUserId =
+                authRepo.currentUser?.id
+        else {
+            return
+        }
         
-            // Switching chats — cancel the previous listener first
+            // Stop previous chat listener.
         messagesTask?.cancel()
+        
         currentObservedTaskId = taskId
         
+        let chatRepo = chatRepo
+        
         messagesTask = Task { [weak self] in
-            guard let self else { return }
-            for await streamMessages in chatRepo.observeMessages(taskId: taskId, currentUserId: currentUserId) {
-                if Task.isCancelled { break }
-                self.activeMessages = streamMessages
+            for await streamMessages in
+                    chatRepo.observeMessages(
+                        taskId: taskId,
+                        currentUserId: currentUserId
+                    ) {
+                
+                guard !Task.isCancelled else {
+                    return
+                }
+                
+                guard let self else {
+                    return
+                }
+                
+                self.activeMessages =
+                streamMessages
             }
         }
     }
     
+        /// Stops the currently active message listener.
     func stopListeningToMessages() {
         messagesTask?.cancel()
         messagesTask = nil
+        
         currentObservedTaskId = nil
         activeMessages = []
     }
     
-    func sendMessage(taskId: String, text: String) async {
-        guard let currentUserId = authRepo.currentUser?.id, !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        // MARK: - Sending Messages
+    
+    func sendMessage(
+        taskId: String,
+        text: String
+    ) async {
+        let trimmedText =
+        text.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        
+        guard !trimmedText.isEmpty else {
+            return
+        }
+        
+        guard let currentUserId =
+                authRepo.currentUser?.id
+        else {
+            return
+        }
+        
         isSending = true
-        defer { isSending = false }
+        
+        defer {
+            isSending = false
+        }
         
         do {
-            try await chatRepo.sendMessage(taskId: taskId, messageText: text, senderId: currentUserId)
+            try await chatRepo.sendMessage(
+                taskId: taskId,
+                messageText: trimmedText,
+                senderId: currentUserId
+            )
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage =
+            error.localizedDescription
         }
     }
     
-    func markAsRead(taskId: String) async {
-        guard let currentUserId = authRepo.currentUser?.id else { return }
+        // MARK: - Read State
+    
+    func markAsRead(
+        taskId: String
+    ) async {
+        guard let currentUserId =
+                authRepo.currentUser?.id
+        else {
+            return
+        }
+        
         do {
-            try await chatRepo.markAllMessagesAsRead(taskId: taskId, currentUserId: currentUserId)
+            try await chatRepo.markAllMessagesAsRead(
+                taskId: taskId,
+                currentUserId: currentUserId
+            )
         } catch {
-            DebugLogger.log("❌ markAsRead FAILED | taskId: \(taskId) | error: \(error)")
+            DebugLogger.log(
+                """
+                ❌ markAsRead FAILED |
+                taskId: \(taskId) |
+                error: \(error)
+                """
+            )
         }
     }
+    
+        // MARK: - Current User
     
     var currentUserId: String? {
         authRepo.currentUser?.id
     }
     
-    func toggleReaction(taskId: String, messageId: String, emoji: String) async {
-        guard let currentUserId = authRepo.currentUser?.id else { return }
-        let currentReaction = activeMessages.first(where: { $0.id == messageId })?.reactions[currentUserId]
-        let newEmoji: String? = (currentReaction == emoji) ? nil : emoji
+        // MARK: - Reactions
+    
+    func toggleReaction(
+        taskId: String,
+        messageId: String,
+        emoji: String
+    ) async {
+        guard let currentUserId =
+                authRepo.currentUser?.id
+        else {
+            return
+        }
+        
+        let currentReaction =
+        activeMessages
+            .first(where: {
+                $0.id == messageId
+            })?
+            .reactions[currentUserId]
+        
+        let newEmoji: String? =
+        currentReaction == emoji
+        ? nil
+        : emoji
         
         do {
-            try await chatRepo.setReaction(taskId: taskId, messageId: messageId, userId: currentUserId, emoji: newEmoji)
+            try await chatRepo.setReaction(
+                taskId: taskId,
+                messageId: messageId,
+                userId: currentUserId,
+                emoji: newEmoji
+            )
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage =
+            error.localizedDescription
         }
     }
 }

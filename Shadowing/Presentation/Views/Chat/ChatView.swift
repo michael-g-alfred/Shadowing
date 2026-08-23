@@ -3,10 +3,16 @@ import SwiftUI
     // MARK: - Message Frame Preference Key
 
 struct MessageFramePreferenceKey: PreferenceKey {
-    static var defaultValue: [String: CGRect] = [:]
+    static let defaultValue: [String: CGRect] = [:]
     
-    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
-        value.merge(nextValue(), uniquingKeysWith: { _, new in new })
+    static func reduce(
+        value: inout [String: CGRect],
+        nextValue: () -> [String: CGRect]
+    ) {
+        value.merge(
+            nextValue(),
+            uniquingKeysWith: { _, new in new }
+        )
     }
 }
 
@@ -19,10 +25,15 @@ struct DirectChatLoaderView: View {
     var body: some View {
         Group {
             if let conversation = vm.conversations.first(where: { $0.id == taskId }) {
-                ConversationDetailView(conversation: conversation, vm: vm)
+                ConversationDetailView(
+                    conversation: conversation,
+                    vm: vm
+                )
             } else {
                 LoadingState.loading(title: "Loading chat").view
-                    .task { vm.listenToConversations() }
+                    .task {
+                        vm.listenToConversations()
+                    }
             }
         }
     }
@@ -35,19 +46,31 @@ struct ConversationRow: View {
     
     var body: some View {
         HStack(alignment: .bottom) {
-            AvatarView(profile: conversation.otherUser, nameLayout: .horizontal, subtitle: "Task title: \( conversation.taskTitle)")
+            AvatarView(
+                profile: conversation.otherUser,
+                nameLayout: .horizontal,
+                subtitle: "Task title: \(conversation.taskTitle)"
+            )
             
             Spacer(minLength: Spacing.md)
             
-            
             if conversation.unreadCount > 0 {
                 let text = "\(conversation.unreadCount)"
+                
                 Text(text)
                     .font(.caption2.bold())
                     .foregroundStyle(.white)
-                    .padding(.horizontal, text.count > 1 ? Spacing.sm : 0)
-                    .frame(minWidth: 16, minHeight: 16)
-                    .appGlassCapsule(overlayColor: .red.opacity(0.75))
+                    .padding(
+                        .horizontal,
+                        text.count > 1 ? Spacing.sm : 0
+                    )
+                    .frame(
+                        minWidth: 16,
+                        minHeight: 16
+                    )
+                    .appGlassCapsule(
+                        overlayColor: .red.opacity(0.75)
+                    )
             }
         }
     }
@@ -56,7 +79,16 @@ struct ConversationRow: View {
     // MARK: - Reaction Picker Component
 
 struct ReactionPickerView: View {
-    static let emojis = ["❤️", "👍", "😂", "😮", "😢", "🔥", "👏"]
+    static let emojis = [
+        "❤️",
+        "👍",
+        "😂",
+        "😮",
+        "😢",
+        "🔥",
+        "👏"
+    ]
+    
     let onSelect: (String) -> Void
     
     var body: some View {
@@ -65,7 +97,9 @@ struct ReactionPickerView: View {
                 Text(emoji)
                     .font(.title)
                     .contentShape(Circle())
-                    .onTapGesture { onSelect(emoji) }
+                    .onTapGesture {
+                        onSelect(emoji)
+                    }
             }
         }
         .padding(.horizontal, Spacing.lg)
@@ -80,16 +114,30 @@ struct ReactionBadgeView: View {
     let reactions: [String: String]
     
     private var counts: [(emoji: String, count: Int)] {
-        Dictionary(grouping: reactions.values, by: { $0 })
-            .map { (emoji: $0.key, count: $0.value.count) }
-            .sorted { $0.emoji < $1.emoji }
+        Dictionary(
+            grouping: reactions.values,
+            by: { $0 }
+        )
+        .map {
+            (
+                emoji: $0.key,
+                count: $0.value.count
+            )
+        }
+        .sorted {
+            $0.emoji < $1.emoji
+        }
     }
     
     var body: some View {
         HStack(spacing: Spacing.xs) {
             ForEach(counts, id: \.emoji) { item in
-                Text(item.count > 1 ? "\(item.emoji) \(item.count)" : item.emoji)
-                    .font(.caption)
+                Text(
+                    item.count > 1
+                    ? "\(item.emoji) \(item.count)"
+                    : item.emoji
+                )
+                .font(.caption)
             }
         }
         .padding(.horizontal, Spacing.sm)
@@ -105,102 +153,192 @@ struct MessageBubble: View {
     let onLongPress: () -> Void
     
     private var bubbleBackground: AnyShapeStyle {
-        message.isCurrentUser ? AnyShapeStyle(Color.accentColor.opacity(0.85)) : AnyShapeStyle(Color(.systemGray3).opacity(0.75))
+        message.isCurrentUser
+        ? AnyShapeStyle(
+            Color.accentColor.opacity(0.85)
+        )
+        : AnyShapeStyle(
+            Color(.systemGray3).opacity(0.75)
+        )
     }
     
     private var bubbleOverlayColor: Color {
-        message.isCurrentUser ? .accentColor.opacity(0.15) : .white.opacity(0.08)
-    }
-    
-    private var bubbleShadowColor: Color {
-        message.isCurrentUser ? .accentColor.opacity(0.35) : .black.opacity(0.15)
+        message.isCurrentUser
+        ? .accentColor.opacity(0.15)
+        : .white.opacity(0.08)
     }
     
     var body: some View {
-        HStack(alignment: .bottom, spacing: Spacing.sm) {
+        HStack(
+            alignment: .bottom,
+            spacing: Spacing.sm
+        ) {
             
             if !message.isCurrentUser {
-                AvatarView(profile: message.sender, size: 28, nameLayout: .none)
+                AvatarView(
+                    profile: message.sender,
+                    size: 28,
+                    nameLayout: .none
+                )
             } else {
                 Spacer()
             }
             
-            VStack(alignment: message.isCurrentUser ? .trailing : .leading, spacing: Spacing.xs) {
-                ZStack(alignment: message.isCurrentUser ? .bottomLeading : .bottomTrailing) {
-                    VStack(alignment: message.isCurrentUser ? .trailing : .leading, spacing: Spacing.xs) {
+            VStack(
+                alignment: message.isCurrentUser
+                ? .trailing
+                : .leading,
+                spacing: Spacing.xs
+            ) {
+                ZStack(
+                    alignment: message.isCurrentUser
+                    ? .bottomLeading
+                    : .bottomTrailing
+                ) {
+                    VStack(
+                        alignment: message.isCurrentUser
+                        ? .trailing
+                        : .leading,
+                        spacing: Spacing.xs
+                    ) {
                         Text(message.text)
-                            .foregroundStyle(message.isCurrentUser ? .white : .primary)
+                            .foregroundStyle(
+                                message.isCurrentUser
+                                ? .white
+                                : .primary
+                            )
                         
                         Text(message.time)
                             .font(.caption2)
-                            .foregroundStyle(message.isCurrentUser ? .white.opacity(0.8) : .secondary)
+                            .foregroundStyle(
+                                message.isCurrentUser
+                                ? .white.opacity(0.8)
+                                : .secondary
+                            )
                     }
-                    .padding(.horizontal, Spacing.xxl)
-                    .padding(.vertical, 6)
-                    .appGlassCapsule(fill: bubbleBackground, overlayColor: bubbleOverlayColor)
+                    .padding(
+                        .horizontal,
+                        Spacing.xxl
+                    )
+                    .padding(
+                        .vertical,
+                        6
+                    )
+                    .appGlassCapsule(
+                        fill: bubbleBackground,
+                        overlayColor: bubbleOverlayColor
+                    )
                     
                     if !message.reactions.isEmpty {
-                        ReactionBadgeView(reactions: message.reactions)
-                            .alignmentGuide(VerticalAlignment.bottom) { d in d[.bottom] - 15 }
-                            .alignmentGuide(message.isCurrentUser ? HorizontalAlignment.leading : HorizontalAlignment.trailing) { d in
-                                message.isCurrentUser ? d[.leading] + 5 : d[.trailing] - 5
-                            }
+                        ReactionBadgeView(
+                            reactions: message.reactions
+                        )
+                        .alignmentGuide(
+                            VerticalAlignment.bottom
+                        ) { dimension in
+                            dimension[.bottom] - 15
+                        }
+                        .alignmentGuide(
+                            message.isCurrentUser
+                            ? HorizontalAlignment.leading
+                            : HorizontalAlignment.trailing
+                        ) { dimension in
+                            message.isCurrentUser
+                            ? dimension[.leading] + 5
+                            : dimension[.trailing] - 5
+                        }
                     }
                 }
-                .padding(.bottom, message.reactions.isEmpty ? 0 : Spacing.xs)
+                .padding(
+                    .bottom,
+                    message.reactions.isEmpty
+                    ? 0
+                    : Spacing.xs
+                )
             }
             
             if message.isCurrentUser {
-                AvatarView(profile: message.sender, size: 28, nameLayout: .none)
+                AvatarView(
+                    profile: message.sender,
+                    size: 28,
+                    nameLayout: .none
+                )
             } else {
                 Spacer()
             }
-            
         }
         .padding(.horizontal, Spacing.sm)
         .padding(.vertical, Spacing.xxs)
         .background(
-            GeometryReader { geo in
-                Color.clear.preference(key: MessageFramePreferenceKey.self, value: [message.id: geo.frame(in: .global)])
+            GeometryReader { geometry in
+                Color.clear
+                    .preference(
+                        key: MessageFramePreferenceKey.self,
+                        value: [
+                            message.id:
+                                geometry.frame(in: .global)
+                        ]
+                    )
             }
         )
         .contentShape(Rectangle())
-        .onLongPressGesture(minimumDuration: 0.25) {
-            let generator = UIImpactFeedbackGenerator(style: .medium)
+        .onLongPressGesture(
+            minimumDuration: 0.25
+        ) {
+            let generator =
+            UIImpactFeedbackGenerator(
+                style: .medium
+            )
+            
             generator.impactOccurred()
+            
             onLongPress()
         }
     }
 }
 
-
     // MARK: - Main Chat List View
 
 struct ChatView: View {
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorScheme)
+    private var colorScheme
+    
     var vm: ChatViewModel
     
     private var listRowColor: Color? {
-        colorScheme == .dark ? Color.accentColor.opacity(0.15) : nil
+        colorScheme == .dark
+        ? Color.accentColor.opacity(0.15)
+        : nil
     }
     
     var body: some View {
         NavigationStack {
             ZStack {
                 AppBackground()
+                
                 contentView
             }
             .navigationTitle("Chats")
-            .task { vm.listenToConversations() }
+            .task {
+                vm.listenToConversations()
+            }
+            .onDisappear {
+                vm.stopListeningToConversations()
+            }
         }
     }
     
     @ViewBuilder
     private var contentView: some View {
         if vm.isLoading && vm.conversations.isEmpty {
-            LoadingState.loading(title: "Loading chats...").view
+            LoadingState.loading(
+                title: "Loading chats..."
+            )
+            .view
+            
         } else if vm.conversations.isEmpty {
             EmptyState.noChats.view()
+            
         } else {
             conversationList
         }
@@ -208,26 +346,39 @@ struct ChatView: View {
     
     private var conversationList: some View {
         List(vm.conversations) { conversation in
-            NavigationLink(destination: ConversationDetailView(conversation: conversation, vm: vm)) {
-                ConversationRow(conversation: conversation)
+            NavigationLink(
+                destination:
+                    ConversationDetailView(
+                        conversation: conversation,
+                        vm: vm
+                    )
+            ) {
+                ConversationRow(
+                    conversation: conversation
+                )
             }
             .listRowBackground(listRowColor)
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
-        .refreshable { vm.listenToConversations() }
+        .refreshable {
+            vm.restartConversationsListener()
+        }
     }
 }
 
     // MARK: - Conversation Detail View
 
 struct ConversationDetailView: View {
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorScheme)
+    private var colorScheme
+    
     let conversation: Conversation
+    
     @Bindable var vm: ChatViewModel
     
-    @State private var messageText: String = ""
-    @State private var selectedMessageForReaction: ChatMessage? = nil
+    @State private var messageText = ""
+    @State private var selectedMessageForReaction: ChatMessage?
     @State private var messageFrames: [String: CGRect] = [:]
     
     var body: some View {
@@ -235,21 +386,44 @@ struct ConversationDetailView: View {
             ZStack {
                 AppBackground()
                 
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(
+                    alignment: .leading,
+                    spacing: 0
+                ) {
+                    
                         // MARK: Chat Header
-                    AvatarView(profile: conversation.otherUser, size: 48, nameLayout: .horizontal, subtitle: conversation.taskTitle)
-                        .padding()
+                    
+                    AvatarView(
+                        profile: conversation.otherUser,
+                        size: 48,
+                        nameLayout: .horizontal,
+                        subtitle: conversation.taskTitle
+                    )
+                    .padding()
                     
                     Divider()
                     
                         // MARK: Messages Scroll View
+                    
                     ScrollViewReader { proxy in
                         ScrollView {
-                            LazyVStack(spacing: Spacing.sm) {
-                                ForEach(vm.activeMessages) { message in
-                                    MessageBubble(message: message) {
-                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                                            selectedMessageForReaction = message
+                            LazyVStack(
+                                spacing: Spacing.sm
+                            ) {
+                                ForEach(
+                                    vm.activeMessages
+                                ) { message in
+                                    MessageBubble(
+                                        message: message
+                                    ) {
+                                        withAnimation(
+                                            .spring(
+                                                response: 0.35,
+                                                dampingFraction: 0.75
+                                            )
+                                        ) {
+                                            selectedMessageForReaction =
+                                            message
                                         }
                                     }
                                     .id(message.id)
@@ -258,62 +432,137 @@ struct ConversationDetailView: View {
                             .padding(.top, Spacing.sm)
                             .padding(.bottom, Spacing.sm)
                         }
-                        .onChange(of: vm.activeMessages.count) { _, _ in
-                            scrollToBottom(proxy: proxy)
-                            Task { await vm.markAsRead(taskId: conversation.id) }
+                        .onChange(
+                            of: vm.activeMessages.count
+                        ) { _, _ in
+                            scrollToBottom(
+                                proxy: proxy
+                            )
+                            
+                            Task {
+                                await vm.markAsRead(
+                                    taskId: conversation.id
+                                )
+                            }
                         }
-                        .onAppear { scrollToBottom(proxy: proxy) }
+                        .onAppear {
+                            scrollToBottom(
+                                proxy: proxy
+                            )
+                        }
                         .scrollIndicators(.hidden)
                     }
-                    .onPreferenceChange(MessageFramePreferenceKey.self) { frames in self.messageFrames = frames }
+                    .onPreferenceChange(
+                        MessageFramePreferenceKey.self
+                    ) { frames in
+                        messageFrames = frames
+                    }
                     
                         // MARK: Text Input Bar
+                    
                     HStack(spacing: Spacing.sm) {
-                        TextField("Type a message...", text: $messageText)
-                            .padding(.horizontal, Spacing.lg)
-                            .padding(.vertical, Spacing.md)
-                            .appGlassCapsule()
+                        TextField(
+                            "Type a message...",
+                            text: $messageText
+                        )
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.md)
+                        .appGlassCapsule()
                         
                         Button {
                             let text = messageText
                             messageText = ""
-                            Task { await vm.sendMessage(taskId: conversation.id, text: text) }
+                            
+                            Task {
+                                await vm.sendMessage(
+                                    taskId: conversation.id,
+                                    text: text
+                                )
+                            }
                         } label: {
-                            Image(systemName: "paperplane.fill")
-                                .font(.callout)
-                                .bold()
-                                .foregroundStyle(messageText.isEmpty ? .secondary : Color.accentColor)
-                                .frame(width: 44, height: 44)
-                                .appGlassCapsule()
+                            Image(
+                                systemName:
+                                    "paperplane.fill"
+                            )
+                            .font(.callout)
+                            .bold()
+                            .foregroundStyle(
+                                messageText.isEmpty
+                                ? .secondary
+                                : Color.accentColor
+                            )
+                            .frame(
+                                width: 44,
+                                height: 44
+                            )
+                            .appGlassCapsule()
                         }
                         .disabled(messageText.isEmpty)
-                        .animation(.easeInOut(duration: 0.2), value: messageText.isEmpty)
+                        .animation(
+                            .easeInOut(duration: 0.2),
+                            value: messageText.isEmpty
+                        )
                     }
                     .padding()
                 }
                 
                     // MARK: Reaction Overlay
-                if let targetMessage = selectedMessageForReaction {
-                    Color.black.opacity(0.5)
-                        .ignoresSafeArea()
-                        .onTapGesture { dismissReactionOverlay() }
-                        .transition(.opacity)
+                
+                if let targetMessage =
+                    selectedMessageForReaction {
                     
-                    if let frame = messageFrames[targetMessage.id] {
-                        ReactionPickerView { emoji in
-                            Task { await vm.toggleReaction(taskId: conversation.id, messageId: targetMessage.id, emoji: emoji) }
+                    Color.black
+                        .opacity(0.5)
+                        .ignoresSafeArea()
+                        .onTapGesture {
                             dismissReactionOverlay()
                         }
-                        .position(x: outerGeometry.size.width / 2, y: max(frame.minY - 45, 120))
-                        .transition(.scale(scale: 0.8).combined(with: .opacity))
+                        .transition(.opacity)
+                    
+                    if let frame =
+                        messageFrames[targetMessage.id] {
+                        
+                        ReactionPickerView { emoji in
+                            Task {
+                                await vm.toggleReaction(
+                                    taskId: conversation.id,
+                                    messageId: targetMessage.id,
+                                    emoji: emoji
+                                )
+                            }
+                            
+                            dismissReactionOverlay()
+                        }
+                        .position(
+                            x: outerGeometry.size.width / 2,
+                            y: max(
+                                frame.minY - 45,
+                                120
+                            )
+                        )
+                        .transition(
+                            .scale(
+                                scale: 0.8
+                            )
+                            .combined(
+                                with: .opacity
+                            )
+                        )
                         .zIndex(10)
                     }
                 }
             }
         }
         .onAppear {
-            vm.listenToMessages(taskId: conversation.id)
-            Task { await vm.markAsRead(taskId: conversation.id) }
+            vm.listenToMessages(
+                taskId: conversation.id
+            )
+            
+            Task {
+                await vm.markAsRead(
+                    taskId: conversation.id
+                )
+            }
         }
         .onDisappear {
             vm.stopListeningToMessages()
@@ -323,17 +572,34 @@ struct ConversationDetailView: View {
         // MARK: Helper Methods
     
     private func dismissReactionOverlay() {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+        withAnimation(
+            .spring(
+                response: 0.3,
+                dampingFraction: 0.8
+            )
+        ) {
             selectedMessageForReaction = nil
         }
     }
     
         // MARK: Native Smooth Scroll
     
-    private func scrollToBottom(proxy: ScrollViewProxy) {
-        guard let lastMessage = vm.activeMessages.last else { return }
-        withAnimation(.smooth(duration: 0.3)) {
-            proxy.scrollTo(lastMessage.id, anchor: .bottom)
+    private func scrollToBottom(
+        proxy: ScrollViewProxy
+    ) {
+        guard let lastMessage =
+                vm.activeMessages.last
+        else {
+            return
+        }
+        
+        withAnimation(
+            .smooth(duration: 0.3)
+        ) {
+            proxy.scrollTo(
+                lastMessage.id,
+                anchor: .bottom
+            )
         }
     }
 }

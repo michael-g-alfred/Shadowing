@@ -619,17 +619,3 @@ final class TaskRepository: TaskRepositoryProtocol {
         return (message: response.message, type: response.type)
     }
 }
-
-/// Errors specific to task payment flows.
-enum PaymentError: LocalizedError {
-    /// The backend returned a `paymentUrl` string that could not be parsed
-    /// as a `URL`. Carries the raw, unparseable string for diagnostics.
-    case invalidPaymentURL(received: String)
-
-    var errorDescription: String? {
-        switch self {
-        case .invalidPaymentURL(let received):
-            return "The payment provider returned an invalid URL (\"\(received)\"). Please try again or contact support."
-        }
-    }
-}
