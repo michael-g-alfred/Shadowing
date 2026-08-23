@@ -3,10 +3,6 @@
 <plist version="1.0">
 <dict>
 	<key>BaseURL</key>
-	<string>http://192.168.1.6:9000/mg/shadowing</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Shadowing uses your location to show nearby tasks on the map and to attach a location when you post a task.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Shadowing needs access to your camera so you can take a photo for your profile picture.</string>
+	<string>http://localhost:9000/mg/shadowing</string>
 </dict>
 </plist>
