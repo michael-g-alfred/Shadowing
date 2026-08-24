@@ -134,7 +134,7 @@ private struct UserLoadedView: View {
                 
                 InfoRow(
                     title: "Rating",
-                    systemImage: "star",
+                    systemImage: "star.fill",
                     localizedValue: user.totalRatings > 0 ? "\(user.rating, specifier: "%.1f")" : "-"
                 )
             } header: {

@@ -29,18 +29,6 @@ struct ProfileView: View {
             }
             .task { await vm.loadProfile() }
             .refreshable { await vm.loadProfile() }
-            .confirmationDialog("Change Photo", isPresented: $vm.isPhotoSourceDialogPresented, titleVisibility: .visible) {
-                Button("Take Photo") {
-                    vm.isCameraPresented = true
-                }
-                Button("Choose from Library") {
-                    vm.isLibraryPickerPresented = true
-                }
-                Button("Choose File") {
-                    vm.isFilePickerPresented = true
-                }
-                Button("Cancel", role: .cancel) {}
-            }
             .photosPicker(
                 isPresented: Bindable(vm).isLibraryPickerPresented,
                 selection: Bindable(vm).selectedPhotoItem,
@@ -137,8 +125,16 @@ private struct ProfileToolbar: ToolbarContent {
                     }
                     .disabled(vm.user == nil)
                     
-                    Button {
-                        vm.isPhotoSourceDialogPresented = true
+                    Menu {
+                        Button("Take Photo", systemImage: "camera") {
+                            vm.isCameraPresented = true
+                        }
+                        Button("Choose from Library", systemImage: "photo") {
+                            vm.isLibraryPickerPresented = true
+                        }
+                        Button("Choose File", systemImage: "folder") {
+                            vm.isFilePickerPresented = true
+                        }
                     } label: {
                         Label("Change Photo", systemImage: "camera")
                     }
@@ -158,7 +154,6 @@ private struct ProfileToolbar: ToolbarContent {
         }
     }
 }
-
 
     // MARK: - Loaded
 
@@ -277,7 +272,7 @@ private struct ProfileLoadedView: View {
             if let createdAt = user.createdAt {
                 InfoRow(
                     title: "Member Since",
-                    systemImage: "calendar",
+                    systemImage: "calendar.and.person",
                     value: createdAt.formatted(.dateTime.day().month().year().locale(locale))
                 )
             }
@@ -310,7 +305,7 @@ private struct ProfileLoadedView: View {
             
             InfoRow(
                 title: "Rating",
-                systemImage: "star",
+                systemImage: "star.fill",
                 localizedValue: user.totalRatings > 0 ? "\(user.rating, specifier: "%.1f")" : "-"
             )
         } header: {
