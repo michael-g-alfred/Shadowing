@@ -14,10 +14,6 @@ struct TaskDTO: Codable {
     let budget: Double
     let originalBudget: Double?
     let currency: String
-    
-        // These arrive as plain name strings from the backend (JOIN ... AS name),
-        // e.g. priority = "urgent", status = "in_progress", serviceType = "plumbing".
-        // Resolve to label/color/icon via LookupStore, never decode into an enum here.
     let priority: String
     let serviceType: String
     let status: String

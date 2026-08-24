@@ -58,6 +58,27 @@ final class TaskDetailsViewModel {
         guard let task else { return false }
         return task.requester.id == currentUserId
     }
+
+        // MARK: - Applicants Sheet Bridge
+
+        /// Mirrors the shared requester view model's applicants-sheet state so
+        /// the details screen can refresh itself once the sheet closes (e.g.
+        /// after an executor is assigned or an applicant is declined). The
+        /// assign/decline actions run against the shared `requesterVM` inside
+        /// the sheet, so the details screen otherwise has no way to know its
+        /// task changed.
+    var isApplicantsSheetPresented: Bool {
+        requesterVM.showApplicantsSheet
+    }
+
+        /// Mirrors the executor apply flow — the "apply" sheet plus the
+        /// following fee-confirmation alert — so the details screen can refresh
+        /// once the whole flow finishes (applied or cancelled). Stays `true`
+        /// across the sheet→alert hand-off and only becomes `false` when the
+        /// flow has fully ended.
+    var isApplyFlowPresented: Bool {
+        executorVM.showAppliedSheet || executorVM.showFeeConfirmationAlert
+    }
     
         // MARK: - Available Actions
     

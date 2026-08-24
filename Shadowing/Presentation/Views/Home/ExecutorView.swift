@@ -53,7 +53,7 @@ private struct ExecutorTabHeader: View {
                         .foregroundStyle(vm.showFavoritesOnly ? .rating : .secondary)
                 }
                 .buttonStyle(.bordered)
-                .accessibilityLabel("Show favourites only")
+                .accessibilityLabel("Show favorites only")
             }
         }
         .padding(.horizontal)

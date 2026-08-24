@@ -47,6 +47,22 @@ struct TaskDetailsView: View {
             content
         }
         .task { await vm.loadDetails() }
+        .onChange(of: vm.isApplicantsSheetPresented) { _, isPresented in
+                // The applicants sheet just closed — an assign/decline may have
+                // changed this task (new executor, status, applicants count), so
+                // refresh the details we're showing.
+            if !isPresented {
+                Task { await vm.loadDetails() }
+            }
+        }
+        .onChange(of: vm.isApplyFlowPresented) { _, isPresented in
+                // The executor apply flow (apply sheet + fee alert) just ended —
+                // if the user applied, this task's `isApplicant`/actions changed,
+                // so refresh.
+            if !isPresented {
+                Task { await vm.loadDetails() }
+            }
+        }
         .toolbar {
             if !vm.availableActions.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {

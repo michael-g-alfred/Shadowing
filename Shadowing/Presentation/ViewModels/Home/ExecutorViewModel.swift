@@ -252,16 +252,21 @@ final class ExecutorViewModel {
                 )
             }
             
-            await notifyRequesterOfWithdrawal(
-                from: task
-            )
-            
+                // Delete the chat FIRST. `deleteChat` also purges this task's
+                // notifications for both participants, so if we sent the
+                // withdrawal notification before this it would be wiped out.
+                // Sending it afterwards guarantees it survives in every case
+                // (whether the task was still open or already in progress).
             if wasInProgress {
                 try? await chatRepo.deleteChat(
                     taskId: task.id
                 )
             }
-            
+
+            await notifyRequesterOfWithdrawal(
+                from: task
+            )
+
         } catch {
             executorAssignedTasks.rollbackRemoval(assignedRemoval)
             executorAvailableTasks.rollbackUpdate(availableUpdate)
