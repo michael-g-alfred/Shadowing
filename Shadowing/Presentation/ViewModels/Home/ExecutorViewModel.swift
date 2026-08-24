@@ -540,6 +540,8 @@ final class ExecutorViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+
+        await checkPendingRatings()
     }
     
     func loadMoreAssignedTasksIfNeeded() async {
@@ -613,9 +615,7 @@ final class ExecutorViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
-        
-            // Piggyback pending-rating check whenever completed
-            // tasks are loaded or reloaded.
+
         await checkPendingRatings()
     }
     

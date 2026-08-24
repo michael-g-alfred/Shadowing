@@ -202,7 +202,7 @@ private struct ProfileLoadedView: View {
                 Section {
                     Text(bio).bold()
                 } header: {
-                    Label("About", systemImage: "person.text.rectangle")
+                    Label("About", systemImage: "person.text.rectangle.fill")
                 }
                 .listRowBackground(listRowColor)
             }
@@ -211,12 +211,14 @@ private struct ProfileLoadedView: View {
                 Section {
                     SpecialtiesFlow(specialties: user.specialties)
                 } header: {
-                    Label("Specialties", systemImage: "medal.star")
+                    Label("Specialties", systemImage: "medal.star.fill")
                 }
                 .listRowBackground(listRowColor)
             }
             
             accountSection(user: user, statusLabel: statusLabel, statusColor: statusColor)
+            
+            statusSection(user: user)
         }
         .scrollContentBackground(.hidden)
     }
@@ -272,6 +274,24 @@ private struct ProfileLoadedView: View {
                 value: phoneDisplayValue(for: user)
             )
             
+            if let createdAt = user.createdAt {
+                InfoRow(
+                    title: "Member Since",
+                    systemImage: "calendar",
+                    value: createdAt.formatted(.dateTime.day().month().year().locale(locale))
+                )
+            }
+            
+            ProfileIdRow(user: user, vm: vm)
+        } header: {
+            Label("Account", systemImage: "person.fill")
+        }
+        .listRowBackground(listRowColor)
+    }
+    
+    private func statusSection(user: UserModel) -> some View {
+        
+        Section {
             InfoRow(
                 title: "Completed Tasks",
                 systemImage: "checklist",
@@ -290,21 +310,11 @@ private struct ProfileLoadedView: View {
             
             InfoRow(
                 title: "Rating",
-                systemImage: "star.fill",
+                systemImage: "star",
                 localizedValue: user.totalRatings > 0 ? "\(user.rating, specifier: "%.1f")" : "-"
             )
-            
-            if let createdAt = user.createdAt {
-                InfoRow(
-                    title: "Member Since",
-                    systemImage: "calendar",
-                    value: createdAt.formatted(.dateTime.day().month().year().locale(locale))
-                )
-            }
-            
-            ProfileIdRow(user: user, vm: vm)
         } header: {
-            Label("Account", systemImage: "person")
+            Label("Stats", systemImage: "chart.bar.xaxis")
         }
         .listRowBackground(listRowColor)
     }

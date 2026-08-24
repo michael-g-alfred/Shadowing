@@ -92,7 +92,7 @@ private struct UserLoadedView: View {
                         .foregroundStyle(.orange)
                         .font(.footnote).bold()
                 } header: {
-                    Label("Error Message", systemImage: "exclamationmark.triangle")
+                    Label("Error Message", systemImage: "exclamationmark.triangle.fill")
                 }
                 .listRowBackground(listErrorRowColor)
             }
@@ -101,7 +101,7 @@ private struct UserLoadedView: View {
                 Section {
                     Text(bio).bold()
                 } header: {
-                    Label("About", systemImage: "person.text.rectangle")
+                    Label("About", systemImage: "person.text.rectangle.fill")
                 }
                 .listRowBackground(listRowColor)
             }
@@ -110,7 +110,7 @@ private struct UserLoadedView: View {
                 Section {
                     SpecialtiesFlow(specialties: user.specialties)
                 } header: {
-                    Label("Specialties", systemImage: "medal.star")
+                    Label("Specialties", systemImage: "medal.star.fill")
                 }
                 .listRowBackground(listRowColor)
             }
@@ -138,7 +138,7 @@ private struct UserLoadedView: View {
                     localizedValue: user.totalRatings > 0 ? "\(user.rating, specifier: "%.1f")" : "-"
                 )
             } header: {
-                Label("Stats", systemImage: "chart.line.uptrend.xyaxis")
+                Label("Stats", systemImage: "chart.bar.xaxis")
             }
             .listRowBackground(listRowColor)
         }

@@ -402,6 +402,8 @@ final class RequesterViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+
+        await checkPendingRatings()
     }
     
     func loadMorePublishedTasksIfNeeded() async {
@@ -476,9 +478,7 @@ final class RequesterViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
-        
-            // Piggyback pending-rating check whenever completed
-            // tasks are loaded or reloaded.
+
         await checkPendingRatings()
     }
     
