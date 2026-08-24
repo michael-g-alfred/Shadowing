@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import MGNetworkingKit
+import FirebaseAuth
 
 /// Owns authentication state and session persistence for the app.
 ///
@@ -77,6 +78,7 @@ final class AuthRepository: AuthRepositoryProtocol {
         let response: APIResponseDTO<AuthResponse> = try await network.request(config)
 
         persist(response.data)
+        await bridgeFirebaseAuth(response.data.firebaseToken)
     }
 
     /// Creates a new account and signs in.
@@ -125,6 +127,7 @@ final class AuthRepository: AuthRepositoryProtocol {
         let response: APIResponseDTO<AuthResponse> = try await network.request(config)
 
         persist(response.data)
+        await bridgeFirebaseAuth(response.data.firebaseToken)
     }
 
     /// Signs the current user out.
@@ -138,6 +141,7 @@ final class AuthRepository: AuthRepositoryProtocol {
     func signOut() async throws {
         guard let refresh = keychainService.refreshToken else {
             clearSession()
+            signOutFirebase()
             return
         }
 
@@ -146,6 +150,7 @@ final class AuthRepository: AuthRepositoryProtocol {
 
         try? await network.requestWithoutResponse(config)
         clearSession()
+        signOutFirebase()
 
         // Decoupled signal so other repositories (e.g. UserRepository's
         // summary cache) can invalidate any per-session cached data without
@@ -226,6 +231,40 @@ final class AuthRepository: AuthRepositoryProtocol {
         currentUser = response.data.user
 
         saveUserToDisk(response.data.user)
+
+        // Re-establish the Firebase session on token refresh (e.g. after an
+        // app relaunch where Firebase's own persisted session was lost).
+        await bridgeFirebaseAuth(response.data.firebaseToken)
+    }
+
+    // MARK: - Firebase Auth Bridge
+
+    /// Signs into Firebase Auth using a backend-minted custom token, bridging
+    /// our Node/Postgres session into a Firebase identity so Firestore rules
+    /// can authorize chat/notification access by `request.auth.uid`.
+    ///
+    /// Best-effort: a failure here never blocks the app's own (backend) session
+    /// — it only means Firestore-backed features stay unavailable until the
+    /// next successful bridge.
+    ///
+    /// - Parameter token: The custom token from the auth response, or `nil` if
+    ///   the backend didn't send one.
+    private func bridgeFirebaseAuth(_ token: String?) async {
+        guard let token else { return }
+        do {
+            try await Auth.auth().signIn(withCustomToken: token)
+        } catch {
+            DebugLogger.log("⚠️ Firebase custom-token sign-in failed: \(error)")
+        }
+    }
+
+    /// Signs out of Firebase Auth. Best-effort; failures are logged only.
+    private func signOutFirebase() {
+        do {
+            try Auth.auth().signOut()
+        } catch {
+            DebugLogger.log("⚠️ Firebase sign-out failed: \(error)")
+        }
     }
 
     // MARK: - Persistence
