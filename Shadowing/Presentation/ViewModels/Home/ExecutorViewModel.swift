@@ -28,6 +28,12 @@ final class ExecutorViewModel {
         }
     }
     
+        /// Controls presentation of the search bar
+    var isSearchPresented = false
+    
+        /// Optional case-insensitive title/description filter for available tasks
+    var searchText = ""
+    
     private var assignedTasksCursor: String?
     private var assignedTasksHasMore = true
     private var assignedTasksGeneration = 0
@@ -49,7 +55,6 @@ final class ExecutorViewModel {
     
         // MARK: - Fee Confirmation Alert
     
-        /// Percentage withheld from the displayed budget before payout.
     private let platformFeeRate: Double = 0.10
     
     var showFeeConfirmationAlert = false
@@ -57,12 +62,10 @@ final class ExecutorViewModel {
     private var pendingApplyTask: TaskModel?
     private var pendingApplyBudget: Double?
     
-        /// The gross amount currently being confirmed.
     var feeConfirmationGrossAmount: Double {
         pendingApplyBudget ?? pendingApplyTask?.budget ?? 0
     }
     
-        /// The net amount the executor will receive after the platform fee.
     var feeConfirmationNetAmount: Double {
         feeConfirmationGrossAmount * (1 - platformFeeRate)
     }
@@ -123,11 +126,6 @@ final class ExecutorViewModel {
         showAppliedSheet = true
     }
     
-        /// Call this from the Apply button instead of
-        /// `acceptTask(_:proposedBudget:)` directly.
-        ///
-        /// Shows a confirmation alert with the net payout after
-        /// the platform fee.
     func requestApply(
         to task: TaskModel,
         proposedBudget: Double? = nil
@@ -135,12 +133,10 @@ final class ExecutorViewModel {
         pendingApplyTask = task
         pendingApplyBudget = proposedBudget
         
-            // Close the sheet before presenting the alert.
         showAppliedSheet = false
         showFeeConfirmationAlert = true
     }
     
-        /// Called when the user confirms the fee alert.
     func confirmApply() async {
         guard let task = pendingApplyTask else { return }
         
@@ -156,7 +152,6 @@ final class ExecutorViewModel {
         )
     }
     
-        /// Called when the user cancels the fee alert.
     func cancelApply() {
         showFeeConfirmationAlert = false
         pendingApplyTask = nil
@@ -165,13 +160,6 @@ final class ExecutorViewModel {
     
         // MARK: - Task Actions
     
-        /// Applies to a task.
-        ///
-        /// IMPORTANT:
-        /// The API action does NOT depend on the task being present
-        /// in `executorAvailableTasks`.
-        ///
-        /// The list is used only for optimistic UI and rollback.
     func acceptTask(
         _ task: TaskModel,
         proposedBudget: Double? = nil
@@ -182,7 +170,7 @@ final class ExecutorViewModel {
         let availableUpdate = executorAvailableTasks.updateTask(id: task.id) {
             $0.isApplicant = true
         }
-
+        
         showAppliedSheet = false
         selectedTaskForApply = nil
         
@@ -203,20 +191,13 @@ final class ExecutorViewModel {
             
         } catch {
             executorAvailableTasks.rollbackUpdate(availableUpdate)
-
+            
             AlertCenter.shared.showError(
                 error.localizedDescription
             )
         }
     }
-
-        /// Withdraws from a task.
-        ///
-        /// IMPORTANT:
-        /// The API action does NOT depend on the task being present
-        /// in any list.
-        ///
-        /// Lists are used only for optimistic UI and rollback.
+    
     func withdrawFromTask(_ task: TaskModel) async {
         let wasInProgress = (
             task.status == TaskStatus.inProgress.rawValue
@@ -224,7 +205,7 @@ final class ExecutorViewModel {
         
         let assignedRemoval: (index: Int, task: TaskModel)?
         let availableUpdate: (index: Int, task: TaskModel)?
-
+        
         if wasInProgress {
             assignedRemoval = executorAssignedTasks.removeTask(id: task.id)
             availableUpdate = nil
@@ -252,42 +233,26 @@ final class ExecutorViewModel {
                 )
             }
             
-                // Delete the chat FIRST. `deleteChat` also purges this task's
-                // notifications for both participants, so if we sent the
-                // withdrawal notification before this it would be wiped out.
-                // Sending it afterwards guarantees it survives in every case
-                // (whether the task was still open or already in progress).
             if wasInProgress {
                 try? await chatRepo.deleteChat(
                     taskId: task.id
                 )
             }
-
+            
             await notifyRequesterOfWithdrawal(
                 from: task
             )
-
+            
         } catch {
             executorAssignedTasks.rollbackRemoval(assignedRemoval)
             executorAvailableTasks.rollbackUpdate(availableUpdate)
-
+            
             AlertCenter.shared.showError(
                 error.localizedDescription
             )
         }
     }
-
-        /// Marks a task as done.
-        ///
-        /// IMPORTANT:
-        /// This method does NOT require the task to exist
-        /// inside `executorAssignedTasks`.
-        ///
-        /// This allows it to work when called from:
-        /// - TaskDetailsView
-        /// - Notification
-        /// - Deep link
-        /// - Any other screen
+    
     func markTaskDone(_ task: TaskModel) async {
         
         let assignedUpdate = executorAssignedTasks.updateTask(id: task.id) {
@@ -295,8 +260,6 @@ final class ExecutorViewModel {
         }
         
         do {
-                // API ALWAYS runs.
-                // It does not depend on executorAssignedTasks.
             let result = try await taskRepo.markTaskDone(
                 id: task.id
             )
@@ -312,23 +275,18 @@ final class ExecutorViewModel {
             
         } catch {
             executorAssignedTasks.rollbackUpdate(assignedUpdate)
-
+            
             AlertCenter.shared.showError(
                 error.localizedDescription
             )
         }
     }
-
+    
         // MARK: - Favorites
     
-        /// Toggles favorite state.
-        ///
-        /// The API action does NOT depend on the task being present
-        /// in `executorAvailableTasks`.
     func toggleFavorite(_ task: TaskModel) async {
         let newValue = !task.isFavorite
-
-            // Local optimistic update if the task exists in the list.
+        
         setFavorite(
             newValue,
             forTaskId: task.id
@@ -350,8 +308,6 @@ final class ExecutorViewModel {
                 )
             }
             
-                // If favorites-only mode is active,
-                // remove the unfavorited task from the local list.
             if showFavoritesOnly && !newValue {
                 executorAvailableTasks.removeAll {
                     $0.id == task.id
@@ -364,18 +320,17 @@ final class ExecutorViewModel {
             )
             
         } catch {
-                // Rollback local state.
             setFavorite(
                 !newValue,
                 forTaskId: task.id
             )
-
+            
             AlertCenter.shared.showError(
                 error.localizedDescription
             )
         }
     }
-
+    
     private func setFavorite(
         _ isFavorite: Bool,
         forTaskId taskId: String
@@ -412,15 +367,9 @@ final class ExecutorViewModel {
             }
             
         } catch {
-                // Silent failure.
-                // This is a background catch-up check.
         }
     }
     
-        /// Called when the rating sheet for this task is dismissed.
-        ///
-        /// If submitted, remove it from the queue.
-        /// If not submitted, leave it so it can appear again later.
     func ratingSheetDismissed(
         for taskId: String,
         wasSubmitted: Bool
@@ -452,7 +401,8 @@ final class ExecutorViewModel {
             let result = try await taskRepo.getExecutorAvailableTasks(
                 cursor: nil,
                 limit: nil,
-                favoritesOnly: showFavoritesOnly
+                favoritesOnly: showFavoritesOnly,
+                search: searchText.isEmpty ? nil : searchText
             )
             
             guard myGeneration == availableTasksGeneration else {
@@ -488,7 +438,8 @@ final class ExecutorViewModel {
             let result = try await taskRepo.getExecutorAvailableTasks(
                 cursor: availableTasksCursor,
                 limit: nil,
-                favoritesOnly: showFavoritesOnly
+                favoritesOnly: showFavoritesOnly,
+                search: searchText.isEmpty ? nil : searchText
             )
             
             guard myGeneration == availableTasksGeneration else {
@@ -540,7 +491,7 @@ final class ExecutorViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
-
+        
         await checkPendingRatings()
     }
     
@@ -615,7 +566,7 @@ final class ExecutorViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
-
+        
         await checkPendingRatings()
     }
     
@@ -665,9 +616,6 @@ final class ExecutorViewModel {
     
         // MARK: - Notifications
     
-        /// Notification failures never block or roll back the
-        /// task action that triggered them.
-    
     private var currentUserDisplayName: String {
         authRepo.currentUser?.displayName ?? "Someone"
     }
@@ -710,9 +658,6 @@ final class ExecutorViewModel {
     
         // MARK: - Helpers
     
-        /// Returns whether another page can be loaded.
-        ///
-        /// This helper is independent of the actual task lists.
     private func shouldLoadMore(
         hasMore: Bool,
         isLoadingMore: Bool

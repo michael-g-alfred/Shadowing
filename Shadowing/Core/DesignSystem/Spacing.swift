@@ -1,6 +1,5 @@
 import SwiftUI
 
-// MARK: - Spacing System (Apple HIG - 4pt grid)
 enum Spacing {
     static let xxs: CGFloat = 2
     static let xs:  CGFloat = 4

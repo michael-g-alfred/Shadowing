@@ -76,15 +76,16 @@ final class TaskRepository: TaskRepositoryProtocol {
     ///   - cursor: An opaque pagination cursor from a previous call, or
     ///     `nil` to fetch the first page.
     ///   - limit: Maximum number of tasks to return.
+    ///   - search: An optional case-insensitive title/description search term.
     /// - Returns: A ``PaginatedTasksResult`` with the tasks, a `hasMore`
     ///   flag, and the next cursor.
     /// - Throws: A networking error, or ``AuthError/noSession``.
-    func getAllTasks(cursor: String?, limit: Int?) async throws -> PaginatedTasksResult {
+    func getAllTasks(cursor: String?, limit: Int?, search: String? = nil) async throws -> PaginatedTasksResult {
         DebugLogger.log("🚀 🟢 TaskRepository -> getAllTasks - Started")
         defer { DebugLogger.log("🚀 🏁 TaskRepository -> getAllTasks - Ended") }
 
         let token = try await getValidToken()
-        let config = APIConfig.allTasks(cursor: cursor, limit: limit, accessToken: token)
+        let config = APIConfig.allTasks(cursor: cursor, limit: limit, search: search, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
         return Self.makePaginatedResult(from: response.data)
@@ -259,14 +260,15 @@ final class TaskRepository: TaskRepositoryProtocol {
     ///   - cursor: An opaque pagination cursor, or `nil` for the first page.
     ///   - limit: Maximum number of tasks to return.
     ///   - favoritesOnly: If `true`, restricts results to favorited tasks.
+    ///   - search: An optional case-insensitive title/description search term.
     /// - Returns: A ``PaginatedTasksResult``.
     /// - Throws: A networking error, or ``AuthError/noSession``.
-    func getExecutorAvailableTasks(cursor: String?, limit: Int?, favoritesOnly: Bool = false) async throws -> PaginatedTasksResult {
+    func getExecutorAvailableTasks(cursor: String?, limit: Int?, favoritesOnly: Bool = false, search: String? = nil) async throws -> PaginatedTasksResult {
         DebugLogger.log("📋 🟢 TaskRepository -> getExecutorAvailableTasks - Started")
         defer { DebugLogger.log("📋 🏁 TaskRepository -> getExecutorAvailableTasks - Ended") }
 
         let token = try await getValidToken()
-        let config = APIConfig.executorAvailableTasks(cursor: cursor, limit: limit, favoritesOnly: favoritesOnly, accessToken: token)
+        let config = APIConfig.executorAvailableTasks(cursor: cursor, limit: limit, favoritesOnly: favoritesOnly, search: search, accessToken: token)
         let response: APIResponseDTO<TaskListResponseDTO> = try await network.request(config)
 
         return Self.makePaginatedResult(from: response.data)

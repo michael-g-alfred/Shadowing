@@ -84,19 +84,19 @@ enum EmptyState: CaseIterable {
     var systemImage: String {
         switch self {
             case .noExecutorCompletedTasks, .noRequesterCompletedTasks:
-                return "checklist.unchecked"
+                return "flag.slash"
             case .noExecutorFavoriteTasks:
                 return "star.slash"
             case .noFilteredRequesterTasks:
                 return "line.3.horizontal.decrease.circle"
             case .noChats:
-                return "bubble.left.and.text.bubble.right"
+                return "bubble.left.and.exclamationmark.bubble.right"
             case .noApplicantsYet:
                 return "person.slash"
             case .noNotifications:
                 return "bell.slash"
             case .noProfile:
-                return "person.crop.circle"
+                return "person.slash"
             case .noRatings:
                 return "star.slash"
             case .noLocationAccess:

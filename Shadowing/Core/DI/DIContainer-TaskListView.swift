@@ -1,18 +1,18 @@
 import Foundation
 import SwiftUI
 
-// MARK: - Shared Swipe Action Rendering
+    // MARK: - Shared Swipe Action Rendering
 
-/// Builds the swipe-action buttons for a list row from a set of ``TaskDetailAction``s.
-///
-/// Shared by both the requester and executor task lists so that swipe actions are rendered
-/// consistently (title, icon, role, and tint color) regardless of which role's actions are
-/// being shown.
-///
-/// - Parameters:
-///   - actions: The ordered set of actions to render as swipe buttons.
-///   - perform: Called with the tapped action so the caller can route it to the appropriate
-///     view model.
+    /// Builds the swipe-action buttons for a list row from a set of ``TaskDetailAction``s.
+    ///
+    /// Shared by both the requester and executor task lists so that swipe actions are rendered
+    /// consistently (title, icon, role, and tint color) regardless of which role's actions are
+    /// being shown.
+    ///
+    /// - Parameters:
+    ///   - actions: The ordered set of actions to render as swipe buttons.
+    ///   - perform: Called with the tapped action so the caller can route it to the appropriate
+    ///     view model.
 @ViewBuilder
 private func swipeButtons(for actions: [TaskDetailAction], perform: @escaping (TaskDetailAction) -> Void) -> some View {
     ForEach(actions) { action in
@@ -25,13 +25,13 @@ private func swipeButtons(for actions: [TaskDetailAction], perform: @escaping (T
     }
 }
 
-/// Routes a swipe action triggered from a requester-owned task to the corresponding
-/// ``RequesterViewModel`` method.
-///
-/// - Parameters:
-///   - action: The action the user selected.
-///   - task: The task the action applies to.
-///   - vm: The requester view model that owns the task's lifecycle.
+    /// Routes a swipe action triggered from a requester-owned task to the corresponding
+    /// ``RequesterViewModel`` method.
+    ///
+    /// - Parameters:
+    ///   - action: The action the user selected.
+    ///   - task: The task the action applies to.
+    ///   - vm: The requester view model that owns the task's lifecycle.
 func requesterSwipePerform(_ action: TaskDetailAction, task: TaskModel, vm: RequesterViewModel) async {
     switch action {
         case .applicants:
@@ -51,13 +51,13 @@ func requesterSwipePerform(_ action: TaskDetailAction, task: TaskModel, vm: Requ
     }
 }
 
-/// Routes a swipe action triggered from an executor-owned task to the corresponding
-/// ``ExecutorViewModel`` method.
-///
-/// - Parameters:
-///   - action: The action the user selected.
-///   - task: The task the action applies to.
-///   - vm: The executor view model that owns the task's lifecycle.
+    /// Routes a swipe action triggered from an executor-owned task to the corresponding
+    /// ``ExecutorViewModel`` method.
+    ///
+    /// - Parameters:
+    ///   - action: The action the user selected.
+    ///   - task: The task the action applies to.
+    ///   - vm: The executor view model that owns the task's lifecycle.
 func executorSwipePerform(_ action: TaskDetailAction, task: TaskModel, vm: ExecutorViewModel) async {
     switch action {
         case .accept:
@@ -73,15 +73,15 @@ func executorSwipePerform(_ action: TaskDetailAction, task: TaskModel, vm: Execu
     }
 }
 
-/// Factory methods that build the various ``TaskListView`` instances used across the app,
-/// pre-wired with the correct data source, loading/pagination hooks, empty state, and
-/// role-appropriate swipe actions from the shared `requesterViewModel` / `executorViewModel`.
+    /// Factory methods that build the various ``TaskListView`` instances used across the app,
+    /// pre-wired with the correct data source, loading/pagination hooks, empty state, and
+    /// role-appropriate swipe actions from the shared `requesterViewModel` / `executorViewModel`.
 extension DIContainer {
-
-    // MARK: - Requester Views
-
-    /// The requester's list of tasks they have published, with leading/trailing swipe actions
-    /// for managing applicants, chats, publishing, canceling, and deleting.
+    
+        // MARK: - Requester Views
+    
+        /// The requester's list of tasks they have published, with leading/trailing swipe actions
+        /// for managing applicants, chats, publishing, canceling, and deleting.
     func makeRequesterPublishedTasksView() -> some View {
         TaskListView(
             tasks: requesterViewModel.requesterPublishedTasks,
@@ -97,7 +97,7 @@ extension DIContainer {
                 swipeButtons(for: TaskDetailAction.requesterActions(for: task).leading) { action in
                     Task { await requesterSwipePerform(action, task: task, vm: requesterViewModel)}
                 }
-
+                
             },
             trailingSwipe: { [requesterViewModel] task in
                 swipeButtons(for: TaskDetailAction.requesterActions(for: task).trailing) { action in
@@ -106,8 +106,8 @@ extension DIContainer {
             }
         )
     }
-
-    /// The requester's list of tasks that have been completed. Read-only — no swipe actions.
+    
+        /// The requester's list of tasks that have been completed. Read-only — no swipe actions.
     func makeRequesterCompletedTasksView() -> some View {
         TaskListView(
             tasks: requesterViewModel.requesterCompletedTasks,
@@ -120,11 +120,11 @@ extension DIContainer {
             onLoadMoreIfNeeded: { [requesterViewModel] in await requesterViewModel.loadMoreCompletedTasksIfNeeded() }
         )
     }
-
-    // MARK: - Executor Views
-
-    /// The executor's list of tasks available to apply for, with favoriting and a trailing
-    /// swipe action to apply.
+    
+        // MARK: - Executor Views
+    
+        /// The executor's list of tasks available to apply for, with favoriting and a trailing
+        /// swipe action to apply.
     func makeExecutorAvailableTasksView() -> some View {
         TaskListView(
             tasks: executorViewModel.executorAvailableTasks,
@@ -141,6 +141,15 @@ extension DIContainer {
             onToggleFavorite: { [executorViewModel] task in
                 Task { await executorViewModel.toggleFavorite(task) }
             },
+            searchText: Binding(
+                get: { [executorViewModel] in executorViewModel.searchText },
+                set: { [executorViewModel] in executorViewModel.searchText = $0 }
+            ),
+            isSearchPresented: Binding(
+                get: { [executorViewModel] in executorViewModel.isSearchPresented },
+                set: { [executorViewModel] in executorViewModel.isSearchPresented = $0 }
+            ),
+            searchPrompt: "Search available tasks",
             trailingSwipe: { [executorViewModel] task in
                 swipeButtons(for: TaskDetailAction.executorActions(for: task).trailing) { action in
                     Task { await executorSwipePerform(action, task: task, vm: executorViewModel) }
@@ -148,9 +157,9 @@ extension DIContainer {
             }
         )
     }
-
-    /// The executor's list of tasks currently assigned to them, with leading/trailing swipe
-    /// actions to withdraw, mark done, or open the chat.
+    
+        /// The executor's list of tasks currently assigned to them, with leading/trailing swipe
+        /// actions to withdraw, mark done, or open the chat.
     func makeExecutorAssignedTasksView() -> some View {
         TaskListView(
             tasks: executorViewModel.executorAssignedTasks,
@@ -173,8 +182,8 @@ extension DIContainer {
             }
         )
     }
-
-    /// The executor's list of tasks that have been completed. Read-only — no swipe actions.
+    
+        /// The executor's list of tasks that have been completed. Read-only — no swipe actions.
     func makeExecutorCompletedTasksView() -> some View {
         TaskListView(
             tasks: executorViewModel.executorCompletedTasks,

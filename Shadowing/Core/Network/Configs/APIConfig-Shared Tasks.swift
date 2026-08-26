@@ -11,17 +11,20 @@ extension APIConfig {
     /// - Parameters:
     ///   - cursor: The pagination cursor, or `nil` for the first page.
     ///   - limit: The maximum number of items to return, or `nil` for the server default.
+    ///   - search: An optional case-insensitive title/description search term.
     ///   - accessToken: The requesting user's bearer token.
     /// - Returns: A configured, authenticated `GET` request.
     static func allTasks(
         cursor: String? = nil,
         limit: Int? = nil,
+        search: String? = nil,
         accessToken: String
     ) -> MGRequestConfig {
         paginatedGetRequest(
             path: APIEndpoints.allTasksPath,
             cursor: cursor,
             limit: limit,
+            additionalItems: [("search", search?.isEmpty == false ? search : nil)],
             accessToken: accessToken
         )
     }

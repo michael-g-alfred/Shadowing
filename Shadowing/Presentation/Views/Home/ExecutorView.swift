@@ -1,34 +1,37 @@
 import SwiftUI
 
-// MARK: - Container
+    // MARK: - Container
 
 struct ExecutorView: View {
-
-    // MARK: Environment
+    
+        // MARK: Environment
     @Environment(DIContainer.self) private var container
-
-    // MARK: State
+    
+        // MARK: State
     @State private var vm: ExecutorViewModel
-
-    // MARK: Init
+    
+        // MARK: Init
     init(vm: ExecutorViewModel) {
         _vm = State(initialValue: vm)
     }
-
-    // MARK: Body
+    
+        // MARK: Body
     var body: some View {
         VStack(spacing: Spacing.lg) {
             ExecutorTabHeader(vm: vm)
             ExecutorTabContent(container: container, selectedTab: vm.selectedTab)
         }
+        .toolbar {
+            ExecutorToolbar(vm: vm)
+        }
     }
 }
 
-// MARK: - Header (picker + favorites toggle)
+    // MARK: - Header (picker + favorites toggle)
 
 private struct ExecutorTabHeader: View {
     let vm: ExecutorViewModel
-
+    
     var body: some View {
         HStack(spacing: Spacing.sm) {
             Picker(
@@ -44,7 +47,7 @@ private struct ExecutorTabHeader: View {
                 }
             }
             .pickerStyle(.segmented)
-
+            
             if vm.selectedTab == .availableTasks {
                 Button {
                     vm.showFavoritesOnly.toggle()
@@ -61,12 +64,12 @@ private struct ExecutorTabHeader: View {
     }
 }
 
-// MARK: - Content
+    // MARK: - Content
 
 private struct ExecutorTabContent: View {
     let container: DIContainer
     let selectedTab: ExecutorTab
-
+    
     var body: some View {
         Group {
             switch selectedTab {
@@ -79,5 +82,23 @@ private struct ExecutorTabContent: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+    // MARK: - Toolbar
+
+private struct ExecutorToolbar: ToolbarContent {
+    @Bindable var vm: ExecutorViewModel
+    
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            if vm.selectedTab == .availableTasks {
+                Button {
+                    vm.isSearchPresented.toggle()
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+            }
+        }
     }
 }

@@ -13,6 +13,7 @@ extension APIConfig {
     ///   - lat: The latitude to bias results toward, or `nil` to omit location filtering.
     ///   - lng: The longitude to bias results toward, or `nil` to omit location filtering.
     ///   - favoritesOnly: Whether to only return tasks the executor has favorited. Defaults to `false`.
+    ///   - search: An optional case-insensitive title/description search term.
     ///   - accessToken: The requesting executor's bearer token.
     /// - Returns: A configured, authenticated `GET` request.
     static func executorAvailableTasks(
@@ -21,6 +22,7 @@ extension APIConfig {
         lat: Double? = nil,
         lng: Double? = nil,
         favoritesOnly: Bool = false,
+        search: String? = nil,
         accessToken: String
     ) -> MGRequestConfig {
         paginatedGetRequest(
@@ -30,7 +32,8 @@ extension APIConfig {
             additionalItems: [
                 ("lat", lat.map { "\($0)" }),
                 ("lng", lng.map { "\($0)" }),
-                ("favoritesOnly", favoritesOnly ? "true" : nil)
+                ("favoritesOnly", favoritesOnly ? "true" : nil),
+                ("search", search?.isEmpty == false ? search : nil)
             ],
             accessToken: accessToken
         )

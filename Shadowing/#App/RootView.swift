@@ -4,12 +4,8 @@ import SwiftUI
 
     /// The top-level view of the application.
     ///
-    /// `RootView` is responsible for:
-    /// - Routing between major application states.
-    /// - Reading shared dependencies and ViewModels from `DIContainer`.
-    ///
-    /// Global sheets/alerts for the main flow are attached via
-    /// `.withGlobalSheets()`, defined in `GlobalSheetsModifier.swift`.
+    /// `RootView` is responsible for routing between major application states
+    /// and reading shared dependencies from `DIContainer`.
 struct RootView: View {
     
         // MARK: Environment
@@ -21,40 +17,14 @@ struct RootView: View {
     var body: some View {
         Group {
             switch container.appState {
-                    
-                        // MARK: Setup
-                    
-                case .setup:
-                    container.makeSetupFlowView()
-                    
-                        // MARK: Onboarding
-                    
-                case .onboarding:
-                    container.makeOnboardingView()
-                    
-                        // MARK: Authentication
-                    
-                case .auth:
-                    AuthCoordinatorView()
-                    
-                        // MARK: Main
-                    
-                case .main:
-                    mainContent
-                    
-                        // MARK: Admin
-                    
-                case .admin:
-                    container.makeAdminDashboardView()
+                case .setup: container.makeSetupFlowView()           // MARK: Setup
+                case .onboarding: container.makeOnboardingView()     // MARK: Onboarding
+                case .auth: AuthCoordinatorView()                    // MARK: Authentication
+                case .main: mainContent                              // MARK: Main
+                case .admin: container.makeAdminDashboardView()      // MARK: Admin
             }
         }
-        .animation(
-            .spring(
-                response: 0.35,
-                dampingFraction: 0.75
-            ),
-            value: container.appState
-        )
+        .animation(.spring(response: 0.35, dampingFraction: 0.75), value: container.appState)
         .responseAlert(
             isPresented: Bindable(AlertCenter.shared).isPresented,
             type: AlertCenter.shared.type,
@@ -64,11 +34,9 @@ struct RootView: View {
     
         // MARK: Main Content
     
-        /// Main application content. All global sheets/alerts for the
-        /// requester and executor flows are attached via `.withGlobalSheets()`.
+        /// Main application content with attached global sheets and location requirements.
     @ViewBuilder
     private var mainContent: some View {
-        
         container.makeMainView()
             .requireLocation(container.locationService)
             .withGlobalSheets()
