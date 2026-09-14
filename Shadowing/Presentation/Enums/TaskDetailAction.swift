@@ -6,74 +6,91 @@ enum TaskSwipeEdge {
 }
 
 enum TaskDetailAction: Identifiable {
-    case applicants
-    case confirmCompletion
-    case chats
-    case delete
     case cancel
     case publish
-    case accept
+    case delete
+    case applicants
+    case pay
+    case chats
+    case apply
     case withdraw
     case markDone
+    case confirmCompletion
     
     var id: Self { self }
     
     var title: LocalizedStringResource {
         switch self {
-            case .applicants: return "Applicants"
-            case .confirmCompletion: return "Confirm Completion"
-            case .chats: return "Chats"
-            case .delete: return "Delete"
             case .cancel: return "Cancel"
             case .publish: return "Publish"
-            case .accept: return "Accept"
+            case .delete: return "Delete"
+            case .applicants: return "Applicants"
+            case .pay: return "Pay Now"
+            case .chats: return "Chats"
+            case .apply: return "Apply"
             case .withdraw: return "Withdraw"
             case .markDone: return "Mark as Done"
+            case .confirmCompletion: return "Confirm Completion"
         }
     }
     
     var systemImage: String {
         switch self {
-            case .applicants: return "person.3.fill"
-            case .confirmCompletion: return "checkmark.seal"
-            case .chats: return "bubble.left.and.bubble.right.fill"
-            case .delete: return "trash"
             case .cancel: return "xmark.circle"
             case .publish: return "square.and.arrow.up.badge.checkmark"
-            case .accept: return "checkmark.circle"
+            case .delete: return "trash"
+            case .applicants: return "person.3.fill"
+            case .pay: return "creditcard.fill"
+            case .chats: return "bubble.left.and.bubble.right.fill"
+            case .apply: return "checkmark.circle"
             case .withdraw: return "arrow.uturn.backward"
             case .markDone: return "checkmark.seal"
+            case .confirmCompletion: return "checkmark.seal"
         }
     }
     
     var color: Color {
         switch self {
-            case .applicants: return .orange
-            case .confirmCompletion: return .green
-            case .chats: return .blue
-            case .delete: return .red
             case .cancel: return .yellow
             case .publish: return .blue
-            case .accept: return .green
+            case .delete: return .red
+            case .applicants: return .orange
+            case .pay: return .green
+            case .chats: return .blue
+            case .apply: return .green
             case .withdraw: return .red
             case .markDone: return .green
+            case .confirmCompletion: return .green
         }
     }
     
     var role: ButtonRole? {
         switch self {
-            case .delete, .withdraw: return .destructive
+            case .cancel: return .cancel
+            case .publish: return nil
+            case .delete: return .destructive
+            case .applicants: return nil
+            case .pay: return nil
+            case .chats: return nil
+            case .apply: return nil
+            case .withdraw: return .destructive
             case .markDone: return .confirm
-            default: return nil
+            case .confirmCompletion: return .confirm
         }
     }
     
     var swipeEdge: TaskSwipeEdge {
         switch self {
-            case .applicants, .confirmCompletion, .chats, .markDone:
-                return .leading
-            case .delete, .cancel, .publish, .accept, .withdraw:
-                return .trailing
+            case .cancel: return .trailing
+            case .publish: return .leading
+            case .delete: return .trailing
+            case .applicants: return .leading
+            case .pay: return .leading
+            case .chats: return .leading
+            case .apply: return .leading
+            case .withdraw: return .trailing
+            case .markDone: return .leading
+            case .confirmCompletion: return .leading
         }
     }
     
@@ -91,6 +108,9 @@ enum TaskDetailAction: Identifiable {
         if task.status == TaskStatus.inProgress.rawValue || task.status == TaskStatus.pendingCompleted.rawValue {
             actions.append(.chats)
         }
+        if task.status == TaskStatus.pendingPayment.rawValue && task.escrowStatus == EscrowStatus.notPaid.rawValue {
+            actions.append(.pay)
+        }
         if task.status == TaskStatus.published.rawValue || task.status == TaskStatus.pending.rawValue {
             actions.append(.cancel)
         }
@@ -104,8 +124,7 @@ enum TaskDetailAction: Identifiable {
         }
         return actions
     }
-
-
+    
     static func executorActions(for task: TaskModel) -> [TaskDetailAction] {
         var actions: [TaskDetailAction] = []
         
@@ -113,7 +132,7 @@ enum TaskDetailAction: Identifiable {
             if task.isApplicant {
                 actions.append(.withdraw)
             } else {
-                actions.append(.accept)
+                actions.append(.apply)
             }
         }
         if task.status == TaskStatus.inProgress.rawValue {

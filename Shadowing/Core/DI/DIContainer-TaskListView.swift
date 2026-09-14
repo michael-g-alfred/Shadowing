@@ -46,7 +46,12 @@ func requesterSwipePerform(_ action: TaskDetailAction, task: TaskModel, vm: Requ
             await vm.cancelTask(task)
         case .publish:
             await vm.publishTask(task)
-        case .accept, .withdraw, .markDone:
+        case .pay:
+                // Same immediate, no-confirmation-screen pattern as cancel/delete/
+                // publish above — this just opens the payment sheet on top of the
+                // list rather than routing through TaskDetailsView first.
+            vm.startPayment(for: task)
+        case .apply, .withdraw, .markDone:
             break // Not applicable to the requester role
     }
 }
@@ -60,7 +65,7 @@ func requesterSwipePerform(_ action: TaskDetailAction, task: TaskModel, vm: Requ
     ///   - vm: The executor view model that owns the task's lifecycle.
 func executorSwipePerform(_ action: TaskDetailAction, task: TaskModel, vm: ExecutorViewModel) async {
     switch action {
-        case .accept:
+        case .apply:
             vm.beginApply(to: task)
         case .withdraw:
             await vm.withdrawFromTask(task)
@@ -68,7 +73,7 @@ func executorSwipePerform(_ action: TaskDetailAction, task: TaskModel, vm: Execu
             await vm.markTaskDone(task)
         case .chats:
             vm.openChat(for: task.id)
-        case .applicants, .confirmCompletion, .delete, .cancel, .publish:
+        case .applicants, .confirmCompletion, .delete, .cancel, .publish, .pay:
             break // Not applicable to the executor role
     }
 }
@@ -81,7 +86,16 @@ extension DIContainer {
         // MARK: - Requester Views
     
         /// The requester's list of tasks they have published, with leading/trailing swipe actions
-        /// for managing applicants, chats, publishing, canceling, and deleting.
+        /// for managing applicants, chats, publishing, canceling, deleting, and paying.
+        ///
+        /// The `.pay` swipe action sets `requesterViewModel.selectedTaskForPayment`
+        /// (via `startPayment(for:)` in `requesterSwipePerform` below). The payment
+        /// sheet itself is presented by `GlobalSheetsModifier` (see its
+        /// "Requester - Payment" section), which observes that same property —
+        /// this view does NOT attach its own `.sheet` for it. Two `.sheet(item:)`
+        /// modifiers keyed off the same `selectedTaskForPayment` would race each
+        /// other and could double-fire `paymentSheetDismissed()`, so this stays
+        /// the single owner now that it's wired into `GlobalSheetsModifier`.
     func makeRequesterPublishedTasksView() -> some View {
         TaskListView(
             tasks: requesterViewModel.requesterPublishedTasks,
@@ -92,6 +106,7 @@ extension DIContainer {
             emptyState: requesterViewModel.statusFilter == .all ? .noRequesterPublishedTasks : .noFilteredRequesterTasks,
             onLoad: { [requesterViewModel] in await requesterViewModel.loadPublishedTasks() },
             onLoadMoreIfNeeded: { [requesterViewModel] in await requesterViewModel.loadMorePublishedTasksIfNeeded() },
+            onRefresh: { [requesterViewModel] in await requesterViewModel.loadPublishedTasks(showLoadingIndicator: false) },
             onClearFilter: { [requesterViewModel] in requesterViewModel.setStatusFilter(.all) },
             leadingSwipe: { [requesterViewModel] task in
                 swipeButtons(for: TaskDetailAction.requesterActions(for: task).leading) { action in
@@ -117,14 +132,24 @@ extension DIContainer {
             loadingTitle: "Loading completed tasks",
             emptyState: .noRequesterCompletedTasks,
             onLoad: { [requesterViewModel] in await requesterViewModel.loadCompletedTasks() },
-            onLoadMoreIfNeeded: { [requesterViewModel] in await requesterViewModel.loadMoreCompletedTasksIfNeeded() }
+            onLoadMoreIfNeeded: { [requesterViewModel] in await requesterViewModel.loadMoreCompletedTasksIfNeeded() },
+            onRefresh: { [requesterViewModel] in await requesterViewModel.loadCompletedTasks(showLoadingIndicator: false) }
         )
     }
     
         // MARK: - Executor Views
     
-        /// The executor's list of tasks available to apply for, with favoriting and a trailing
-        /// swipe action to apply.
+        /// The executor's list of tasks available to apply for, with favoriting, a leading swipe
+        /// action to accept, and a trailing swipe action to apply/withdraw depending on applicant
+        /// status.
+        ///
+        /// FIX: this previously only wired up `trailingSwipe`. `.accept` has
+        /// `swipeEdge == .leading` (see `TaskDetailAction.swipeEdge`), so with no
+        /// `leadingSwipe` closure passed to `TaskListView`, the leading half of
+        /// `executorActions(for:)` — i.e. the accept button — was silently dropped
+        /// on the floor even though the action array itself was computed correctly.
+        /// Added `leadingSwipe` below, mirroring the pattern already used in
+        /// `makeExecutorAssignedTasksView` and `makeRequesterPublishedTasksView`.
     func makeExecutorAvailableTasksView() -> some View {
         TaskListView(
             tasks: executorViewModel.executorAvailableTasks,
@@ -135,6 +160,7 @@ extension DIContainer {
             emptyState: executorViewModel.showFavoritesOnly ? .noExecutorFavoriteTasks : .noAvailableTasks,
             onLoad: { [executorViewModel] in await executorViewModel.loadAvailableTasks() },
             onLoadMoreIfNeeded: { [executorViewModel] in await executorViewModel.loadMoreAvailableTasksIfNeeded() },
+            onRefresh: { [executorViewModel] in await executorViewModel.loadAvailableTasks(showLoadingIndicator: false) },
             onClearFilter: executorViewModel.showFavoritesOnly ? { [executorViewModel] in
                 executorViewModel.showFavoritesOnly = false
             } : nil,
@@ -150,6 +176,11 @@ extension DIContainer {
                 set: { [executorViewModel] in executorViewModel.isSearchPresented = $0 }
             ),
             searchPrompt: "Search available tasks",
+            leadingSwipe: { [executorViewModel] task in
+                swipeButtons(for: TaskDetailAction.executorActions(for: task).leading) { action in
+                    Task { await executorSwipePerform(action, task: task, vm: executorViewModel) }
+                }
+            },
             trailingSwipe: { [executorViewModel] task in
                 swipeButtons(for: TaskDetailAction.executorActions(for: task).trailing) { action in
                     Task { await executorSwipePerform(action, task: task, vm: executorViewModel) }
@@ -170,6 +201,7 @@ extension DIContainer {
             emptyState: .noAssignedTasks,
             onLoad: { [executorViewModel] in await executorViewModel.loadAssignedTasks() },
             onLoadMoreIfNeeded: { [executorViewModel] in await executorViewModel.loadMoreAssignedTasksIfNeeded() },
+            onRefresh: { [executorViewModel] in await executorViewModel.loadAssignedTasks(showLoadingIndicator: false) },
             leadingSwipe: { [executorViewModel] task in
                 swipeButtons(for: TaskDetailAction.executorActions(for: task).leading) { action in
                     Task { await executorSwipePerform(action, task: task, vm: executorViewModel) }
@@ -193,7 +225,8 @@ extension DIContainer {
             loadingTitle: "Loading completed tasks",
             emptyState: .noExecutorCompletedTasks,
             onLoad: { [executorViewModel] in await executorViewModel.loadCompletedTasks() },
-            onLoadMoreIfNeeded: { [executorViewModel] in await executorViewModel.loadMoreCompletedTasksIfNeeded() }
+            onLoadMoreIfNeeded: { [executorViewModel] in await executorViewModel.loadMoreCompletedTasksIfNeeded() },
+            onRefresh: { [executorViewModel] in await executorViewModel.loadCompletedTasks(showLoadingIndicator: false) }
         )
     }
 }

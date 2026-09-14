@@ -34,6 +34,32 @@ final class RequesterViewModel {
         /// ApplicantsSheet shows this as a local alert.
     var assignResult: (message: String, type: String)?
     
+        /// Set once, right after a successful assign, by
+        /// `dismissAssignSuccessAlert()` — reflects the task's updated
+        /// `in_progress` status (unlike `selectedTaskForApplicants`, which
+        /// still holds the pre-assignment snapshot).
+        ///
+        /// This exists so redirecting straight to payment after an assign
+        /// works no matter which screen opened the applicants sheet — not
+        /// just when it's `TaskDetailsView` (which already has its own,
+        /// server-confirmed version of this check via `loadDetails()`).
+        /// Whatever presents `ApplicantsSheet` should observe this, act on
+        /// it once, and set it back to `nil` — it's a one-shot signal, not
+        /// persisted state.
+    var taskJustAssigned: TaskModel?
+    
+        /// The task currently being paid for from a list swipe action (see
+        /// `startPayment(for:)`). Drives the `.sheet(item:)` in
+        /// `GlobalSheetsModifier`, the same way `TaskDetailsView` drives its
+        /// own payment sheet off `isPaymentSheetPresented` — this is just
+        /// the list-row equivalent of that same one-shot flow.
+        ///
+        /// (This comment used to point at a `.sheet(item:)` directly inside
+        /// `DIContainer.makeRequesterPublishedTasksView()`. `GlobalSheetsModifier`
+        /// says that was moved out at some point to keep every global sheet in
+        /// one place — this doc just hadn't caught up.)
+    var selectedTaskForPayment: TaskModel?
+    
     var selectedTaskId: String?
     
     var statusFilter: RequesterStatusFilter = .all
@@ -136,7 +162,15 @@ final class RequesterViewModel {
             where: { $0.id == task.id }
            ) {
             requesterPublishedTasks[index].status =
-            TaskStatus.inProgress.rawValue
+            TaskStatus.pendingPayment.rawValue
+        }
+        
+            // Read back the just-updated entry (not `selectedTaskForApplicants`,
+            // which still has the pre-assignment status) so whoever consumes
+            // this sees `status == in_progress` already. Falls back to
+            // `selectedTaskForApplicants` if the task wasn't in the array.
+        if let task = selectedTaskForApplicants {
+            taskJustAssigned = requesterPublishedTasks.first(where: { $0.id == task.id }) ?? task
         }
         
         assignResult = nil
@@ -296,6 +330,38 @@ final class RequesterViewModel {
         }
     }
     
+        // MARK: - Payment
+    
+        /// Kicks off a payment attempt for `task` from a list swipe action.
+        ///
+        /// Just sets `selectedTaskForPayment` — the actual sheet lives in
+        /// `GlobalSheetsModifier` (a `.sheet(item:)` bound to this property),
+        /// mirroring how `showApplicants(for:)` sets
+        /// `selectedTaskForApplicants` and lets the presenting view own the
+        /// sheet itself.
+        ///
+        /// No pre-flight status/escrow check here: `TaskDetailAction
+        /// .requesterActions(for:)` already only offers `.pay` when the task
+        /// is `pending_payment` and unpaid, and the server re-validates both
+        /// on `initiatePayment` regardless.
+    func startPayment(for task: TaskModel) {
+        selectedTaskForPayment = task
+    }
+    
+        /// Called once the payment sheet (opened via `startPayment(for:)`)
+        /// closes, success or not.
+        ///
+        /// Same caveat as `TaskDetailsView`'s own payment flow: there is no
+        /// synchronous success signal, since Paymob confirms asynchronously
+        /// via webhook. This refresh either picks up the new `escrowStatus`
+        /// if the webhook already landed, or leaves the task showing
+        /// `pending_payment`/unpaid — with `.pay` still offered — if it
+        /// hasn't yet.
+    func paymentSheetDismissed() async {
+        selectedTaskForPayment = nil
+        await loadPublishedTasks()
+    }
+    
         // MARK: - Applicants
     
     func showApplicants(for task: TaskModel) async {
@@ -370,8 +436,20 @@ final class RequesterViewModel {
     
         // MARK: - Published Tasks
     
-    func loadPublishedTasks() async {
-        isLoading = true
+        /// - Parameter showLoadingIndicator: When `true` (the default, used for
+        ///   the very first load and for filter changes), sets `isLoading`,
+        ///   which `TaskListView` uses to swap in the full-screen skeleton.
+        ///   Pass `false` for a pull-to-refresh call: `isLoading` flipping true
+        ///   mid-refresh was replacing the still-visible `List` (and the
+        ///   `.refreshable`-owned task riding on it) with the skeleton view,
+        ///   which cancelled the in-flight request — surfacing as
+        ///   "Request failed: cancelled". With `showLoadingIndicator: false`,
+        ///   the `List` (and its native refresh spinner) stays put for the
+        ///   whole call.
+    func loadPublishedTasks(showLoadingIndicator: Bool = true) async {
+        if showLoadingIndicator {
+            isLoading = true
+        }
         errorMessage = nil
         
         publishedTasksCursor = nil
@@ -381,7 +459,9 @@ final class RequesterViewModel {
         let myGeneration = publishedTasksGeneration
         
         defer {
-            isLoading = false
+            if showLoadingIndicator {
+                isLoading = false
+            }
         }
         
         do {
@@ -402,7 +482,7 @@ final class RequesterViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
-
+        
         await checkPendingRatings()
     }
     
@@ -447,8 +527,12 @@ final class RequesterViewModel {
     
         // MARK: - Completed Tasks
     
-    func loadCompletedTasks() async {
-        isLoading = true
+        /// See `loadPublishedTasks(showLoadingIndicator:)` for why this takes
+        /// the same parameter.
+    func loadCompletedTasks(showLoadingIndicator: Bool = true) async {
+        if showLoadingIndicator {
+            isLoading = true
+        }
         errorMessage = nil
         
         completedTasksCursor = nil
@@ -458,7 +542,9 @@ final class RequesterViewModel {
         let myGeneration = completedTasksGeneration
         
         defer {
-            isLoading = false
+            if showLoadingIndicator {
+                isLoading = false
+            }
         }
         
         do {
@@ -478,7 +564,7 @@ final class RequesterViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
-
+        
         await checkPendingRatings()
     }
     

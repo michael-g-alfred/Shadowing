@@ -11,28 +11,28 @@ import SwiftUI
     /// `PendingRating` normalizes both flows into one value so the
     /// global sheets modifier can drive a single sheet presentation.
 fileprivate struct PendingRating: Identifiable {
-
+    
         // MARK: Source
-
+    
     enum Source {
             /// The signed-in user is the executor and needs to rate the requester.
         case executor
-
+        
             /// The signed-in user is the requester and needs to rate the executor.
         case requester
     }
-
+    
         // MARK: Properties
-
+    
         /// The task associated with this pending rating.
     let task: TaskModel
-
+    
         /// The user being rated.
     let target: RatingTarget
-
+    
         /// Which rating flow produced this pending rating.
     let source: Source
-
+    
         /// A unique identifier for the pending rating.
         ///
         /// Including the source prevents two different rating flows
@@ -41,7 +41,7 @@ fileprivate struct PendingRating: Identifiable {
         switch source {
             case .executor:
                 "\(task.id)-executor"
-
+                
             case .requester:
                 "\(task.id)-requester"
         }
@@ -57,22 +57,22 @@ fileprivate struct PendingRating: Identifiable {
     /// Reads shared dependencies and ViewModels from `DIContainer`,
     /// same as `RootView` did before this was extracted.
 struct GlobalSheetsModifier: ViewModifier {
-
+    
         // MARK: Environment
-
+    
     @Environment(DIContainer.self) private var container
-
+    
         // MARK: Pending Rating
-
+    
         /// The rating currently waiting to be presented.
         ///
         /// The executor flow is checked first, followed by the requester flow.
         /// If neither flow has a pending rating, this returns `nil`.
     private var pendingRating: PendingRating? {
-
+        
             // Executor → Rate Requester
         if let task = container.executorViewModel.currentRatingTask {
-
+            
             return PendingRating(
                 task: task,
                 target: .requester(
@@ -82,11 +82,11 @@ struct GlobalSheetsModifier: ViewModifier {
                 source: .executor
             )
         }
-
+        
             // Requester → Rate Executor
         if let task = container.requesterViewModel.currentRatingTask,
            let executor = task.executor {
-
+            
             return PendingRating(
                 task: task,
                 target: .executor(
@@ -96,17 +96,17 @@ struct GlobalSheetsModifier: ViewModifier {
                 source: .requester
             )
         }
-
+        
         return nil
     }
-
+    
         // MARK: Body
-
+    
     func body(content: Content) -> some View {
         content
-
-                // MARK: Rating Sheet
-
+        
+            // MARK: Rating Sheet
+        
             .sheet(
                 item: Binding(
                     get: {
@@ -117,7 +117,7 @@ struct GlobalSheetsModifier: ViewModifier {
                     }
                 )
             ) { pending in
-
+                
                 container.makeRatingSheet(
                     taskId: pending.task.id,
                     taskTitle: pending.task.title,
@@ -127,9 +127,17 @@ struct GlobalSheetsModifier: ViewModifier {
                     interactiveDismissDisabled: true
                 )
             }
-
-                // MARK: Executor - Applied Sheet
-
+        
+            // MARK: Executor - Applied Sheet
+            //
+            // Owns the whole apply flow now — budget entry, fee confirmation,
+            // and submission — as internal steps of AppliedSheet itself
+            // (see ExecutorViewModel.isConfirmingApply / .isApplying). There is
+            // no separate "Apply Confirmation" alert anymore; it was removed
+            // because closing this sheet before showing that alert meant the
+            // real network call ran with no visible loading state. See
+            // AppliedSheet.swift and ExecutorViewModel.swift for the fix.
+        
             .sheet(
                 isPresented: Binding(
                     get: {
@@ -145,9 +153,9 @@ struct GlobalSheetsModifier: ViewModifier {
                 )
                 .appSheetStyle()
             }
-
-                // MARK: Executor - Direct Chat
-
+        
+            // MARK: Executor - Direct Chat
+        
             .sheet(
                 isPresented: Binding(
                     get: {
@@ -167,39 +175,9 @@ struct GlobalSheetsModifier: ViewModifier {
                     .appSheetStyle()
                 }
             }
-
-                // MARK: Executor - Apply Confirmation
-
-            .alert(
-                "Confirm Task Application",
-                isPresented: Binding(
-                    get: {
-                        container.executorViewModel.showFeeConfirmationAlert
-                    },
-                    set: {
-                        container.executorViewModel.showFeeConfirmationAlert = $0
-                    }
-                )
-            ) {
-
-                Button("Cancel", role: .cancel) {
-                    container.executorViewModel.cancelApply()
-                }
-
-                Button("Confirm", role: .confirm) {
-                    Task {
-                        await container.executorViewModel.confirmApply()
-                    }
-                }
-
-            } message: {
-                Text(
-                    container.executorViewModel.feeConfirmationMessage
-                )
-            }
-
-                // MARK: Requester - Add Task
-
+        
+            // MARK: Requester - Add Task
+        
             .sheet(
                 isPresented: Binding(
                     get: {
@@ -215,9 +193,9 @@ struct GlobalSheetsModifier: ViewModifier {
                         interactiveDismissDisabled: true
                     )
             }
-
-                // MARK: Requester - Applicants
-
+        
+            // MARK: Requester - Applicants
+        
             .sheet(
                 isPresented: Binding(
                     get: {
@@ -231,9 +209,9 @@ struct GlobalSheetsModifier: ViewModifier {
                 container.makeApplicantsSheet()
                     .appSheetStyle()
             }
-
-                // MARK: Requester - Direct Chat
-
+        
+            // MARK: Requester - Direct Chat
+        
             .sheet(
                 isPresented: Binding(
                     get: {
@@ -253,10 +231,46 @@ struct GlobalSheetsModifier: ViewModifier {
                     .appSheetStyle()
                 }
             }
+        
+            // MARK: Requester - Payment
+            //
+            // Driven by `selectedTaskForPayment`, set via the `.pay` swipe
+            // action (see `requesterSwipePerform` in DIContainer-TaskListView.swift)
+            // — same one-shot, set-then-clear pattern as the applicants and
+            // direct-chat sheets above. This is the ONLY place that presents
+            // it — `DIContainer.makeRequesterPublishedTasksView()` must not
+            // also attach a `.sheet` for this property, or the two would race.
+        
+            .sheet(
+                item: Binding(
+                    get: {
+                        container.requesterViewModel.selectedTaskForPayment
+                    },
+                    set: { newValue in
+                        if newValue == nil {
+                            container.requesterViewModel.selectedTaskForPayment = nil
+                        }
+                    }
+                )
+            ) { task in
+                container.makePaymentView(for: task)
+            }
+            .appSheetStyle()
+            .onChange(of: container.requesterViewModel.selectedTaskForPayment?.id) { _, taskId in
+                    // The payment sheet just closed. No synchronous success
+                    // signal here — Paymob confirms via webhook, asynchronously
+                    // — so this refresh either picks up the new status/
+                    // escrowStatus if the webhook already landed, or leaves the
+                    // task showing pending_payment/unpaid, with `.pay` still
+                    // offered, if it hasn't yet.
+                if taskId == nil {
+                    Task { await container.requesterViewModel.paymentSheetDismissed() }
+                }
+            }
     }
-
+    
         // MARK: Rating Sheet Handling
-
+    
         /// Handles changes to the rating sheet binding.
         ///
         /// A `nil` value can be produced when the sheet is dismissed.
@@ -265,23 +279,23 @@ struct GlobalSheetsModifier: ViewModifier {
     private func handleRatingSheetChange(
         _ newValue: PendingRating?
     ) {
-
+        
         guard newValue == nil else {
             return
         }
-
+        
         guard let current = pendingRating else {
             return
         }
-
+        
         switch current.source {
-
+                
             case .executor:
                 container.executorViewModel.ratingSheetDismissed(
                     for: current.task.id,
                     wasSubmitted: true
                 )
-
+                
             case .requester:
                 container.requesterViewModel.ratingSheetDismissed(
                     for: current.task.id,
@@ -294,10 +308,10 @@ struct GlobalSheetsModifier: ViewModifier {
     // MARK: - View Extension
 
 extension View {
-
+    
         /// Attaches every global sheet/alert belonging to the main
-        /// application flow (rating, applied, direct chat, apply
-        /// confirmation, add task, applicants).
+        /// application flow (rating, applied, direct chat, add task,
+        /// applicants, payment).
     func withGlobalSheets() -> some View {
         modifier(GlobalSheetsModifier())
     }

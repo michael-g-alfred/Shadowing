@@ -431,6 +431,8 @@ final class TaskRepository: TaskRepositoryProtocol {
         return (message: response.message, type: response.type)
     }
 
+    // MARK: - Payments
+
     /// Initiates a new payment attempt for a task and returns the payment URL.
     ///
     /// - Parameter taskId: The task's ID.
@@ -452,6 +454,35 @@ final class TaskRepository: TaskRepositoryProtocol {
         }
 
         return url
+    }
+
+    /// Onboards the current user as a payment sub-merchant, a one-time
+    /// prerequisite before ``startPayment(taskId:)`` will succeed for any
+    /// task where they're the assigned executor — the backend rejects
+    /// `initiatePayment` up front when the assigned executor has no
+    /// `sub_merchant_id` on file yet.
+    ///
+    /// Safe to call more than once: the backend checks for an existing
+    /// sub-merchant ID first and returns `alreadyOnboarded: true` without
+    /// contacting the payment provider again, so this can be wired to a
+    /// "complete your payment setup" entry point that fires unconditionally,
+    /// without checking onboarding status client-side first.
+    ///
+    /// - Returns: The user's sub-merchant ID and whether they were already
+    ///   onboarded before this call.
+    /// - Throws: A networking error, or ``AuthError/noSession``.
+    func onboardExecutor() async throws -> (subMerchantId: String, alreadyOnboarded: Bool) {
+        DebugLogger.log("🏦 🟢 TaskRepository -> onboardExecutor - Started")
+        defer { DebugLogger.log("🏦 🏁 TaskRepository -> onboardExecutor - Ended") }
+
+        let token = try await getValidToken()
+        let config = APIConfig.onboardExecutor(accessToken: token)
+        let response: APIResponseDTO<OnboardExecutorResponseDTO> = try await network.request(config)
+
+        return (
+            subMerchantId: response.data.subMerchantId,
+            alreadyOnboarded: response.data.alreadyOnboarded
+        )
     }
 
     /// Declines an applicant for a task (requester-only).

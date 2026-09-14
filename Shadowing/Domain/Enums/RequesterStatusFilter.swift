@@ -4,6 +4,7 @@ enum RequesterStatusFilter: LocalizedStringResource, CaseIterable, Identifiable 
     case all
     case published
     case pending
+    case pendingPayment
     case inProgress
     case pendingCompleted
 
@@ -14,6 +15,7 @@ enum RequesterStatusFilter: LocalizedStringResource, CaseIterable, Identifiable 
             case .all: return "All"
             case .published: return "Published"
             case .pending: return "Pending"
+            case .pendingPayment: return "Pending Payment"
             case .inProgress: return "In progress"
             case .pendingCompleted: return "Pending completed"
         }
@@ -24,6 +26,7 @@ enum RequesterStatusFilter: LocalizedStringResource, CaseIterable, Identifiable 
             case .all: return nil
             case .published: return "published"
             case .pending: return "pending"
+            case .pendingPayment: return "pending_payment"
             case .inProgress: return "in_progress"
             case .pendingCompleted: return "pending_completed"
         }

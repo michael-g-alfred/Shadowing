@@ -241,22 +241,21 @@ private struct AddTaskToolbar: ToolbarContent {
     let dismiss: DismissAction
     
     var body: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
+        ToolbarItem(placement: .cancellationAction) {
             Button("Cancel") {
                 dismiss()
             }
         }
         
-        ToolbarSpacer(.fixed, placement: .topBarLeading)
-        
-        ToolbarItem(placement: .topBarLeading) {
+        ToolbarItem(placement: .principal) {
             if !vm.isFormValid {
                 Button {
                     vm.showErrorsAlert = true
                 } label: {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
                 }
+                .buttonStyle(.glassProminent)
+                .tint(.orange)
             }
         }
         
@@ -267,7 +266,6 @@ private struct AddTaskToolbar: ToolbarContent {
                 Button("Post") {
                     vm.attemptSubmit()
                 }
-                .buttonSizing(.fitted)
                 .buttonStyle(.glassProminent)
                 .disabled(!vm.isFormValid)
             }

@@ -17,6 +17,14 @@ struct TaskListView<LeadingSwipe: View, TrailingSwipe: View>: View {
     
     let onLoad: () async -> Void
     let onLoadMoreIfNeeded: () async -> Void
+        /// Called by pull-to-refresh. Defaults to `onLoad` if not provided —
+        /// but callers whose `onLoad` sets a blocking `isLoading` flag should
+        /// pass a dedicated closure here (e.g. `loadX(showLoadingIndicator:
+        /// false)`), or the refresh gesture can cancel itself: `isLoading`
+        /// flipping true swaps this view's `List` out for the skeleton state
+        /// mid-refresh, tearing down the `.refreshable`-owned task along with
+        /// the in-flight request ("Request failed: cancelled").
+    var onRefresh: (() async -> Void)? = nil
     var onClearFilter: (() -> Void)? = nil
     var onToggleFavorite: ((TaskModel) -> Void)? = nil
     
@@ -42,6 +50,7 @@ struct TaskListView<LeadingSwipe: View, TrailingSwipe: View>: View {
         emptyState: EmptyState,
         onLoad: @escaping () async -> Void,
         onLoadMoreIfNeeded: @escaping () async -> Void,
+        onRefresh: (() async -> Void)? = nil,
         onClearFilter: (() -> Void)? = nil,
         onToggleFavorite: ((TaskModel) -> Void)? = nil,
         searchText: Binding<String>? = nil,
@@ -58,6 +67,7 @@ struct TaskListView<LeadingSwipe: View, TrailingSwipe: View>: View {
         self.emptyState = emptyState
         self.onLoad = onLoad
         self.onLoadMoreIfNeeded = onLoadMoreIfNeeded
+        self.onRefresh = onRefresh
         self.onClearFilter = onClearFilter
         self.onToggleFavorite = onToggleFavorite
         self.searchText = searchText
@@ -71,7 +81,26 @@ struct TaskListView<LeadingSwipe: View, TrailingSwipe: View>: View {
     var body: some View {
         content
             .refreshable {
-                await onLoadMoreIfNeeded()
+                    // FIX (round 1): was calling `onLoadMoreIfNeeded()`, which
+                    // just pages forward using the existing cursor — and does
+                    // nothing at all once `hasMore == false`. Pull-to-refresh
+                    // should reset and refetch from the top.
+                    //
+                    // FIX (round 2): switching this straight to `onLoad()`
+                    // surfaced a new problem — `onLoad()` sets `isLoading`,
+                    // which swaps this view's `List` out for the skeleton
+                    // state mid-refresh, cancelling the in-flight request
+                    // ("Request failed: cancelled"). `onRefresh`, when the
+                    // caller supplies it, points at the same reset+refetch
+                    // logic but without touching `isLoading` (see
+                    // `loadX(showLoadingIndicator: false)` in
+                    // RequesterViewModel/ExecutorViewModel), so the List and
+                    // its native refresh spinner stay put for the whole call.
+                if let onRefresh {
+                    await onRefresh()
+                } else {
+                    await onLoad()
+                }
             }
             .navigationDestination(for: String.self) { taskId in
                 container.makeTaskDetailsView(taskId: taskId)

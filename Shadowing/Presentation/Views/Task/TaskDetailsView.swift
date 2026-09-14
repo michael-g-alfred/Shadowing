@@ -50,9 +50,15 @@ struct TaskDetailsView: View {
         .onChange(of: vm.isApplicantsSheetPresented) { _, isPresented in
                 // The applicants sheet just closed — an assign/decline may have
                 // changed this task (new executor, status, applicants count), so
-                // refresh the details we're showing.
+                // refresh the details we're showing. If that refresh shows an
+                // executor was just assigned and the task isn't paid yet, go
+                // straight to payment instead of leaving the requester to find
+                // the Pay Now action themselves.
             if !isPresented {
-                Task { await vm.loadDetails() }
+                Task {
+                    await vm.loadDetails()
+                    vm.startPaymentIfJustAssigned()
+                }
             }
         }
         .onChange(of: vm.isApplyFlowPresented) { _, isPresented in
@@ -61,6 +67,22 @@ struct TaskDetailsView: View {
                 // so refresh.
             if !isPresented {
                 Task { await vm.loadDetails() }
+            }
+        }
+        .onChange(of: vm.isPaymentSheetPresented) { _, isPresented in
+                // The payment sheet just closed. There's no synchronous
+                // success/failure signal from it (Paymob confirms via webhook,
+                // asynchronously), so this refresh either picks up the new
+                // `escrowStatus` if the webhook already landed, or leaves the
+                // task showing `not_paid` — with the Pay Now action still
+                // available — if it hasn't yet.
+            if !isPresented {
+                Task { await vm.loadDetails() }
+            }
+        }
+        .sheet(isPresented: $vm.isPaymentSheetPresented) {
+            if let task = vm.task {
+                container.makePaymentView(for: task)
             }
         }
         .toolbar {

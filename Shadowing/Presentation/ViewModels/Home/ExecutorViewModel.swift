@@ -53,11 +53,23 @@ final class ExecutorViewModel {
     var selectedTaskForApply: TaskModel?
     var isApplying = false
     
-        // MARK: - Fee Confirmation Alert
-    
+        // MARK: - Apply Confirmation (in-sheet step, not a separate presentation)
+        //
+        // FIX: this used to be `showFeeConfirmationAlert`, driving a standalone
+        // `.alert` in `GlobalSheetsModifier`. That meant `requestApply()` had to
+        // close `AppliedSheet` first (`showAppliedSheet = false`) before the alert
+        // could show, which in turn meant `acceptTask()` — the thing that actually
+        // sets `isApplying = true` and makes the network call — ran after the sheet
+        // was already off screen. No loading feedback was ever visible during the
+        // real `applyToTask` request.
+        //
+        // Renamed to `isConfirmingApply`: it now just picks which step
+        // `AppliedSheet` shows internally (edit vs. confirm) while the sheet stays
+        // open the whole time, including through the network call, so `isApplying`
+        // can actually drive a visible overlay.
     private let platformFeeRate: Double = 0.10
     
-    var showFeeConfirmationAlert = false
+    var isConfirmingApply = false
     
     private var pendingApplyTask: TaskModel?
     private var pendingApplyBudget: Double?
@@ -121,41 +133,43 @@ final class ExecutorViewModel {
     
         // MARK: - Apply
     
+        /// Opens `AppliedSheet` on the budget-editing step for `task`.
+        ///
+        /// Resets any leftover state from a previous, incomplete apply attempt
+        /// so a stale error or confirmation step never bleeds into a fresh one.
     func beginApply(to task: TaskModel) {
         selectedTaskForApply = task
+        isConfirmingApply = false
+        pendingApplyTask = nil
+        pendingApplyBudget = nil
+        errorMessage = nil
         showAppliedSheet = true
     }
     
+        /// Called from `AppliedSheet`'s "Send" button. Switches the sheet from
+        /// the edit step to the confirm step — the sheet itself stays open and
+        /// on screen the whole time.
     func requestApply(
         to task: TaskModel,
         proposedBudget: Double? = nil
     ) {
         pendingApplyTask = task
         pendingApplyBudget = proposedBudget
-        
-        showAppliedSheet = false
-        showFeeConfirmationAlert = true
+        isConfirmingApply = true
     }
     
+        /// Called from `AppliedSheet`'s "Back" button on the confirm step.
+        /// Returns to the edit step without closing the sheet.
+    func cancelApply() {
+        isConfirmingApply = false
+        pendingApplyTask = nil
+        pendingApplyBudget = nil
+    }
+    
+        /// Called from `AppliedSheet`'s "Confirm" button on the confirm step.
     func confirmApply() async {
         guard let task = pendingApplyTask else { return }
-        
-        let budget = pendingApplyBudget
-        
-        showFeeConfirmationAlert = false
-        pendingApplyTask = nil
-        pendingApplyBudget = nil
-        
-        await acceptTask(
-            task,
-            proposedBudget: budget
-        )
-    }
-    
-    func cancelApply() {
-        showFeeConfirmationAlert = false
-        pendingApplyTask = nil
-        pendingApplyBudget = nil
+        await acceptTask(task, proposedBudget: pendingApplyBudget)
     }
     
         // MARK: - Task Actions
@@ -165,14 +179,12 @@ final class ExecutorViewModel {
         proposedBudget: Double? = nil
     ) async {
         isApplying = true
+        errorMessage = nil
         defer { isApplying = false }
         
         let availableUpdate = executorAvailableTasks.updateTask(id: task.id) {
             $0.isApplicant = true
         }
-        
-        showAppliedSheet = false
-        selectedTaskForApply = nil
         
         do {
             let result = try await taskRepo.applyToTask(
@@ -189,12 +201,25 @@ final class ExecutorViewModel {
                 for: task
             )
             
+                // Success — safe to close everything now that the request
+                // actually landed.
+            showAppliedSheet = false
+            isConfirmingApply = false
+            selectedTaskForApply = nil
+            pendingApplyTask = nil
+            pendingApplyBudget = nil
+            
         } catch {
             executorAvailableTasks.rollbackUpdate(availableUpdate)
             
+            errorMessage = error.localizedDescription
             AlertCenter.shared.showError(
                 error.localizedDescription
             )
+                // Failure — stay open on the confirm step so the user can see
+                // the error and either retry Confirm or tap Back to edit again.
+                // `pendingApplyTask`/`pendingApplyBudget` are deliberately left
+                // intact for that retry.
         }
     }
     
@@ -383,8 +408,18 @@ final class ExecutorViewModel {
     
         // MARK: - Available Tasks
     
-    func loadAvailableTasks() async {
-        isLoading = true
+        /// - Parameter showLoadingIndicator: When `true` (the default), sets
+        ///   `isLoading`, which `TaskListView` uses to swap in the full-screen
+        ///   skeleton. Pass `false` for a pull-to-refresh call — flipping
+        ///   `isLoading` mid-refresh replaces the still-visible `List` (and
+        ///   the `.refreshable`-owned task riding on it) with the skeleton
+        ///   view, cancelling the in-flight request ("Request failed:
+        ///   cancelled"). With `false`, the `List` and its native refresh
+        ///   spinner stay put for the whole call.
+    func loadAvailableTasks(showLoadingIndicator: Bool = true) async {
+        if showLoadingIndicator {
+            isLoading = true
+        }
         errorMessage = nil
         
         availableTasksCursor = nil
@@ -394,7 +429,9 @@ final class ExecutorViewModel {
         let myGeneration = availableTasksGeneration
         
         defer {
-            isLoading = false
+            if showLoadingIndicator {
+                isLoading = false
+            }
         }
         
         do {
@@ -460,8 +497,12 @@ final class ExecutorViewModel {
     
         // MARK: - Assigned Tasks
     
-    func loadAssignedTasks() async {
-        isLoading = true
+        /// See `loadAvailableTasks(showLoadingIndicator:)` for why this takes
+        /// the same parameter.
+    func loadAssignedTasks(showLoadingIndicator: Bool = true) async {
+        if showLoadingIndicator {
+            isLoading = true
+        }
         errorMessage = nil
         
         assignedTasksCursor = nil
@@ -471,7 +512,9 @@ final class ExecutorViewModel {
         let myGeneration = assignedTasksGeneration
         
         defer {
-            isLoading = false
+            if showLoadingIndicator {
+                isLoading = false
+            }
         }
         
         do {
@@ -535,8 +578,12 @@ final class ExecutorViewModel {
     
         // MARK: - Completed Tasks
     
-    func loadCompletedTasks() async {
-        isLoading = true
+        /// See `loadAvailableTasks(showLoadingIndicator:)` for why this takes
+        /// the same parameter.
+    func loadCompletedTasks(showLoadingIndicator: Bool = true) async {
+        if showLoadingIndicator {
+            isLoading = true
+        }
         errorMessage = nil
         
         completedTasksCursor = nil
@@ -546,7 +593,9 @@ final class ExecutorViewModel {
         let myGeneration = completedTasksGeneration
         
         defer {
-            isLoading = false
+            if showLoadingIndicator {
+                isLoading = false
+            }
         }
         
         do {

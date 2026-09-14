@@ -246,4 +246,9 @@ enum APIEndpoints {
     static func payInitiatePath(id: String) -> String {
         return payRoute + "/\(id)/initiate"
     }
+    
+        /// Onboards the current user as a payment sub-merchant — a one-time
+        /// prerequisite before they can be paid via ``payInitiatePath(id:)``
+        /// on any task where they're the assigned executor.
+    static let payOnboardPath = payRoute + "/onboard"
 }
