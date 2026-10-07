@@ -19,10 +19,22 @@ struct MainView: View {
     var body: some View {
         TabView(selection: $vm.selectedTab) {
             ForEach(AppTab.allCases) { tab in
-                Tab(tab.title, systemImage: tab.image, value: tab) {
-                    view(for: tab)
+                if tab != .profile {
+                    Tab(tab.title, systemImage: tab.image, value: tab) {
+                        view(for: tab)
+                    }
+                    .badge(badgeCount(for: tab))
+                } else {
+                    if #available(anyAppleOS 27.0, *) {
+                        Tab(tab.title, systemImage: tab.image, value: tab, role: .prominent) {
+                            view(for: tab)
+                        }
+                    } else {
+                        Tab(tab.title, systemImage: tab.image, value: tab) {
+                            view(for: tab)
+                        }
+                    }
                 }
-                .badge(badgeCount(for: tab))
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)

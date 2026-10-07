@@ -26,9 +26,15 @@ struct PaymentView: View {
         if let url = vm.paymentURL {
             // PaymentWebView brings its own NavigationStack + toolbar, so it
             // is shown directly rather than nested inside another one below.
-            PaymentWebView(url: url) {
-                await vm.webViewDismissed()
-            }
+            PaymentWebView(
+                url: url,
+                onDismiss: {
+                    await vm.webViewDismissed()
+                },
+                onFailure: { error in
+                    vm.webViewFailed(error)
+                }
+            )
         } else {
             NavigationStack {
                 statusContent

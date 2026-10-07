@@ -247,8 +247,26 @@ enum APIEndpoints {
         return payRoute + "/\(id)/initiate"
     }
     
-        /// Onboards the current user as a payment sub-merchant — a one-time
-        /// prerequisite before they can be paid via ``payInitiatePath(id:)``
-        /// on any task where they're the assigned executor.
-    static let payOnboardPath = payRoute + "/onboard"
+        /// Asks the backend to re-check a payment directly with Paymob.
+        ///
+        /// Call after the checkout web view closes: it settles the task
+        /// even when Paymob's webhook hasn't arrived yet.
+        ///
+        /// - Parameter id: The task's ID.
+    static func payVerifyPath(id: String) -> String {
+        return payRoute + "/\(id)/verify"
+    }
+
+        /// Refunds a paid task while the money is still held (requester only).
+        ///
+        /// - Parameter id: The task's ID.
+    static func payRefundPath(id: String) -> String {
+        return payRoute + "/\(id)/refund"
+    }
+
+        /// The current user's earnings wallet (pending / available / withdrawn).
+    static let payWalletPath = payRoute + "/wallet"
+
+        /// Submits a withdrawal request for the current user's available balance.
+    static let payPayoutsPath = payRoute + "/payouts"
 }

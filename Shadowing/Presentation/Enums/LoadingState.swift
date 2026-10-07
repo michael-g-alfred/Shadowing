@@ -23,7 +23,7 @@ enum LoadingState {
                 } description: {
                     Text(subtitle)
                 }
-                .frame(width: 250)
+                .frame(width: 300)
                 
             case let .error(message):
                 ContentUnavailableView(

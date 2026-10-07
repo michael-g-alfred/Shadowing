@@ -75,9 +75,10 @@ struct TaskDetailsView: View {
                 // asynchronously), so this refresh either picks up the new
                 // `escrowStatus` if the webhook already landed, or leaves the
                 // task showing `not_paid` — with the Pay Now action still
-                // available — if it hasn't yet.
+                // available — if it hasn't yet. `paymentSheetDismissed()` also
+                // asks the server to re-check with Paymob before reloading.
             if !isPresented {
-                Task { await vm.loadDetails() }
+                Task { await vm.paymentSheetDismissed() }
             }
         }
         .sheet(isPresented: $vm.isPaymentSheetPresented) {

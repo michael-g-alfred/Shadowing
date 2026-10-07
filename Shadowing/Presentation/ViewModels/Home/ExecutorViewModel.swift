@@ -224,14 +224,18 @@ final class ExecutorViewModel {
     }
     
     func withdrawFromTask(_ task: TaskModel) async {
-        let wasInProgress = (
+        // An assigned executor (working, or still waiting for the requester's
+        // payment) lives in the "assigned" list; only a plain applicant lives
+        // in "available".
+        let wasAssigned = (
             task.status == TaskStatus.inProgress.rawValue
+            || task.status == TaskStatus.pendingPayment.rawValue
         )
         
         let assignedRemoval: (index: Int, task: TaskModel)?
         let availableUpdate: (index: Int, task: TaskModel)?
         
-        if wasInProgress {
+        if wasAssigned {
             assignedRemoval = executorAssignedTasks.removeTask(id: task.id)
             availableUpdate = nil
         } else {
@@ -258,7 +262,7 @@ final class ExecutorViewModel {
                 )
             }
             
-            if wasInProgress {
+            if wasAssigned {
                 try? await chatRepo.deleteChat(
                     taskId: task.id
                 )

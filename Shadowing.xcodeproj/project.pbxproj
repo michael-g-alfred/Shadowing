@@ -24,6 +24,9 @@
 		BE9AEE7A301C17770018FDB2 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		BEB8684530324AAC00D64EFA /* shadowing.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = shadowing.icon; sourceTree = "<group>"; };
 		BEDF5B952FFED85C00015FE5 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		BEE294743075958500A7534B /* PaymobSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = PaymobSDK.xcframework; path = "../../../../Downloads/PaymobSDK 1.7.1/PaymobSDK.xcframework"; sourceTree = "<group>"; };
+		BEE294783075994B00A7534B /* PaymobSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = PaymobSDK.xcframework; sourceTree = "<group>"; };
+		BEE2947A3075995B00A7534B /* PaymobSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = PaymobSDK.xcframework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -68,6 +71,9 @@
 		BE27FCDB301BB2C3009CDA02 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BEE294793075994B00A7534B /* PaymobSDK 1.7.1 */,
+				BEE2947B3075995B00A7534B /* PaymobSDK 1.7.1 */,
+				BEE294743075958500A7534B /* PaymobSDK.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -90,6 +96,24 @@
 				BE5E81FD2FFCF43100DE012B /* Shadowing.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		BEE294793075994B00A7534B /* PaymobSDK 1.7.1 */ = {
+			isa = PBXGroup;
+			children = (
+				BEE294783075994B00A7534B /* PaymobSDK.xcframework */,
+			);
+			name = "PaymobSDK 1.7.1";
+			path = "../../Graphics & Programing/Web Projects/Swift/PaymobSDK 1.7.1";
+			sourceTree = "<group>";
+		};
+		BEE2947B3075995B00A7534B /* PaymobSDK 1.7.1 */ = {
+			isa = PBXGroup;
+			children = (
+				BEE2947A3075995B00A7534B /* PaymobSDK.xcframework */,
+			);
+			name = "PaymobSDK 1.7.1";
+			path = "../../Graphics & Programing/Web Projects/Swift/PaymobSDK 1.7.1";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

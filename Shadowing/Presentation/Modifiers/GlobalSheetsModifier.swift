@@ -254,17 +254,19 @@ struct GlobalSheetsModifier: ViewModifier {
                 )
             ) { task in
                 container.makePaymentView(for: task)
+                    .appSheetStyle()
             }
-            .appSheetStyle()
-            .onChange(of: container.requesterViewModel.selectedTaskForPayment?.id) { _, taskId in
+            .onChange(of: container.requesterViewModel.selectedTaskForPayment?.id) { oldTaskId, newTaskId in
                     // The payment sheet just closed. No synchronous success
                     // signal here — Paymob confirms via webhook, asynchronously
                     // — so this refresh either picks up the new status/
                     // escrowStatus if the webhook already landed, or leaves the
                     // task showing pending_payment/unpaid, with `.pay` still
                     // offered, if it hasn't yet.
-                if taskId == nil {
-                    Task { await container.requesterViewModel.paymentSheetDismissed() }
+                    // `paymentSheetDismissed(taskId:)` first asks the server to
+                    // re-check the payment with Paymob, then reloads the list.
+                if newTaskId == nil, let oldTaskId {
+                    Task { await container.requesterViewModel.paymentSheetDismissed(taskId: oldTaskId) }
                 }
             }
     }

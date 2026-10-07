@@ -110,6 +110,12 @@ final class DIContainer {
         network: networkService, authRepository: authRepository
     )
 
+    /// Reads the user's earnings wallet and submits withdrawal requests.
+    @ObservationIgnored
+    private(set) lazy var walletRepository: WalletRepositoryProtocol = WalletRepository(
+        network: networkService, authRepository: authRepository
+    )
+
     /// Handles conversation and message data for in-app chat.
     @ObservationIgnored
     private(set) lazy var chatRepository: ChatRepositoryProtocol = ChatRepository(

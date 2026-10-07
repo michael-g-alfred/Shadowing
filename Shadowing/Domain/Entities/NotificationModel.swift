@@ -8,6 +8,7 @@ enum NotificationType: String, Codable {
     case taskConfirmed
     case taskCancelled
     case taskWithdrawn
+    case taskPaid
     case newMessage
     case ratingReceived
     case taskInvitation
@@ -22,6 +23,7 @@ enum NotificationType: String, Codable {
             case .taskConfirmed: return "checkmark.seal"
             case .taskCancelled: return "xmark.circle"
             case .taskWithdrawn: return "arrow.uturn.left.circle"
+            case .taskPaid: return "creditcard.circle"
             case .newMessage: return "bubble.circle"
             case .ratingReceived: return "star.circle"
             case .taskInvitation: return "envelope.circle"
@@ -38,6 +40,7 @@ enum NotificationType: String, Codable {
             case .taskConfirmed: return "Completion Confirmed"
             case .taskCancelled: return "Task Cancelled"
             case .taskWithdrawn: return "Executor Withdrew"
+            case .taskPaid: return "Payment Received"
             case .newMessage: return "New Message"
             case .ratingReceived: return "New Rating"
             case .taskInvitation: return "Task Invitation"

@@ -25,8 +25,17 @@
       ],
       "layers" : [
         {
-          "blend-mode" : "normal",
+          "blend-mode-specializations" : [
+            {
+              "value" : "normal"
+            },
+            {
+              "appearance" : "tinted",
+              "value" : "normal"
+            }
+          ],
           "fill" : "automatic",
+          "glass" : true,
           "hidden" : false,
           "image-name" : "01.svg",
           "name" : "01",

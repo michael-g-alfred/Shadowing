@@ -456,33 +456,44 @@ final class TaskRepository: TaskRepositoryProtocol {
         return url
     }
 
-    /// Onboards the current user as a payment sub-merchant, a one-time
-    /// prerequisite before ``startPayment(taskId:)`` will succeed for any
-    /// task where they're the assigned executor — the backend rejects
-    /// `initiatePayment` up front when the assigned executor has no
-    /// `sub_merchant_id` on file yet.
+    /// Asks the backend to re-check a task's payment directly with Paymob.
     ///
-    /// Safe to call more than once: the backend checks for an existing
-    /// sub-merchant ID first and returns `alreadyOnboarded: true` without
-    /// contacting the payment provider again, so this can be wired to a
-    /// "complete your payment setup" entry point that fires unconditionally,
-    /// without checking onboarding status client-side first.
+    /// Call this after the checkout web view closes. It settles the task
+    /// even if Paymob's webhook hasn't arrived yet, so the requester doesn't
+    /// see a paid task still sitting in `pending_payment`.
     ///
-    /// - Returns: The user's sub-merchant ID and whether they were already
-    ///   onboarded before this call.
+    /// - Parameter taskId: The task's ID.
+    /// - Returns: The task's current status and escrow status.
     /// - Throws: A networking error, or ``AuthError/noSession``.
-    func onboardExecutor() async throws -> (subMerchantId: String, alreadyOnboarded: Bool) {
-        DebugLogger.log("🏦 🟢 TaskRepository -> onboardExecutor - Started")
-        defer { DebugLogger.log("🏦 🏁 TaskRepository -> onboardExecutor - Ended") }
+    func verifyPayment(taskId: String) async throws -> PaymentVerification {
+        DebugLogger.log("💳 🟢 TaskRepository -> verifyPayment - Started")
+        defer { DebugLogger.log("💳 🏁 TaskRepository -> verifyPayment - Ended") }
 
         let token = try await getValidToken()
-        let config = APIConfig.onboardExecutor(accessToken: token)
-        let response: APIResponseDTO<OnboardExecutorResponseDTO> = try await network.request(config)
+        let config = APIConfig.verifyPayment(taskId: taskId, accessToken: token)
+        let response: APIResponseDTO<VerifyPaymentResponseDTO> = try await network.request(config)
 
-        return (
-            subMerchantId: response.data.subMerchantId,
-            alreadyOnboarded: response.data.alreadyOnboarded
+        return PaymentVerification(
+            status: response.data.status,
+            escrowStatus: response.data.escrowStatus
         )
+    }
+
+    /// Refunds a paid task while the money is still held, and cancels it
+    /// (requester-only). The requester can republish it afterwards.
+    ///
+    /// - Parameter id: The task's ID.
+    /// - Returns: A tuple of a server message and message type.
+    /// - Throws: A networking error, or ``AuthError/noSession``.
+    func refundTask(id: String) async throws -> (message: String, type: String) {
+        DebugLogger.log("↩️ 🟢 TaskRepository -> refundTask - Started")
+        defer { DebugLogger.log("↩️ 🏁 TaskRepository -> refundTask - Ended") }
+
+        let token = try await getValidToken()
+        let config = APIConfig.refundPayment(taskId: id, accessToken: token)
+        let response: APIResponseDTO<RefundResponseDTO> = try await network.request(config)
+
+        return (message: response.message, type: response.type)
     }
 
     /// Declines an applicant for a task (requester-only).

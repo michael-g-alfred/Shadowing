@@ -51,7 +51,8 @@ protocol TaskRepositoryProtocol {
         // MARK: - Payments
     
     func startPayment(taskId: String) async throws -> URL
-    func onboardExecutor() async throws -> (subMerchantId: String, alreadyOnboarded: Bool)
+    func verifyPayment(taskId: String) async throws -> PaymentVerification
+    func refundTask(id: String) async throws -> (message: String, type: String)
     
         // MARK: - Executor Actions
     

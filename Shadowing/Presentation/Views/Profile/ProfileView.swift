@@ -214,6 +214,8 @@ private struct ProfileLoadedView: View {
             accountSection(user: user, statusLabel: statusLabel, statusColor: statusColor)
             
             statusSection(user: user)
+            
+            walletSection
         }
         .scrollContentBackground(.hidden)
     }
@@ -310,6 +312,19 @@ private struct ProfileLoadedView: View {
             )
         } header: {
             Label("Stats", systemImage: "chart.bar.xaxis")
+        }
+        .listRowBackground(listRowColor)
+    }
+    
+    private var walletSection: some View {
+        Section {
+            NavigationLink {
+                container.makeWalletView()
+            } label: {
+                Label("Wallet", systemImage: "wallet.bifold.fill")
+            }
+        } header: {
+            Label("Payments", systemImage: "creditcard.fill")
         }
         .listRowBackground(listRowColor)
     }

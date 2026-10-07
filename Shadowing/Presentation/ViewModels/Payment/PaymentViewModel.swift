@@ -22,6 +22,12 @@ final class PaymentViewModel {
     /// with this is what actually shows the payment form.
     private(set) var paymentURL: URL?
 
+    /// Set once the web view has been closed. Stops the loading state's
+    /// `.task` from requesting a SECOND payment while the sheet is still
+    /// animating away (clearing `paymentURL` on close used to flip the view
+    /// back to its loading state, which re-ran `startPayment()`).
+    private(set) var hasFinished = false
+
     private let taskRepo: TaskRepositoryProtocol
 
     /// Called once the payment sheet closes, regardless of whether the
@@ -60,7 +66,7 @@ final class PaymentViewModel {
     /// ``PaymentView``. Guards against double-firing so it's harmless if
     /// SwiftUI ever re-invokes the `.task` it's attached to.
     func startPayment() async {
-        guard !isLoading, paymentURL == nil else { return }
+        guard !isLoading, !hasFinished, paymentURL == nil else { return }
 
         isLoading = true
         errorMessage = nil
@@ -88,7 +94,19 @@ final class PaymentViewModel {
 
     /// Called when the payment WebView's "Done" button is tapped.
     func webViewDismissed() async {
-        paymentURL = nil
+        // Leave `paymentURL` untouched: the sheet is closing, and swapping the
+        // view back to its loading state would start a new payment attempt.
+        hasFinished = true
         await onDismiss?()
+    }
+
+    /// Returns the flow to its recoverable error state when Paymob's hosted
+    /// checkout or a 3-D Secure page cannot load.
+    ///
+    /// Clearing the URL removes the WebView. The existing retry action then
+    /// requests a fresh checkout URL, avoiding reuse of an expired session.
+    func webViewFailed(_ error: Error) {
+        paymentURL = nil
+        errorMessage = error.localizedDescription
     }
 }

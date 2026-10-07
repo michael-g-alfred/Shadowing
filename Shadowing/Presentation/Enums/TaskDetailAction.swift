@@ -11,6 +11,7 @@ enum TaskDetailAction: Identifiable {
     case delete
     case applicants
     case pay
+    case refund
     case chats
     case apply
     case withdraw
@@ -26,6 +27,7 @@ enum TaskDetailAction: Identifiable {
             case .delete: return "Delete"
             case .applicants: return "Applicants"
             case .pay: return "Pay Now"
+            case .refund: return "Refund"
             case .chats: return "Chats"
             case .apply: return "Apply"
             case .withdraw: return "Withdraw"
@@ -41,6 +43,7 @@ enum TaskDetailAction: Identifiable {
             case .delete: return "trash"
             case .applicants: return "person.3.fill"
             case .pay: return "creditcard.fill"
+            case .refund: return "arrow.uturn.backward.circle.fill"
             case .chats: return "bubble.left.and.bubble.right.fill"
             case .apply: return "checkmark.circle"
             case .withdraw: return "arrow.uturn.backward"
@@ -56,6 +59,7 @@ enum TaskDetailAction: Identifiable {
             case .delete: return .red
             case .applicants: return .orange
             case .pay: return .green
+            case .refund: return .red
             case .chats: return .blue
             case .apply: return .green
             case .withdraw: return .red
@@ -71,6 +75,7 @@ enum TaskDetailAction: Identifiable {
             case .delete: return .destructive
             case .applicants: return nil
             case .pay: return nil
+            case .refund: return .destructive
             case .chats: return nil
             case .apply: return nil
             case .withdraw: return .destructive
@@ -86,6 +91,7 @@ enum TaskDetailAction: Identifiable {
             case .delete: return .trailing
             case .applicants: return .leading
             case .pay: return .leading
+            case .refund: return .trailing
             case .chats: return .leading
             case .apply: return .leading
             case .withdraw: return .trailing
@@ -110,9 +116,19 @@ enum TaskDetailAction: Identifiable {
         }
         if task.status == TaskStatus.pendingPayment.rawValue && task.escrowStatus == EscrowStatus.notPaid.rawValue {
             actions.append(.pay)
+            actions.append(.chats)
         }
-        if task.status == TaskStatus.published.rawValue || task.status == TaskStatus.pending.rawValue {
+        // Cancel is also allowed while waiting for payment (nothing was paid yet).
+        if task.status == TaskStatus.published.rawValue
+            || task.status == TaskStatus.pending.rawValue
+            || task.status == TaskStatus.pendingPayment.rawValue {
             actions.append(.cancel)
+        }
+        // Paid but not finished: the requester can still get the money back
+        // while it is held (this also cancels the task).
+        if task.status == TaskStatus.inProgress.rawValue
+            && task.escrowStatus == EscrowStatus.held.rawValue {
+            actions.append(.refund)
         }
         if task.status == TaskStatus.cancelled.rawValue {
             actions.append(.publish)
@@ -139,6 +155,12 @@ enum TaskDetailAction: Identifiable {
             actions.append(.markDone)
             actions.append(.chats)
             actions.append(.withdraw)
+        }
+        // Assigned, but the requester hasn't paid yet: the executor may leave
+        // freely (the server never counts this as a withdrawal strike).
+        if task.status == TaskStatus.pendingPayment.rawValue {
+            actions.append(.withdraw)
+            actions.append(.chats)
         }
         if task.status == TaskStatus.pendingCompleted.rawValue {
             actions.append(.chats)

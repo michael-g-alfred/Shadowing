@@ -51,6 +51,8 @@ func requesterSwipePerform(_ action: TaskDetailAction, task: TaskModel, vm: Requ
                 // publish above — this just opens the payment sheet on top of the
                 // list rather than routing through TaskDetailsView first.
             vm.startPayment(for: task)
+        case .refund:
+            await vm.refundTask(task)
         case .apply, .withdraw, .markDone:
             break // Not applicable to the requester role
     }
@@ -73,7 +75,7 @@ func executorSwipePerform(_ action: TaskDetailAction, task: TaskModel, vm: Execu
             await vm.markTaskDone(task)
         case .chats:
             vm.openChat(for: task.id)
-        case .applicants, .confirmCompletion, .delete, .cancel, .publish, .pay:
+        case .applicants, .confirmCompletion, .delete, .cancel, .publish, .pay, .refund:
             break // Not applicable to the executor role
     }
 }

@@ -103,6 +103,15 @@ final class TaskDetailsViewModel {
         isPaymentSheetPresented = true
     }
     
+        /// Call once the payment sheet closes. Asks the server to re-check the
+        /// payment with Paymob first (so a late webhook doesn't leave the task
+        /// showing `pending_payment`) and notifies the executor if it went
+        /// through, then reloads the details.
+    func paymentSheetDismissed() async {
+        await requesterVM.settlePayment(taskId: taskId)
+        await loadDetails()
+    }
+    
         /// Call after a refresh that followed the applicants sheet closing.
         /// If `task` just became `in_progress` with escrow still `not_paid` —
         /// i.e. an executor was just assigned — opens the payment sheet

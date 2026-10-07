@@ -298,6 +298,66 @@ final class RequesterViewModel {
         }
     }
     
+        // MARK: - Settle Payment
+
+        /// Asks the server to re-check a task's payment with Paymob and, if it
+        /// went through (`in_progress` + escrow `held`), tells the executor they
+        /// can start working.
+        ///
+        /// Call this from every place a payment sheet closes (the list sheet in
+        /// `GlobalSheetsModifier` and the one in `TaskDetailsView`), so the
+        /// verify + notify steps live in one spot. A failed verify is silent:
+        /// the screen's reload still shows whatever the server knows.
+    func settlePayment(taskId: String) async {
+        guard let verification = try? await taskRepo.verifyPayment(taskId: taskId),
+              verification.status == TaskStatus.inProgress.rawValue,
+              verification.escrowStatus == EscrowStatus.held.rawValue
+        else {
+            return
+        }
+        
+        await notifyExecutorOfPayment(taskId: taskId)
+    }
+    
+        // MARK: - Refund Task
+
+        /// Refunds a paid task while the money is still held, and cancels it.
+        ///
+        /// Only offered for `in_progress` tasks whose escrow is `held`
+        /// (see `TaskDetailAction.requesterActions(for:)`); the server
+        /// re-validates both. `escrowStatus` is immutable on `TaskModel`, so
+        /// the list is reloaded after a successful refund.
+    func refundTask(_ task: TaskModel) async {
+        
+        let update = requesterPublishedTasks.updateTask(id: task.id) {
+            $0.status = TaskStatus.cancelled.rawValue
+        }
+        
+        do {
+            let result = try await taskRepo.refundTask(
+                id: task.id
+            )
+            
+            AlertCenter.shared.show(
+                responseType: result.type,
+                message: result.message
+            )
+            
+            await notifyExecutorOfCancellation(
+                for: task
+            )
+            
+            await loadPublishedTasks(showLoadingIndicator: false)
+            
+        } catch {
+            requesterPublishedTasks.rollbackUpdate(update)
+            
+            AlertCenter.shared.showError(
+                error.localizedDescription
+            )
+        }
+    }
+    
         // MARK: - Publish Task
     
         /// Publishes a task.
@@ -357,8 +417,13 @@ final class RequesterViewModel {
         /// if the webhook already landed, or leaves the task showing
         /// `pending_payment`/unpaid — with `.pay` still offered — if it
         /// hasn't yet.
-    func paymentSheetDismissed() async {
+    func paymentSheetDismissed(taskId: String) async {
         selectedTaskForPayment = nil
+        // Ask the server to re-check the payment with Paymob first, so the
+        // reload below already sees `in_progress` / `held` even when the
+        // webhook is late. A failure here is fine: the reload still shows
+        // whatever the server currently knows.
+        await settlePayment(taskId: taskId)
         await loadPublishedTasks()
     }
     
@@ -722,6 +787,27 @@ final class RequesterViewModel {
             type: .taskCancelled,
             subjectText: "Task cancelled",
             messageText: "\(currentUserDisplayName) cancelled \"\(task.title)\"",
+            taskId: task.id
+        )
+    }
+    
+        /// Fetches the task fresh (the cached list item can predate the
+        /// assignment, so its `executor` may still be nil) and tells the
+        /// assigned executor that the requester paid.
+    private func notifyExecutorOfPayment(
+        taskId: String
+    ) async {
+        guard let task = try? await taskRepo.getTaskDetails(id: taskId),
+              let executorId = task.executor?.id
+        else {
+            return
+        }
+        
+        try? await notificationRepo.send(
+            to: executorId,
+            type: .taskPaid,
+            subjectText: "Payment received",
+            messageText: "\(currentUserDisplayName) paid for \"\(task.title)\". You can start working now.",
             taskId: task.id
         )
     }
