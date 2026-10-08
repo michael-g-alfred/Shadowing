@@ -59,6 +59,10 @@ final class RequesterViewModel {
         /// says that was moved out at some point to keep every global sheet in
         /// one place — this doc just hadn't caught up.)
     var selectedTaskForPayment: TaskModel?
+
+        /// A task the requester asked to refund, waiting for their OK in the
+        /// confirmation alert owned by `GlobalSheetsModifier`.
+    var taskPendingRefund: TaskModel?
     
     var selectedTaskId: String?
     
@@ -296,6 +300,15 @@ final class RequesterViewModel {
                 error.localizedDescription
             )
         }
+    }
+    
+        // MARK: - Request Refund
+
+        /// First step of a refund: asks for confirmation instead of refunding
+        /// right away (it cancels the task and returns the money). The alert
+        /// calls ``refundTask(_:)`` once the requester confirms.
+    func requestRefund(_ task: TaskModel) {
+        taskPendingRefund = task
     }
     
         // MARK: - Settle Payment

@@ -61,7 +61,7 @@ struct ApplicantsSheet: View {
                     } label: {
                         applicantRow(applicant)
                     }
-                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
                             applicantPendingDecline = applicant
                         } label: {
@@ -69,7 +69,7 @@ struct ApplicantsSheet: View {
                         }
                         .tint(.red)
                     }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
                         Button(role: .confirm) {
                             Task {
                                 await vm.assignExecutor(applicant)

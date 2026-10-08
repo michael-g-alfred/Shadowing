@@ -6,23 +6,14 @@ enum TaskSwipeEdge {
 }
 
 enum TaskDetailAction: Identifiable {
-    case cancel
-    case publish
-    case delete
-    case applicants
-    case pay
-    case refund
-    case chats
-    case apply
-    case withdraw
-    case markDone
-    case confirmCompletion
+    case cancel, publish, delete, applicants, pay, refund
+    case chats, apply, withdraw, markDone, confirmCompletion
     
     var id: Self { self }
     
     var title: LocalizedStringResource {
         switch self {
-            case .cancel: return "Cancel"
+            case .cancel: return "Cancel Task"
             case .publish: return "Publish"
             case .delete: return "Delete"
             case .applicants: return "Applicants"
@@ -48,59 +39,58 @@ enum TaskDetailAction: Identifiable {
             case .apply: return "checkmark.circle"
             case .withdraw: return "arrow.uturn.backward"
             case .markDone: return "checkmark.seal"
-            case .confirmCompletion: return "checkmark.seal"
+            case .confirmCompletion: return "checkmark.seal.fill"
         }
     }
     
     var color: Color {
         switch self {
-            case .cancel: return .yellow
-            case .publish: return .blue
-            case .delete: return .red
-            case .applicants: return .orange
-            case .pay: return .green
-            case .refund: return .red
-            case .chats: return .blue
-            case .apply: return .green
-            case .withdraw: return .red
-            case .markDone: return .green
-            case .confirmCompletion: return .green
+            case .cancel: return .orange
+            case .publish, .chats: return .blue
+            case .delete, .refund, .withdraw: return .red
+            case .applicants: return .indigo
+            case .pay, .apply, .markDone, .confirmCompletion: return .green
         }
     }
     
     var role: ButtonRole? {
         switch self {
-            case .cancel: return .cancel
-            case .publish: return nil
-            case .delete: return .destructive
-            case .applicants: return nil
-            case .pay: return nil
-            case .refund: return .destructive
-            case .chats: return nil
-            case .apply: return nil
-            case .withdraw: return .destructive
-            case .markDone: return .confirm
-            case .confirmCompletion: return .confirm
+            case .delete, .refund, .withdraw: return .destructive
+            case .markDone, .confirmCompletion:
+                if #available(iOS 26, *) { return .confirm } else { return nil }
+            default: return nil
         }
     }
     
     var swipeEdge: TaskSwipeEdge {
         switch self {
-            case .cancel: return .trailing
-            case .publish: return .leading
-            case .delete: return .trailing
-            case .applicants: return .leading
-            case .pay: return .leading
-            case .refund: return .trailing
-            case .chats: return .leading
-            case .apply: return .leading
-            case .withdraw: return .trailing
-            case .markDone: return .leading
-            case .confirmCompletion: return .leading
+            case .cancel, .delete, .refund, .withdraw: return .trailing
+            default: return .leading
         }
     }
     
-        // MARK: - Availability by role & status
+    var requiresConfirmation: Bool {
+        switch self {
+            case .cancel, .delete, .refund, .withdraw: return true
+            default: return false
+        }
+    }
+    
+    var allowsFullSwipe: Bool {
+        !requiresConfirmation && role != .destructive
+    }
+    
+    var swipePriority: Int {
+        switch self {
+            case .pay, .confirmCompletion, .markDone, .apply, .publish: return 0
+            case .applicants: return 1
+            case .chats: return 2
+            case .cancel: return 3
+            case .withdraw: return 4
+            case .refund: return 5
+            case .delete: return 6
+        }
+    }
     
     static func requesterActions(for task: TaskModel) -> [TaskDetailAction] {
         var actions: [TaskDetailAction] = []
@@ -118,14 +108,11 @@ enum TaskDetailAction: Identifiable {
             actions.append(.pay)
             actions.append(.chats)
         }
-        // Cancel is also allowed while waiting for payment (nothing was paid yet).
         if task.status == TaskStatus.published.rawValue
             || task.status == TaskStatus.pending.rawValue
             || task.status == TaskStatus.pendingPayment.rawValue {
             actions.append(.cancel)
         }
-        // Paid but not finished: the requester can still get the money back
-        // while it is held (this also cancels the task).
         if task.status == TaskStatus.inProgress.rawValue
             && task.escrowStatus == EscrowStatus.held.rawValue {
             actions.append(.refund)
@@ -145,19 +132,13 @@ enum TaskDetailAction: Identifiable {
         var actions: [TaskDetailAction] = []
         
         if task.status == TaskStatus.published.rawValue || task.status == TaskStatus.pending.rawValue {
-            if task.isApplicant {
-                actions.append(.withdraw)
-            } else {
-                actions.append(.apply)
-            }
+            actions.append(task.isApplicant ? .withdraw : .apply)
         }
         if task.status == TaskStatus.inProgress.rawValue {
             actions.append(.markDone)
             actions.append(.chats)
             actions.append(.withdraw)
         }
-        // Assigned, but the requester hasn't paid yet: the executor may leave
-        // freely (the server never counts this as a withdrawal strike).
         if task.status == TaskStatus.pendingPayment.rawValue {
             actions.append(.withdraw)
             actions.append(.chats)
@@ -170,8 +151,16 @@ enum TaskDetailAction: Identifiable {
 }
 
 extension Array where Element == TaskDetailAction {
-        /// Actions from this list that render as leading swipe actions.
-    var leading: [TaskDetailAction] { filter { $0.swipeEdge == .leading } }
-        /// Actions from this list that render as trailing swipe actions.
-    var trailing: [TaskDetailAction] { filter { $0.swipeEdge == .trailing } }
+    func swipe(_ edge: TaskSwipeEdge, limit: Int = 2) -> [TaskDetailAction] {
+        filter { $0.swipeEdge == edge }
+            .sorted { $0.swipePriority < $1.swipePriority }
+            .prefix(limit)
+            .map { $0 }
+    }
+    
+    var menuOnly: [TaskDetailAction] {
+        let inSwipe = Set(swipe(.leading) + swipe(.trailing))
+        return filter { !inSwipe.contains($0) }
+            .sorted { $0.swipePriority < $1.swipePriority }
+    }
 }

@@ -269,6 +269,76 @@ struct GlobalSheetsModifier: ViewModifier {
                     Task { await container.requesterViewModel.paymentSheetDismissed(taskId: oldTaskId) }
                 }
             }
+        
+            // MARK: Requester - Refund Confirmation
+            //
+            // A refund cancels the task and returns the money, so it always asks
+            // first. `requesterSwipePerform` only sets `taskPendingRefund`.
+        
+            .alert(
+                "Refund this task?",
+                isPresented: Binding(
+                    get: {
+                        container.requesterViewModel.taskPendingRefund != nil
+                    },
+                    set: { isPresented in
+                        if !isPresented {
+                            container.requesterViewModel.taskPendingRefund = nil
+                        }
+                    }
+                ),
+                presenting: container.requesterViewModel.taskPendingRefund
+            ) { task in
+                Button("Refund", role: .destructive) {
+                    container.requesterViewModel.taskPendingRefund = nil
+                    Task { await container.requesterViewModel.refundTask(task) }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: { _ in
+                Text("The money you paid will be returned and the task will be cancelled. The executor will be notified.")
+            }
+        
+            // MARK: Executor - Withdraw Confirmation
+            //
+            // `executorSwipePerform` only sets `taskPendingWithdraw`, so every
+            // entry point (swipe, details menu) goes through this alert.
+        
+            .alert(
+                "Withdraw from this task?",
+                isPresented: Binding(
+                    get: {
+                        container.executorViewModel.taskPendingWithdraw != nil
+                    },
+                    set: { isPresented in
+                        if !isPresented {
+                            container.executorViewModel.taskPendingWithdraw = nil
+                        }
+                    }
+                ),
+                presenting: container.executorViewModel.taskPendingWithdraw
+            ) { task in
+                Button("Withdraw", role: .destructive) {
+                    container.executorViewModel.taskPendingWithdraw = nil
+                    Task { await container.executorViewModel.withdrawFromTask(task) }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: { task in
+                Text(withdrawMessage(for: task))
+            }
+    }
+    
+        // MARK: Withdraw Message
+    
+        /// What the executor is agreeing to, depending on how far the task got.
+    private func withdrawMessage(for task: TaskModel) -> LocalizedStringKey {
+        switch task.status {
+            case TaskStatus.inProgress.rawValue:
+                return "The requester will be refunded and the task will be reopened. Withdrawing after work has started may count as a strike against your account."
+            case TaskStatus.pendingPayment.rawValue:
+                return "You'll be removed from this task. There's no penalty because the requester hasn't paid yet."
+            default:
+                return "Your application will be withdrawn."
+        }
     }
     
         // MARK: Rating Sheet Handling

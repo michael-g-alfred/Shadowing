@@ -50,6 +50,10 @@ final class ExecutorViewModel {
         // MARK: - Applied Sheet
     
     var showAppliedSheet = false
+
+        /// A task the executor asked to withdraw from, waiting for their OK in
+        /// the confirmation alert owned by `GlobalSheetsModifier`.
+    var taskPendingWithdraw: TaskModel?
     var selectedTaskForApply: TaskModel?
     var isApplying = false
     
@@ -221,6 +225,13 @@ final class ExecutorViewModel {
                 // `pendingApplyTask`/`pendingApplyBudget` are deliberately left
                 // intact for that retry.
         }
+    }
+    
+    /// First step of a withdrawal: asks for confirmation instead of
+    /// withdrawing right away. The alert calls ``withdrawFromTask(_:)`` once
+    /// the executor confirms.
+    func requestWithdraw(_ task: TaskModel) {
+        taskPendingWithdraw = task
     }
     
     func withdrawFromTask(_ task: TaskModel) async {

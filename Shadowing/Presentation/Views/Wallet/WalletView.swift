@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// The earnings wallet: balance overview plus a withdrawal request form.
-/// Pushed from the profile screen (see `ProfileView`).
 struct WalletView: View {
 
     // MARK: Environment
@@ -22,10 +20,9 @@ struct WalletView: View {
 
     // MARK: Body
     var body: some View {
-        ZStack {
-            AppBackground()
+        ScreenContainer(content: {
             content
-        }
+        })
         .navigationTitle("Wallet")
         .navigationBarTitleDisplayMode(.inline)
         .task { await vm.loadWallet() }
@@ -55,17 +52,20 @@ struct WalletView: View {
             InfoRow(
                 title: "Pending",
                 systemImage: "hourglass",
-                value: money(balance.pendingEGP)
+                value: money(balance.pendingEGP),
+                iconColor: .orange
             )
             InfoRow(
                 title: "Available",
                 systemImage: "checkmark.circle.fill",
-                value: money(balance.availableEGP)
+                value: money(balance.availableEGP),
+                iconColor: .green
             )
             InfoRow(
                 title: "Withdrawn",
                 systemImage: "arrow.up.right.circle.fill",
-                value: money(balance.withdrawnEGP)
+                value: money(balance.withdrawnEGP),
+                iconColor: .blue
             )
         } header: {
             Text("Balance")
